@@ -4,6 +4,8 @@ use core::arch::asm;
 use core::mem;
 use core::ptr::NonNull;
 
+use cortex_m::register::control::{self, Control, Spsel};
+use cortex_m::register::{msp, psp};
 use cortex_m_rt::exception;
 // #[cfg(feature = "alarm_test")]
 // use defmt::trace;
@@ -247,12 +249,15 @@ pub extern "Rust" fn set_program_sp(sp: *mut u8) {
     #[cfg(feature = "defmt")]
     trace!("set_program_sp");
     unsafe {
-        asm!(
-            "MSR psp, r0",
-            in("r0") sp,
-            options(nostack, preserves_flags),
-        )
+        psp::write(sp as u32);
     }
+    // unsafe {
+    //     asm!(
+    //         "MSR psp, r0",
+    //         in("r0") sp,
+    //         options(nostack, preserves_flags),
+    //     )
+    // }
 }
 #[no_mangle]
 #[inline]
@@ -261,18 +266,26 @@ pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8) {
     #[cfg(feature = "defmt")]
     trace!("set_int_change_2_psp");
     unsafe {
-        asm!(
-            // fisrt change the MSP
-           "MSR msp, r1",
-            // then change the control register to use the psp
-            "MRS r0, control",
-            "ORR r0, r0, #2",
-            "MSR control, r0",
-            // make sure the function will be inlined as we don't use lr to return
-            // // then we need to return to the caller, this time we explicitly use the lr
-            // "BX lr",
-            in("r1") int_ptr,
-            options(nostack, preserves_flags),
-        )
+        msp::write(int_ptr as u32);
     }
+    let mut control = control::read();
+    control.set_spsel(Spsel::Psp);
+    unsafe {
+        control::write(control);
+    }
+    // unsafe {
+    //     asm!(
+    //         // fisrt change the MSP
+    //        "MSR msp, r1",
+    //         // then change the control register to use the psp
+    //         "MRS r0, control",
+    //         "ORR r0, r0, #2",
+    //         "MSR control, r0",
+    //         // make sure the function will be inlined as we don't use lr to return
+    //         // // then we need to return to the caller, this time we explicitly use the lr
+    //         // "BX lr",
+    //         in("r1") int_ptr,
+    //         options(nostack, preserves_flags),
+    //     )
+    // }
 }
