@@ -7,9 +7,7 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
-#[cfg(feature = "defmt")]
-#[allow(unused_imports)]
-use defmt::{info,trace};
+use crate::mem_log;
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
@@ -33,8 +31,7 @@ pub static ref INTERRUPT_STACK: UPSafeCell<OS_STK_REF> = unsafe {
 }
 
 pub fn init_stack_allocator() {
-    #[cfg(feature = "defmt")]
-    trace!("init_stack_allocator");
+    mem_log!(trace, "init_stack_allocator");
     unsafe {
         STACK_ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
     }
@@ -58,20 +55,17 @@ pub fn init_stack_allocator() {
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
-    #[cfg(feature = "defmt")]
-    trace!("alloc_stack");
+    mem_log!(trace, "alloc_stack");
     let heap_ptr: *mut u8;
     unsafe {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);
     }
-    #[cfg(feature = "defmt")]
-    trace!("alloc a stack at {}", heap_ptr);
+    mem_log!(trace, "alloc a stack at {}", heap_ptr);
     stk_from_ptr(heap_ptr, layout)
 }
 /// dealloc a stack
 pub fn dealloc_stack(stk: &mut OS_STK_REF) {
-    #[cfg(feature = "defmt")]
-    trace!("dealloc_stack");
+    mem_log!(trace, "dealloc_stack");
     if stk.STK_REF == NonNull::dangling() || stk.HEAP_REF == NonNull::dangling() {
         return;
     }
@@ -145,7 +139,7 @@ pub fn stk_from_ptr(heap_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
         layout,
     }
 }
-#[cfg(all(test, feature = "defmt"))]
+#[cfg(all(test, feature = "log-mem"))]
 #[defmt_test::tests]
 mod unit_tests {
     use defmt::{assert, println};
@@ -245,13 +239,13 @@ mod unit_tests {
     fn debug_test() {
         let layout = alloc::alloc::Layout::from_size_align(2048, 4).unwrap();
         let stk1 = super::alloc_stack(layout);
-        println!("stk1 Heap ptr:{:?}", stk1.HEAP_REF.as_ptr());
+        mem_log!(info, "stk1 Heap ptr: {:?}", stk1.HEAP_REF.as_ptr());
         assert!(stk1.HEAP_REF.as_ptr() as usize == 0x20001000);
         let stk2 = super::alloc_stack(layout);
-        println!("stk2 Heap ptr:{:?}", stk2.HEAP_REF.as_ptr());
+        mem_log!(info, "stk2 Heap ptr: {:?}", stk2.HEAP_REF.as_ptr());
         assert!(stk2.HEAP_REF.as_ptr() as usize == 0x20001800);
         let stk3 = super::alloc_stack(layout);
-        println!("stk3 Heap ptr:{:?}", stk3.HEAP_REF.as_ptr());
+        mem_log!(info, "stk3 Heap ptr: {:?}", stk3.HEAP_REF.as_ptr());
         assert!(stk3.HEAP_REF.as_ptr() as usize == 0x20002000);
     }
 }

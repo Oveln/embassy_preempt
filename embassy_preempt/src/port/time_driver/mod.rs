@@ -9,9 +9,6 @@ use core::{mem, ptr};
 
 use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
-#[cfg(feature = "defmt")]
-#[allow(unused_imports)]
-use defmt::{info,trace};
 use stm32_metapac::flash::vals::Latency;
 use stm32_metapac::rcc::vals::*;
 use stm32_metapac::timer::{regs, vals};
@@ -20,6 +17,9 @@ use stm32_metapac::{Interrupt, FLASH, RCC};
 use crate::cfg::{APB_HZ, TICK_HZ};
 use crate::executor::waker;
 use crate::port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE};
+
+// 导入日志宏
+use crate::timer_log;
 
 #[cfg(any(
     feature = "time_driver_tim9",
@@ -42,11 +42,9 @@ const ALARM_COUNT: USIZE = 3;
 #[no_mangle]
 /// TIM3 interrupt handler
 pub extern "C" fn TIM3() {
-    #[cfg(feature = "defmt")]
-    trace!("TIM3");
+    timer_log!(trace, "TIM3");
     RTC_DRIVER.on_interrupt();
-    #[cfg(feature = "defmt")]
-    trace!("exit TIM3");
+    timer_log!(trace, "exit TIM3");
 }
 /*
 *********************************************************************************************************
@@ -158,8 +156,7 @@ impl AlarmHandle {
 
 impl RtcDriver {
     pub(crate) fn init(&'static self) {
-        #[cfg(feature = "defmt")]
-        trace!("init of RtcDriver");
+        timer_log!(trace, "init of RtcDriver");
         // rcc config
         rcc_init();
         // enable the Timer Driver
@@ -244,8 +241,7 @@ impl RtcDriver {
 
             for n in 0..ALARM_COUNT {
                 if sr.ccif(n + 1) && dier.ccie(n + 1) {
-                    #[cfg(feature = "defmt")]
-                    trace!("the alarm is triggered!!!");
+                    timer_log!(trace, "the alarm is triggered!!!");
                     self.trigger_alarm(n, cs);
                 }
             }
@@ -281,8 +277,7 @@ impl RtcDriver {
     }
 
     fn trigger_alarm(&self, n: usize, cs: CriticalSection) {
-        #[cfg(feature = "defmt")]
-        trace!("trigger_alarm");
+        timer_log!(trace, "trigger_alarm");
         let alarm = &self.alarms.borrow(cs)[n];
         alarm.timestamp.set(u64::MAX);
 
@@ -328,11 +323,8 @@ impl Driver for RtcDriver {
     }
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> bool {
-        #[cfg(feature = "defmt")]
-        {
-            trace!("set_alarm");
-            trace!("set the alarm at {}", timestamp);
-        }
+        timer_log!(trace, "set_alarm");
+        timer_log!(trace, "set the alarm at {}", timestamp);
         let n = alarm.id() as usize;
         // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
         if timestamp == INT64U::MAX {
@@ -487,8 +479,7 @@ fn calc_now(period: INT32U, counter: INT16U) -> INT64U {
 #[no_mangle]
 /// Schedule the given waker to be woken at `at`.
 pub fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker) {
-    #[cfg(feature = "defmt")]
-    trace!("_embassy_time_schedule_wake");
+    timer_log!(trace, "_embassy_time_schedule_wake");
     let task = waker::task_from_waker(waker);
     let task = task.header();
     unsafe {

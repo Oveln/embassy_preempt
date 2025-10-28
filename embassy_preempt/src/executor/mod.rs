@@ -14,12 +14,7 @@ use core::pin::Pin;
 use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
-#[cfg(feature = "alarm_test")]
-use defmt::info;
-#[cfg(feature = "defmt")]
-use defmt::info;
-#[cfg(feature = "defmt")]
-use defmt::trace;
+use crate::{mem_log, scheduler_log, task_log, timer_log};
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
 use state::State;
@@ -270,8 +265,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         _name: String,
         future_func: impl FnOnce() -> F,
     ) -> OS_ERR_STATE {
-        #[cfg(feature = "defmt")]
-        trace!("init of OS_TASK_STORAGE");
+        task_log!(trace, "init of OS_TASK_STORAGE");
         // by noah: claim a TaskStorage
         let task_ref = OS_TASK_STORAGE::<F>::claim();
 
@@ -346,14 +340,12 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         let mut cx = Context::from_waker(&waker);
         match future.poll(&mut cx) {
             Poll::Ready(_) => {
-                #[cfg(feature = "defmt")]
-                trace!("the task {} is ready", this.task_tcb.OSTCBPrio);
+                task_log!(trace, "the task {} is ready", this.task_tcb.OSTCBPrio);
                 this.future.drop_in_place();
                 this.task_tcb.OSTCBStat.despawn();
             }
             Poll::Pending => {
-                #[cfg(feature = "defmt")]
-                trace!("the task {} is pending", this.task_tcb.OSTCBPrio);
+                task_log!(trace, "the task {} is pending", this.task_tcb.OSTCBPrio);
             }
         }
 
@@ -368,8 +360,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // by noah: for we can create task after OSTaskCreate, so we need a cs
         critical_section::with(|cs| {
             let task_storage = ARENA.alloc::<OS_TASK_STORAGE<F>>(cs);
-            #[cfg(feature = "defmt")]
-            trace!("size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
+            task_log!(trace, "size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
             // create a new task which is not init
             task_storage.write(OS_TASK_STORAGE::new());
             // by noah：no panic will occurred here because if the Arena is not enough, the program will panic when alloc
@@ -436,8 +427,7 @@ impl<F: Future + 'static> AvailableTask<F> {}
 ///
 /// You can obtain a `TaskRef` from a `Waker` using [`task_from_waker`].
 pub fn wake_task(task: OS_TCB_REF) {
-    #[cfg(feature = "defmt")]
-    trace!("wake_task");
+    task_log!(trace, "wake_task");
     let header = task.header();
     if header.OSTCBStat.run_enqueue() {
         // We have just marked the task as scheduled, so enqueue it.
@@ -473,8 +463,7 @@ pub(crate) struct SyncExecutor {
 }
 impl SyncExecutor {
     fn alarm_callback(ctx: *mut ()) {
-        #[cfg(feature = "defmt")]
-        trace!("alarm_callback");
+        timer_log!(trace, "alarm_callback");
         let this: &Self = unsafe { &*(ctx as *const Self) };
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
@@ -514,8 +503,7 @@ impl SyncExecutor {
     }
     /// set the current to be highrdy
     pub(crate) unsafe fn set_cur_highrdy(&self) {
-        #[cfg(feature = "defmt")]
-        trace!("set_cur_highrdy");
+        scheduler_log!(trace, "set_cur_highrdy");
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
     }
@@ -542,24 +530,19 @@ impl SyncExecutor {
     pub(crate) unsafe fn IntCtxSW(&'static self) {
         stack_pin_high();
         // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
-        #[cfg(feature = "defmt")]
-        info!("IntCtxSW");
+        scheduler_log!(info, "IntCtxSW");
         if critical_section::with(|_| unsafe {
             let new_prio = self.find_highrdy_prio();
-            #[cfg(feature = "defmt")]
-            trace!(
-                " the new_prio is {}, the highrdy task's prio is {}, the cur task's prio is {}",
+            scheduler_log!(trace, " the new_prio is {}, the highrdy task's prio is {}, the cur task's prio is {}",
                 new_prio,
                 self.OSPrioHighRdy.get_unmut(),
                 self.OSTCBCur.get_unmut().OSTCBPrio
             );
             if new_prio >= self.OSPrioCur.get() {
-                #[cfg(feature = "defmt")]
-                trace!("no need to switch task");
+                scheduler_log!(trace, "no need to switch task");
                 false
             } else {
-                #[cfg(feature = "defmt")]
-                trace!("need to switch task");
+                scheduler_log!(trace, "need to switch task");
                 self.set_highrdy_with_prio(new_prio);
                 true
             }
@@ -577,29 +560,25 @@ impl SyncExecutor {
             fn restore_thread_task();
         }
         // test: print the ready queue
-        #[cfg(feature = "defmt")]
         critical_section::with(|_| {
-            info!("in interrupt_poll");
+            scheduler_log!(info, "in interrupt_poll");
             self.print_ready_queue();
-            info!("the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
+            scheduler_log!(info, "the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
         });
 
-        #[cfg(feature = "defmt")]
-        trace!("interrupt_poll");
+        scheduler_log!(trace, "interrupt_poll");
         if *self.OSPrioCur.get_unmut() != OS_TASK_IDLE_PRIO {
             self.OSTCBCur.get().is_in_thread_poll.set(false);
         }
         let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
 
         // then we need to restore the highest priority task
-        #[cfg(feature = "defmt")]
         {
-            trace!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
-            trace!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
+            scheduler_log!(trace, "interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
+            scheduler_log!(trace, "interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
         }
         if task.OSTCBStkPtr.is_none() {
-            #[cfg(feature = "defmt")]
-            info!("the task's stk is none");
+            scheduler_log!(info, "the task's stk is none");
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
 
@@ -618,16 +597,10 @@ impl SyncExecutor {
                 .unwrap();
                 stk = program_stk.clone();
             } else {
-                #[cfg(feature = "alarm_test")]
-                {
-                    info!("alloc stack");
-                }
+                mem_log!(info, "alloc stack");
                 let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
                 stk = alloc_stack(layout);
-                #[cfg(feature = "alarm_test")]
-                {
-                    info!("the alloc task's stk is {:?}", stk.STK_REF);
-                }
+                mem_log!(info, "the alloc task's stk is {:?}", stk.STK_REF);
             }
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
@@ -638,8 +611,7 @@ impl SyncExecutor {
         critical_section::with(|_| {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
                 unsafe {
-                    #[cfg(feature = "defmt")]
-                    trace!("restore the task/thread");
+                    task_log!(trace, "restore the task/thread");
                     restore_thread_task()
                 };
             }
@@ -648,17 +620,15 @@ impl SyncExecutor {
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
     pub(crate) unsafe fn poll(&'static self) -> ! {
-        #[cfg(feature = "defmt")]
-        trace!("poll");
+        scheduler_log!(trace, "poll");
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop
         loop {
             // test: print the ready queue
-            #[cfg(feature = "defmt")]
             critical_section::with(|_| {
-                info!("in poll");
+                scheduler_log!(info, "in poll");
                 self.print_ready_queue();
-                info!("the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
+                scheduler_log!(info, "the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
             });
             // if the highrdy task is the idle task, we need to delay some time
             #[cfg(feature = "delay_idle")]
@@ -677,11 +647,8 @@ impl SyncExecutor {
                     self.OSTCBCur.set(task);
                 } else {
                     // if the task has stack, it's a thread, we need to resume it not poll it
-                    #[cfg(feature = "defmt")]
-                    {
-                        trace!("resume the task");
-                        trace!("the highrdy task's prio is {}", task.OSTCBPrio);
-                    }
+                    task_log!(trace, "resume the task");
+                    task_log!(trace, "the highrdy task's prio is {}", task.OSTCBPrio);
                     task.restore_context_from_stk();
                     return None;
                 }
@@ -715,8 +682,7 @@ impl SyncExecutor {
                     // The **task which is waiting for the next_expire** must be current task
                     // we must do this until we set the alarm successfully or there is no alarm required
                     while !RTC_DRIVER.set_alarm(self.alarm, next_expire) {
-                        #[cfg(feature = "defmt")]
-                        trace!("the set alarm return false");
+                        task_log!(trace, "the set alarm return false");
                         // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                         // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
                         // (just like the operation in alarm_callback)
@@ -736,8 +702,7 @@ impl SyncExecutor {
             });
     }
     pub(crate) unsafe fn set_highrdy(&self) {
-        #[cfg(feature = "defmt")]
-        trace!("set_highrdy");
+        task_log!(trace, "set_highrdy");
         let tmp = self.OSRdyGrp.get_unmut();
         // if there is no task in the ready queue, return None also set the current running task to the lowest priority
         if *tmp == 0 {
@@ -759,8 +724,7 @@ impl SyncExecutor {
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio as usize]);
     }
     pub(crate) fn find_highrdy_prio(&self) -> OS_PRIO {
-        #[cfg(feature = "defmt")]
-        trace!("find_highrdy_prio");
+        task_log!(trace, "find_highrdy_prio");
         let tmp = self.OSRdyGrp.get_unmut();
         if *tmp == 0 {
             return OS_TASK_IDLE_PRIO;
@@ -771,8 +735,7 @@ impl SyncExecutor {
         prio as OS_PRIO
     }
     pub(crate) unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
-        #[cfg(feature = "defmt")]
-        trace!("set_task_unready");
+        task_log!(trace, "set_task_unready");
         // added by liam: we have to make this process in critical section
         // because the bitmap is shared by all the tasks
         critical_section::with(|_| {
@@ -807,17 +770,16 @@ impl SyncExecutor {
     }
 
     // by noah:TEST print the ready queue
-    #[cfg(feature = "defmt")]
     pub fn print_ready_queue(&self) {
         let tmp: [u8; OS_RDY_TBL_SIZE];
         unsafe {
             tmp = self.OSRdyTbl.get();
         }
         {
-            info!("the ready queue is:");
+            task_log!(info, "the ready queue is:");
             for i in 0..OS_LOWEST_PRIO + 1 {
                 if tmp[(i / 8) as usize] & (1 << (i % 8)) != 0 {
-                    info!("the {}th task is ready", i);
+                    task_log!(info, "the {}th task is ready", i);
                 }
             }
         }
@@ -825,8 +787,7 @@ impl SyncExecutor {
 }
 /// Wake a task by `TaskRef`.
 pub fn wake_task_no_pend(task: OS_TCB_REF) {
-    #[cfg(feature = "defmt")]
-    trace!("wake_task_no_pend");
+    task_log!(trace, "wake_task_no_pend");
     // We have just marked the task as scheduled, so enqueue it.
     unsafe {
         let executor = GlobalSyncExecutor.as_ref().unwrap();

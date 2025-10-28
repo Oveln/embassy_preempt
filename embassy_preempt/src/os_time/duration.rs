@@ -3,7 +3,7 @@ use core::ops::Add;
 use crate::cfg::TICK_HZ;
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[cfg_attr(feature = "log-timer", derive(defmt::Format))]
 /// Represents the difference between two [Instant](struct.Instant.html)s
 pub struct Duration {
     pub(crate) ticks: u64,

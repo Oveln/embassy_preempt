@@ -3,9 +3,6 @@ use cortex_m::peripheral::scb::SystemHandler;
 #[allow(unused_imports)]
 use cortex_m::peripheral::{NVIC, SCB};
 use stm32_metapac::timer::TimGp16;
-#[cfg(feature = "defmt")]
-#[allow(unused_imports)]
-use defmt::{info,trace};
 
 /*
 **************************************************************************************************************************************
@@ -94,6 +91,8 @@ use cortex_m::{interrupt, Peripherals};
 use cortex_m::register::primask;
 use critical_section::{set_impl, Impl, RawRestoreState};
 
+use crate::os_log;
+
 struct SingleCoreCriticalSection;
 set_impl!(SingleCoreCriticalSection);
 
@@ -130,22 +129,16 @@ pub fn init_core_peripherals() {
         p.SCB.aircr.write(aircr);
         // infer that the group is 2-2
         // set the TIM3 prio as 3
-        #[cfg(feature = "defmt")]
-        info!("the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+        os_log!(info, "the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
         p.NVIC.set_priority(stm32_metapac::Interrupt::TIM3, 32);
-        #[cfg(feature = "defmt")]
-        info!("the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+        os_log!(info, "the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
 
-        #[cfg(feature = "defmt")]
-        info!("the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
+        os_log!(info, "the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
         // set the EXTI13 prio as 1
         p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, 16);
-        #[cfg(feature = "defmt")]
-        info!("the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
-        #[cfg(feature = "defmt")]
-        info!("the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
+        os_log!(info, "the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
+        os_log!(info, "the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
         p.SCB.set_priority(SystemHandler::PendSV, 0xf<<4);
-        #[cfg(feature = "defmt")]
-        info!("the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
+        os_log!(info, "the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
     }
 }

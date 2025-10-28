@@ -6,8 +6,7 @@
 use core::arch::asm;
 use core::ffi::c_void;
 
-#[cfg(feature = "alarm_test")]
-use defmt::trace;
+use embassy_preempt::task_log;
 use embassy_preempt::app::led::{interrupt_pin_low, thread_pin_high, thread_pin_low, Pin_Init};
 use embassy_preempt::os_core::{OSInit, OSStart};
 use embassy_preempt::os_task::AsyncOSTaskCreate;
@@ -64,8 +63,7 @@ async fn task1(_args: *mut c_void) {
         led_on();
         Timer::after_millis(5 * 1000).await;
         led_off();
-        #[cfg(feature = "alarm_test")]
-        trace!("the task1");
+        task_log!(trace, "the task1");
         Timer::after_millis(5 * 1000).await;
     }
 }
@@ -75,8 +73,7 @@ async fn task2(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
         // Timer::after_millis(10).await;
-        #[cfg(feature = "alarm_test")]
-        trace!("the task2");
+        task_log!(trace, "the task2");
         delay(BLOCK_TIME);
         Timer::after_millis(5).await;
     }
@@ -90,8 +87,7 @@ async fn task3(_args: *mut c_void) {
         // #[cfg(feature = "alarm_test")]
         // trace!("the task3");
         delay(BLOCK_TIME);
-        #[cfg(feature = "alarm_test")]
-        trace!("the task3");
+        task_log!(trace, "the task3");
         Timer::after_millis(20).await;
     }
 }
@@ -101,8 +97,7 @@ async fn task4(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
         // Timer::after_millis(80).await;
-        #[cfg(feature = "alarm_test")]
-        trace!("the task4");
+        task_log!(trace, "the task4");
         delay(BLOCK_TIME);
         Timer::after_millis(8).await;
     }
@@ -113,8 +108,7 @@ async fn task5(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
         // Timer::after_millis(300).await;
-        #[cfg(feature = "alarm_test")]
-        trace!("the task5");
+        task_log!(trace, "the task5");
         delay(BLOCK_TIME);
         Timer::after_millis(10).await;
     }

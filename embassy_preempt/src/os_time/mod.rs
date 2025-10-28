@@ -1,10 +1,9 @@
-#[cfg(feature = "defmt")]
-#[allow(unused_imports)]
-use defmt::{info, trace};
-
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::INT64U;
+
+// 导入日志宏
+use crate::timer_log;
 /// the mod of blockdelay of uC/OS-II kernel
 pub mod blockdelay;
 /// the mod of duration of uC/OS-II kernel
@@ -16,14 +15,12 @@ pub mod timer;
 
 /// init the Timer as the Systick
 pub fn OSTimerInit() {
-    #[cfg(feature = "defmt")]
-    trace!("OSTimerInit");
+    timer_log!(trace, "OSTimerInit");
     RTC_DRIVER.init();
 }
 /// we have to make this delay acting like preemptive delay
 pub fn OSTimeDly(_ticks: INT64U) {
-    #[cfg(feature = "defmt")]
-    trace!("OSTimeDly");
+    timer_log!(trace, "OSTimeDly");
     unsafe {
         delay_tick(_ticks);
     }
@@ -39,8 +36,7 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
         executor.set_task_unready(*task);
         critical_section::with(|_| executor.timer_queue.update(*task))
     });
-    #[cfg(feature = "defmt")]
-    trace!("in delay_tick the next expire is {:?}", next_expire);
+    timer_log!(trace, "in delay_tick the next expire is {:?}", next_expire);
     if critical_section::with(|_| {
         if next_expire < *executor.timer_queue.set_time.get_unmut() {
             executor.timer_queue.set_time.set(next_expire);
@@ -64,8 +60,7 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
                 .dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
             // then we need to set a new alarm according to the next expiration time
             next_expire = unsafe { executor.timer_queue.next_expiration() };
-            #[cfg(feature = "defmt")]
-            trace!("in delay_tick the next expire is {:?}", next_expire);
+            timer_log!(trace, "in delay_tick the next expire is {:?}", next_expire);
             // by noah：we also need to updater the set_time of the timer_queue
             executor.timer_queue.set_time.set(next_expire);
         }
@@ -77,7 +72,6 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
     }) {
         // call the interrupt poll
         GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
-        #[cfg(feature = "defmt")]
-        trace!("end the delay");
+        timer_log!(trace, "end the delay");
     }
 }

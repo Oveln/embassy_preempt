@@ -35,22 +35,14 @@ use core::ffi::c_void;
 use core::sync::atomic::Ordering;
 
 use bottom_driver::BOT_DRIVER;
-#[cfg(feature = "defmt")]
-#[allow(unused)]
-use defmt::info;
-#[cfg(feature = "alarm_test")]
-use defmt::trace;
-#[cfg(feature = "defmt")]
-use defmt::trace;
+use crate::{task_log};
 // use critical_section::Mutex;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::executor::GlobalSyncExecutor;
+use crate::{executor::GlobalSyncExecutor, os_log};
 use crate::heap::stack_allocator::init_stack_allocator;
 use crate::os_task::SyncOSTaskCreate;
-#[cfg(feature = "alarm_test")]
-use crate::os_time::blockdelay;
 use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
@@ -165,8 +157,7 @@ pub fn OSEventNameSet() {}
 /// prior to creating any uC/OS-II object and, prior to calling OSStart().
 #[no_mangle]
 pub extern "C" fn OSInit() {
-    #[cfg(feature = "defmt")]
-    trace!("OSInit");
+    os_log!(trace, "OSInit");
     OSInitHookBegin(); /* Call port specific initialization code   */
 
     // by noah: this func is no need to be called because we give the static var init val
@@ -340,8 +331,7 @@ pub extern "C" fn OSStart() -> ! {
     extern "Rust" {
         fn set_int_change_2_psp(int_ptr: *mut u8);
     }
-    #[cfg(feature = "defmt")]
-    trace!("OSStart");
+    os_log!(trace, "OSStart");
     // set OSRunning
     OSRunning.store(true, Ordering::Release);
     // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
@@ -627,22 +617,18 @@ fn OS_InitTaskIdle() {
         #[allow(unused)]
         fn run_idle();
     }
-    #[cfg(feature = "defmt")]
-    trace!("OS_InitTaskIdle");
+    os_log!(trace, "OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
-            #[cfg(feature = "alarm_test")]
-            {
-                trace!("task idle");
-                blockdelay::delay(1);
-            }
+            task_log!(trace, "task idle");
+            #[cfg(log_enabled)]
+            crate::os_time::blockdelay::delay(1);
             unsafe {
                 run_idle();
             }
         }
     };
-    #[cfg(feature = "defmt")]
-    trace!("create idle task");
+    os_log!(trace, "create idle task");
     SyncOSTaskCreate(idle_fn, 0 as *mut c_void, 0 as *mut usize, OS_TASK_IDLE_PRIO);
 }
 

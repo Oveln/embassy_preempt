@@ -21,8 +21,9 @@
 *                                                               pub mod
 ********************************************************************************************************************************************
 */
-#[cfg(any(feature = "defmt",feature = "alarm_test"))]
-use defmt_rtt as _; // global logger
+/// Centralized logging module
+pub mod log;
+
 extern crate alloc;
 /// the mod of uC/OS-II kernel
 pub mod os_core;

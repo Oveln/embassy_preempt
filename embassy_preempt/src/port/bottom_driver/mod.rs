@@ -5,8 +5,6 @@ use core::sync::atomic::{compiler_fence, Ordering};
 
 use cortex_m::peripheral::NVIC;
 use critical_section::Mutex;
-#[cfg(feature = "defmt")]
-use defmt::{info, trace};
 // use critical_section::{CriticalSection, Mutex};
 use stm32_metapac::{gpio::vals, EXTI, RCC, SYSCFG};
 #[cfg(feature = "GPIOA")]
@@ -16,6 +14,7 @@ use stm32_metapac::GPIOC;
 
 use super::{DISENABLE, ENABLE};
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor, OS_TCB_REF};
+use crate::os_log;
 use crate::pac::Interrupt;
 use crate::util::SyncUnsafeCell;
 
@@ -61,23 +60,20 @@ pub(crate) static BOT_DRIVER: BotDriver = BotDriver {
 #[cfg(feature = "GPIOC")]
 /// EXTI15_10 interrupt handler
 pub extern "C" fn EXTI15_10() {
-    use crate::app::led::interrupt_pin_high;
+    use crate::{app::led::interrupt_pin_high};
 
-    #[cfg(feature = "defmt")]
-    info!("EXTI15_10");
+    os_log!(info, "EXTI15_10");
     // set the interrupt pin high, so the high level indicate the interrupt and schedule. Begin the interrupt and schedule test
     interrupt_pin_high();
     BOT_DRIVER.on_interrupt();
-    #[cfg(feature = "defmt")]
-    info!("exit_EXTI15_10");
+    os_log!(info, "exit_EXTI15_10");
 }
 
 /// EXTI15_10 interrupt handler
 #[cfg(feature = "GPIOA")]
 #[no_mangle]
 pub extern "C" fn EXTI0() {
-    #[cfg(feature = "defmt")]
-    info!("EXTI0");
+    os_log!(info, "EXTI0");
     BOT_DRIVER.on_interrupt();
 }
 
@@ -87,8 +83,7 @@ unsafe impl Sync for BotDriver {}
 // use PC13 as the source of EXIT13
 impl BotDriver {
     pub(crate) fn init(&'static self) {
-        #[cfg(feature = "defmt")]
-        trace!("init of BotDriver");
+        os_log!(trace, "init of BotDriver");
         // gpio config
         bottom_init();
 
@@ -344,7 +339,6 @@ pub(crate) unsafe fn bottom_waiter() {
     }) {
         // call the interrupt poll
         GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
-        #[cfg(feature = "defmt")]
-        trace!("end the delay");
+        os_log!(trace, "end the delay");
     }
 }

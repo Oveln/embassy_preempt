@@ -5,8 +5,7 @@
 use core::ffi::c_void;
 
 // extern crate embassy_preempt;
-#[cfg(feature = "defmt")]
-use defmt::info;
+use embassy_preempt::task_log;
 use embassy_preempt::app::led::{LED_Init, LED_OFF, LED_ON};
 use embassy_preempt::os_core::{OSInit, OSStart};
 use embassy_preempt::os_task::AsyncOSTaskCreate;
@@ -29,15 +28,13 @@ async fn task1(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_ticks(20000).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_ticks(20000).await;

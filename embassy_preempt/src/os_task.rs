@@ -17,13 +17,10 @@ use core::ffi::c_void;
 use core::future::Future;
 use core::sync::atomic::Ordering::Acquire;
 
-#[cfg(feature = "defmt")]
-#[allow(unused)]
-use defmt::{trace,info};
-
 use crate::cfg::OS_LOWEST_PRIO;
 use crate::executor::{GlobalSyncExecutor, OS_TASK_STORAGE};
 use crate::heap::stack_allocator::{dealloc_stack, stk_from_ptr};
+use crate::task_log;
 use crate::port::{INT8U, OS_STK};
 use crate::ucosii::{OSIntNesting, OSRunning, OS_ERR_STATE};
 const DEFAULT_REVOKE_STACK_SIZE: usize = 128;
@@ -51,23 +48,20 @@ where
     F: FnOnce(*mut c_void) -> R + 'static,
     R: ReturnUnitOrNeverReturn,
 {
-    #[cfg(feature = "defmt")]
-    trace!("SyncOSTaskCreate");
+    task_log!(trace, "SyncOSTaskCreate");
     // check the priority
     if prio > OS_LOWEST_PRIO as u8 {
         return OS_ERR_STATE::OS_ERR_PRIO_INVALID;
     }
     // warp the normal func to a async func
     let future_func = move || async move { task(p_arg) };
-    #[cfg(feature = "defmt")]
-    trace!("the size of future is {}", core::mem::size_of_val(&future_func));
+    task_log!(trace, "the size of future is {}", core::mem::size_of_val(&future_func));
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
         let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 4).unwrap();
         let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
         // by noah: used to test ffi
-        #[cfg(feature = "defmt")]
-        trace!("Task Create");
+        task_log!(trace, "Task Create");
         let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);
         dealloc_stack(&mut stk);
     }
@@ -81,8 +75,7 @@ where
     F: Future + 'static,
     FutFn: FnOnce(*mut c_void) -> F + 'static,
 {
-    #[cfg(feature = "defmt")]
-    trace!("AsyncOSTaskCreate");
+    task_log!(trace, "AsyncOSTaskCreate");
     let future_func = || task(p_arg);
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
@@ -129,8 +122,7 @@ pub extern "aapcs" fn OSTaskCreate(
     ptos: *mut OS_STK,
     prio: INT8U,
 ) -> OS_ERR_STATE {
-    #[cfg(feature = "defmt")]
-    trace!("OSTaskCreate");
+    task_log!(trace, "OSTaskCreate");
     let fun_ptr = move |p_arg| fun_ptr(p_arg);
     SyncOSTaskCreate(fun_ptr, p_arg, ptos, prio)
 }
@@ -151,8 +143,7 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
             return false;
         }
     }) {
-        #[cfg(feature = "defmt")]
-        trace!("the prio is exist");
+        task_log!(trace, "the prio is exist");
         return OS_ERR_STATE::OS_ERR_PRIO_EXIST;
     }
 

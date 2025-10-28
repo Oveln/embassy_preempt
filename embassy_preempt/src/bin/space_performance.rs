@@ -6,8 +6,7 @@
 use core::ffi::c_void;
 
 // extern crate embassy_preempt;
-#[cfg(feature = "defmt")]
-use defmt::info;
+use embassy_preempt::task_log;
 use embassy_preempt::app::led::{LED_Init, Pin_Init, LED_OFF, LED_ON};
 use embassy_preempt::os_core::{OSInit, OSStart};
 use embassy_preempt::os_task::AsyncOSTaskCreate;
@@ -52,13 +51,11 @@ async fn test_task(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         bottom::wait_for_rising_edge().await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         bottom::wait_for_rising_edge().await;
@@ -70,15 +67,13 @@ async fn task1(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -90,15 +85,13 @@ async fn task2(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -110,15 +103,13 @@ async fn task3(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -130,15 +121,13 @@ async fn task4(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -150,15 +139,13 @@ async fn task5(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -170,15 +157,13 @@ async fn task6(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -190,15 +175,13 @@ async fn task7(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -210,15 +193,13 @@ async fn task8(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -230,15 +211,13 @@ async fn task9(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -250,15 +229,13 @@ async fn task10(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -270,15 +247,13 @@ async fn task11(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -290,15 +265,13 @@ async fn task12(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -310,15 +283,13 @@ async fn task13(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -330,15 +301,13 @@ async fn task14(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -350,15 +319,13 @@ async fn task15(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -370,15 +337,13 @@ async fn task16(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -390,15 +355,13 @@ async fn task17(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -410,15 +373,13 @@ async fn task18(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -430,15 +391,13 @@ async fn task19(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -450,15 +409,13 @@ async fn task20(_args: *mut c_void) {
     loop {
         // led on
         LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
+        task_log!(info, "led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
+        task_log!(info, "led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;

@@ -4,8 +4,7 @@
 
 use core::ffi::c_void;
 
-#[cfg(feature = "defmt")]
-use defmt::info;
+use embassy_preempt::task_log;
 // <- derive attribute
 use embassy_preempt::os_core::{OSInit, OSStart};
 use embassy_preempt::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
@@ -34,22 +33,19 @@ fn test_basic_schedule() -> ! {
 fn task1(_args: *mut c_void) {
     loop {
         // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task1 begin---");
+        task_log!(info, "---task1 begin---");
         OSTimeDly(100_000);
-        #[cfg(feature = "defmt")]
-        info!("---task1 end---");
+        task_log!(info, "---task1 end---");
         delay(SHORT_TIME);
     }
 }
+
 fn task2(_args: *mut c_void) {
     loop {
         // 任务2
-        #[cfg(feature = "defmt")]
-        info!("---task2 begin---");
+        task_log!(info, "---task2 begin---");
         OSTimeDly(200_000);
-        #[cfg(feature = "defmt")]
-        info!("---task2 end---");
+        task_log!(info, "---task2 end---");
         delay(SHORT_TIME);
     }
 }
@@ -57,24 +53,19 @@ fn task2(_args: *mut c_void) {
 async fn task3(_args: *mut c_void) {
     // 任务3
     loop {
-        //
-        #[cfg(feature = "defmt")]
-        info!("---task3 begin---");
+        task_log!(info, "---task3 begin---");
         Timer::after_secs(LONG_TIME as u64).await;
-        // delay(LONG_TIME);
-        #[cfg(feature = "defmt")]
-        info!("---task3 end---");
+        task_log!(info, "---task3 end---");
         delay(SHORT_TIME);
     }
 }
+
 fn task4(_args: *mut c_void) {
     // 任务4
-    #[cfg(feature = "defmt")]
-    info!("---task4 begin---");
+    task_log!(info, "---task4 begin---");
     // 任务3中涉及任务创建
     SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 14);
     delay(SHORT_TIME);
-    #[cfg(feature = "defmt")]
-    info!("---task4 end---");
+    task_log!(info, "---task4 end---");
     delay(MID_TIME);
 }
