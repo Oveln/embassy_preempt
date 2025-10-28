@@ -34,13 +34,13 @@ members = []
 cortex-m = { version = "0.7"}
 cortex-m-rt = {version = "0.7", features = ["device"]}
 critical-section = { version = "1.1",features=["restore-state-bool"]}
-defmt = {version = "0.3", optional = true}
-defmt-rtt = {version = "0.4", optional = true}
-panic-probe = { version = "0.3", features = ["print-defmt"], optional = true}
+defmt = {version = "1.0.1", optional = true}
+defmt-rtt = {version = "1.1.0", optional = true}
 log = { version = "0.4.14", optional = true }
-spin = "0.5.2"
-
+spin = "0.10.0"
+# linked_list_allocator = "0.9.0"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
+panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true}
 cortex-m-semihosting = "0.5.0"
 stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata"]}
 
@@ -61,7 +61,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
 # cargo build/run
 [profile.dev]
 codegen-units = 1
-debug = 1
+debug = 2
 debug-assertions = true # <-
 incremental = false
 opt-level = 3         # <-
@@ -95,7 +95,18 @@ opt-level = 3  # 优化级别 # <-
 
 
 [features]
-default = ["OS_SCHED_LOCK_EN","stm32f401re","GPIOC","rt","cortex_m","use_spin","unstable-pac","time_driver_tim3","OS_STACK_LESS_THAN_64","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE","OS_TIME_DLY_HMSM_EN"]
+# when a feature is set in default, it is active
+default = ["GPIOC","rt","use_spin","unstable-pac","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+
+# log features
+logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
+log-base = ["dep:defmt", "dep:panic-probe", "dep:defmt-rtt"]
+log-os = ["log-base"]
+log-task = ["log-base"]
+log-mem = ["log-base"]
+log-timer = ["log-base"]
+log-scheduler = ["log-base"]
+
 nightly = []
 defmt = ["dep:defmt","panic-probe","defmt-rtt"]
 alarm_test = ["dep:defmt","panic-probe","defmt-rtt"]

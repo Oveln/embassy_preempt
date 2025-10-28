@@ -1,15 +1,15 @@
 use cortex_m_semihosting::debug;
-#[cfg(feature = "defmt")]
+#[cfg(log_enabled)]
 use panic_probe as _;
 
 // same panicking *behavior* as `panic-probe` but doesn't print a panic message
 // this prevents the panic message being printed *twice* when `defmt::panic` is invoked
-#[cfg(feature = "defmt")]
+#[cfg(log_enabled)]
 #[defmt::panic_handler]
 fn panic() -> ! {
     cortex_m::asm::udf()
 }
-#[cfg(not(feature = "defmt"))]
+#[cfg(not(log_enabled))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}

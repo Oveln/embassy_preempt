@@ -4,9 +4,8 @@
 
 use core::ffi::c_void;
 
-#[cfg(feature = "defmt")]
-use defmt::info;
-use embassy_preempt::app::led::{LED_Init, LED_OFF, LED_ON};
+use embassy_preempt::task_log;
+use embassy_preempt::app::led::LED_Init;
 // <- derive attribute
 use embassy_preempt::executor::{OSInit, OSStart};
 use embassy_preempt::executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
@@ -66,485 +65,82 @@ fn test_basic_schedule() -> ! {
     // 启动os
     OSStart();
 }
+macro_rules! generate_tasks_async {
+    (
+        $(
+            $fn_name:ident: ($first_delay:ident, $second_delay:ident)
+        ),+ $(,)?
+    ) => {
+        $(
+            async fn $fn_name(_args: *mut core::ffi::c_void) {
+                loop {
+                    task_log!(info, "---{} begin---", stringify!($fn_name));
 
-// ASYNC TEST
-// ss-ss
-async fn task1(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task1 begin---");
+                    embassy_preempt::os_time::timer::Timer::after_ticks($first_delay).await;
 
-        Timer::after_ticks(SHORT_SHORT_TIME).await;
+                    task_log!(info, "---{} end---", stringify!($fn_name));
 
-        #[cfg(feature = "defmt")]
-        info!("---task1 end---");
-
-        Timer::after_ticks(SHORT_SHORT_TIME).await;
-    }
+                    embassy_preempt::os_time::timer::Timer::after_ticks($second_delay).await;
+                }
+            }
+        )+
+    };
 }
+macro_rules! generate_tasks_sync {
+    (
+        $(
+            $fn_name:ident: ($first_delay:ident, $second_delay:ident)
+        ),+ $(,)?
+    ) => {
+        $(
+            fn $fn_name(_args: *mut core::ffi::c_void) {
+                loop {
+                    task_log!(info, "---{} begin---", stringify!($fn_name));
 
-// ss-s
-async fn task2(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task2 begin---");
+                    embassy_preempt::os_time::OSTimeDly($first_delay);
 
-        Timer::after_ticks(SHORT_SHORT_TIME).await;
+                    task_log!(info, "---{} end---", stringify!($fn_name));
 
-        #[cfg(feature = "defmt")]
-        info!("---task2 end---");
-
-        Timer::after_ticks(SHORT_TIME).await;
-    }
+                    embassy_preempt::os_time::OSTimeDly($second_delay);
+                }
+            }
+        )+
+    };
 }
+generate_tasks_async! {
+    task1: (SHORT_SHORT_TIME, LONG_TIME),
+    task2: (SHORT_SHORT_TIME, LONG_TIME),
+    task3: (SHORT_SHORT_TIME, LONG_TIME),
+    task4: (SHORT_SHORT_TIME, LONG_TIME),
+    task5: (SHORT_SHORT_TIME, LONG_TIME),
+    task6: (SHORT_SHORT_TIME, LONG_TIME),
+    task7: (SHORT_SHORT_TIME, LONG_TIME),
+    task8: (SHORT_SHORT_TIME, LONG_TIME),
+    task9: (SHORT_SHORT_TIME, LONG_TIME),
+    task10: (SHORT_SHORT_TIME, LONG_TIME),
 
-// ss-m
-async fn task3(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task3 begin---");
-
-        Timer::after_ticks(SHORT_SHORT_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task3 end---");
-
-        Timer::after_ticks(MID_TIME).await;
-    }
+    task11: (SHORT_TIME, LONG_TIME),
+    task12: (SHORT_TIME, LONG_TIME),
+    task13: (SHORT_TIME, LONG_TIME),
+    task14: (SHORT_TIME, LONG_TIME),
+    task15: (SHORT_TIME, LONG_TIME),
 }
-
-// ss-l
-async fn task4(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task4 begin---");
-
-        Timer::after_ticks(SHORT_SHORT_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task4 end---");
-
-        Timer::after_ticks(LONG_TIME).await;
-    }
-}
-
-// ss-ll
-async fn task5(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task5 begin---");
-
-        Timer::after_ticks(SHORT_SHORT_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task5 end---");
-
-        Timer::after_ticks(LONG_LONG_TIME).await;
-    }
-}
-
-// s-s
-async fn task6(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task6 begin---");
-
-        Timer::after_ticks(SHORT_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task6 end---");
-
-        Timer::after_ticks(SHORT_TIME).await;
-    }
-}
-
-// s-m
-async fn task7(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task7 begin---");
-
-        Timer::after_ticks(SHORT_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task7 end---");
-
-        Timer::after_ticks(MID_TIME).await;
-    }
-}
-
-// s-l
-async fn task8(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task8 begin---");
-
-        Timer::after_ticks(SHORT_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task8 end---");
-
-        Timer::after_ticks(LONG_TIME).await;
-    }
-}
-
-// s-ll
-async fn task9(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task9 begin---");
-
-        Timer::after_ticks(SHORT_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task9 end---");
-
-        Timer::after_ticks(LONG_LONG_TIME).await;
-    }
-}
-
-// m-m
-async fn task10(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task10 begin---");
-
-        Timer::after_ticks(MID_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task10 end---");
-
-        Timer::after_ticks(MID_TIME).await;
-    }
-}
-
-// m-l
-async fn task11(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task11 begin---");
-
-        Timer::after_ticks(MID_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task11 end---");
-
-        Timer::after_ticks(LONG_TIME).await;
-    }
-}
-
-// m-ll
-async fn task12(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task12 begin---");
-
-        Timer::after_ticks(MID_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task12 end---");
-
-        Timer::after_ticks(LONG_LONG_TIME).await;
-    }
-}
-
-// l-l
-async fn task13(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task13 begin---");
-        LED_ON();
-        Timer::after_ticks(LONG_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task13 end---");
-        LED_OFF();
-        Timer::after_ticks(LONG_TIME).await;
-    }
-}
-
-// l-ll
-async fn task14(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task14 begin---");
-
-        Timer::after_ticks(LONG_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task14 end---");
-
-        Timer::after_ticks(LONG_LONG_TIME).await;
-    }
-}
-
-// ll-ll
-async fn task15(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task15 begin---");
-
-        Timer::after_ticks(LONG_LONG_TIME).await;
-
-        #[cfg(feature = "defmt")]
-        info!("---task15 end---");
-
-        Timer::after_ticks(LONG_LONG_TIME).await;
-    }
-}
-
-// SYNC TEST
-// ss-ss
-fn task16(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task16 begin---");
-
-        OSTimeDly(SHORT_SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task16 end---");
-
-        OSTimeDly(SHORT_SHORT_TIME);
-    }
-}
-
-// ss-s
-fn task17(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task17 begin---");
-
-        OSTimeDly(SHORT_SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task17 end---");
-
-        OSTimeDly(SHORT_TIME);
-    }
-}
-
-// ss-m
-fn task18(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task18 begin---");
-
-        OSTimeDly(SHORT_SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task18 end---");
-
-        OSTimeDly(MID_TIME);
-    }
-}
-
-// ss-l
-fn task19(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task19 begin---");
-
-        OSTimeDly(SHORT_SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task19 end---");
-
-        OSTimeDly(LONG_TIME);
-    }
-}
-
-// ss-ll
-fn task20(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task20 begin---");
-
-        OSTimeDly(SHORT_SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task20 end---");
-
-        OSTimeDly(LONG_LONG_TIME);
-    }
-}
-
-// s-s
-fn task21(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task21 begin---");
-
-        OSTimeDly(SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task21 end---");
-
-        OSTimeDly(SHORT_TIME);
-    }
-}
-
-// s-m
-fn task22(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task22 begin---");
-
-        OSTimeDly(SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task22 end---");
-
-        OSTimeDly(MID_TIME);
-    }
-}
-
-// s-l
-fn task23(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task23 begin---");
-
-        OSTimeDly(SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task23 end---");
-
-        OSTimeDly(LONG_TIME);
-    }
-}
-
-// s-ll
-fn task24(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task24 begin---");
-
-        OSTimeDly(SHORT_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task24 end---");
-
-        OSTimeDly(LONG_LONG_TIME);
-    }
-}
-
-// m-m
-fn task25(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task25 begin---");
-
-        OSTimeDly(MID_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task25 end---");
-
-        OSTimeDly(MID_TIME);
-    }
-}
-
-// m-l
-fn task26(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task26 begin---");
-
-        OSTimeDly(MID_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task26 end---");
-
-        OSTimeDly(LONG_TIME);
-    }
-}
-
-// m-ll
-fn task27(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task27 begin---");
-
-        OSTimeDly(MID_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task27 end---");
-
-        OSTimeDly(LONG_LONG_TIME);
-    }
-}
-
-// l-l
-fn task28(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task28 begin---");
-
-        OSTimeDly(LONG_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task28 end---");
-
-        OSTimeDly(LONG_TIME);
-    }
-}
-
-// l-ll
-fn task29(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task29 begin---");
-
-        OSTimeDly(LONG_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task29 end---");
-
-        OSTimeDly(LONG_LONG_TIME);
-    }
-}
-
-// ll-ll
-fn task30(_args: *mut c_void) {
-    loop {
-        // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task30 begin---");
-
-        OSTimeDly(LONG_LONG_TIME);
-
-        #[cfg(feature = "defmt")]
-        info!("---task30 end---");
-
-        OSTimeDly(LONG_LONG_TIME);
-    }
+generate_tasks_sync! {
+    task16: (SHORT_TIME, LONG_TIME),
+    task17: (SHORT_TIME, LONG_TIME),
+    task18: (SHORT_TIME, LONG_TIME),
+    task19: (SHORT_TIME, LONG_TIME),
+    task20: (SHORT_TIME, LONG_TIME),
+
+    task21: (MID_TIME, LONG_TIME),
+    task22: (MID_TIME, LONG_TIME),
+    task23: (MID_TIME, LONG_TIME),
+    task24: (MID_TIME, LONG_TIME),
+    task25: (MID_TIME, LONG_TIME),
+
+    task26: (LONG_LONG_TIME, LONG_TIME),
+    task27: (LONG_LONG_TIME, LONG_TIME),
+    task28: (LONG_LONG_TIME, LONG_TIME),
+    task29: (LONG_LONG_TIME, LONG_TIME),
+    task30: (LONG_LONG_TIME, LONG_TIME),
 }

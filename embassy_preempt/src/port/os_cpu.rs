@@ -4,7 +4,7 @@ use core::arch::asm;
 use core::mem;
 use core::ptr::NonNull;
 
-use cortex_m::register::control::{self, Control, Spsel};
+use cortex_m::register::control::{self, Spsel};
 use cortex_m::register::{msp, psp};
 use cortex_m_rt::exception;
 #[cfg(feature = "alarm_test")]
@@ -28,8 +28,7 @@ const NVIC_PENDSVSET: u32 = 0x10000000;
 #[inline]
 /// the function to start the first task
 pub extern "Rust" fn restore_thread_task() {
-    #[cfg(feature = "defmt")]
-    trace!("restore_thread_task");
+    os_log!(trace, "restore_thread_task");
     unsafe {
         asm!(
             "STR     R1, [R0]",
@@ -56,8 +55,7 @@ fn PendSV() {
             options(nostack, preserves_flags)
         );
     }
-    #[cfg(feature = "defmt")]
-    info!("PendSV");
+    os_log!(info, "PendSV");
     // then switch the task
     let global_executor = GlobalSyncExecutor.as_ref().unwrap();
     let prio_cur = global_executor.OSPrioCur.get_unmut();
@@ -142,10 +140,13 @@ fn PendSV() {
 #[no_mangle]
 /// the function when there is no task to run
 pub extern "Rust" fn run_idle() {
-    #[cfg(feature = "defmt")]
-    trace!("run_idle");
+    os_log!(trace, "run_idle");
     // undate the counter of the system
     // OSIdleCtr.fetch_add(1, Ordering::Relaxed);
+
+    // After WFE, probe-rs reports that the RTT read pointer has been modified.
+    // Therefore, when logging is enabled, avoid WFE in idle to prevent interference.
+    #[cfg(not(log_enabled))]
     unsafe {
         asm!("wfe");
     }
@@ -181,11 +182,9 @@ const CONTEXT_STACK_SIZE: usize = 17;
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
 pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> {
-    #[cfg(feature = "defmt")]
-    trace!("OSTaskStkInit");
+    scheduler_log!(trace, "OSTaskStkInit");
     let executor_function_ptr: fn() = || unsafe {
-        #[cfg(feature = "defmt")]
-        info!("entering the executor function");
+        scheduler_log!(info, "entering the executor function");
         stack_pin_high();
         let global_executor = GlobalSyncExecutor.as_ref().unwrap();
         let task = global_executor.OSTCBHighRdy.get_mut().clone();
@@ -194,8 +193,7 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
         global_executor.poll();
     };
     let executor_function_ptr = executor_function_ptr as *const () as usize;
-    #[cfg(feature = "defmt")]
-    info!("the executor function ptr is 0x{:x}", executor_function_ptr);
+    scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function_ptr);
     let ptos = stk_ref.as_ptr() as *mut usize;
     // do align with 8 and move the stack pointer down an align size
     let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
@@ -229,8 +227,7 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
 #[inline]
 /// the function to set the program stack
 pub extern "Rust" fn set_program_sp(sp: *mut u8) {
-    #[cfg(feature = "defmt")]
-    trace!("set_program_sp");
+    os_log!(trace, "set_program_sp");
     unsafe {
         psp::write(sp as u32);
     }
@@ -246,9 +243,9 @@ pub extern "Rust" fn set_program_sp(sp: *mut u8) {
 #[inline]
 /// the function to set the interrupt stack and change the control register to use the psp
 pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8) {
-    #[cfg(feature = "defmt")]
-    trace!("set_int_change_2_psp");
+    scheduler_log!(trace, "set_int_change_2_psp");
     unsafe {
+        #[allow(deprecated)]
         msp::write(int_ptr as u32);
     }
     let mut control = control::read();

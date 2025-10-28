@@ -20,8 +20,6 @@ use core::ptr::null_mut;
 
 use crate::cfg::OS_ARENA_SIZE;
 use critical_section::{CriticalSection, Mutex};
-#[cfg(feature = "defmt")]
-use defmt::trace;
 
 /*
 ********************************************************************************************************************************************
@@ -57,8 +55,7 @@ impl<const N: usize> Arena<N> {
     }
     /// alloc the stack memory for the task(TCB) list.
     pub fn alloc<T>(&'static self, cs: CriticalSection) -> &'static mut MaybeUninit<T> {
-        #[cfg(feature = "defmt")]
-        trace!("alloc of Arena");
+        mem_log!(trace, "alloc of Arena");
         let layout = Layout::new::<T>();
 
         let start = self.buf.get().cast::<u8>();

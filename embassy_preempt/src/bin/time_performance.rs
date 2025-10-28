@@ -14,7 +14,7 @@ use embassy_preempt::os_time::timer::Timer;
 use embassy_preempt::pac::{gpio, GPIOA, RCC};
 use embassy_preempt::port::bottom_driver::Bottom::bottom;
 
-const BLOCK_TIME: usize = 1;
+const BLOCK_TIME: u64 = 1;
 
 // use embassy_preempt::{self as _};
 
@@ -56,75 +56,35 @@ async fn test_task(_args: *mut c_void) {
     }
 }
 
-// 用于模拟多任务执行环境
-async fn task1(_args: *mut c_void) {
-    loop {
-        // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
-        led_on();
-        Timer::after_millis(500).await;
-        led_off();
-        #[cfg(feature = "alarm_test")]
-        trace!("the task1");
-        Timer::after_millis(500).await;
-    }
+macro_rules! generate_tasks_async {
+    (
+        $(
+            $fn_name:ident: ($first_delay:ident, $second_delay:ident)
+        ),+ $(,)?
+    ) => {
+        $(
+            async fn $fn_name(_args: *mut core::ffi::c_void) {
+                loop {
+                    use embassy_preempt::task_log;
+                    task_log!(info, "---{} begin---", stringify!($fn_name));
+
+                    embassy_preempt::os_time::timer::Timer::after_ticks($first_delay).await;
+
+                    task_log!(info, "---{} end---", stringify!($fn_name));
+
+                    embassy_preempt::os_time::timer::Timer::after_ticks($second_delay).await;
+                }
+            }
+        )+
+    };
 }
 
-// 用于模拟多任务执行环境
-async fn task2(_args: *mut c_void) {
-    loop {
-        critical_section::with(|_| task_pin_low(2));
-        delay(BLOCK_TIME);
-        // Timer::after_millis(10).await;
-        #[cfg(feature = "alarm_test")]
-        trace!("the task2");
-        delay(BLOCK_TIME);
-        critical_section::with(|_| task_pin_high(2));
-        Timer::after_millis(500).await;
-    }
-}
-
-// 用于模拟多任务执行环境
-async fn task3(_args: *mut c_void) {
-    loop {
-        task_pin_low(3);
-        delay(BLOCK_TIME);
-        // Timer::after_millis(20).await;
-        // #[cfg(feature = "alarm_test")]
-        // trace!("the task3");
-        delay(BLOCK_TIME);
-        task_pin_high(3);
-        #[cfg(feature = "alarm_test")]
-        trace!("the task3");
-        Timer::after_millis(500).await;
-    }
-}
-
-// 用于模拟多任务执行环境
-async fn task4(_args: *mut c_void) {
-    loop {
-        task_pin_low(4);
-        delay(BLOCK_TIME);
-        // Timer::after_millis(80).await;
-        #[cfg(feature = "alarm_test")]
-        trace!("the task4");
-        delay(BLOCK_TIME);
-        task_pin_high(4);
-        Timer::after_millis(500).await;
-    }
-}
-
-// 用于模拟多任务执行环境
-async fn task5(_args: *mut c_void) {
-    loop {
-        task_pin_low(5);
-        delay(BLOCK_TIME);
-        // Timer::after_millis(300).await;
-        #[cfg(feature = "alarm_test")]
-        trace!("the task5");
-        delay(BLOCK_TIME);
-        task_pin_high(5);
-        Timer::after_millis(500).await;
-    }
+generate_tasks_async! {
+    task1: (BLOCK_TIME, BLOCK_TIME),
+    task2: (BLOCK_TIME, BLOCK_TIME),
+    task3: (BLOCK_TIME, BLOCK_TIME),
+    task4: (BLOCK_TIME, BLOCK_TIME),
+    task5: (BLOCK_TIME, BLOCK_TIME),
 }
 
 /// init the LED

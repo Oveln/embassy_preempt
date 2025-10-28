@@ -22,6 +22,9 @@ use crate::executor::waker;
 use crate::port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE};
 use crate::app::led::{interrupt_pin_high, interrupt_pin_low};
 
+// 导入日志宏
+use crate::timer_log;
+
 #[cfg(any(
     feature = "time_driver_tim9",
     feature = "time_driver_tim12",
@@ -277,8 +280,7 @@ impl RtcDriver {
 
             for n in 0..ALARM_COUNT {
                 if sr.ccif(n + 1) && dier.ccie(n + 1) {
-                    #[cfg(feature = "defmt")]
-                    trace!("the alarm is triggered!!!");
+                    timer_log!(trace, "the alarm is triggered!!!");
                     self.trigger_alarm(n, cs);
                 }
             }
@@ -316,8 +318,7 @@ impl RtcDriver {
     }
 
     fn trigger_alarm(&self, n: usize, cs: CriticalSection) {
-        #[cfg(feature = "defmt")]
-        trace!("trigger_alarm");
+        timer_log!(trace, "trigger_alarm");
         let alarm = &self.alarms.borrow(cs)[n];
         alarm.timestamp.set(u64::MAX);
 
@@ -363,11 +364,8 @@ impl Driver for RtcDriver {
     }
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> bool {
-        #[cfg(feature = "defmt")]
-        {
-            trace!("set_alarm");
-            trace!("set the alarm at {}", timestamp);
-        }
+        timer_log!(trace, "set_alarm");
+        timer_log!(trace, "set the alarm at {}", timestamp);
         let n = alarm.id() as usize;
         // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
         if timestamp == INT64U::MAX {
@@ -556,8 +554,7 @@ fn calc_now(period: INT32U, counter: INT16U) -> INT64U {
 #[no_mangle]
 /// Schedule the given waker to be woken at `at`.
 pub fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker) {
-    #[cfg(feature = "defmt")]
-    trace!("_embassy_time_schedule_wake");
+    timer_log!(trace, "_embassy_time_schedule_wake");
     let task = waker::task_from_waker(waker);
     let task = task.header();
     unsafe {

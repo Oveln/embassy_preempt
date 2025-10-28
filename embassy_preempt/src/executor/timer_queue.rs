@@ -22,8 +22,7 @@ impl TimerQueue {
     /// Insert a task into the timer queue.(sorted by `expires_at`,the header is the nearest task)
     /// return the next expiration time.
     pub(crate) unsafe fn update(&self, p: OS_TCB_REF) -> u64 {
-        // #[cfg(feature = "defmt")]
-        // trace!("in timer update");
+        timer_log!(trace, "in timer update");
         let p_expires_at = &p.expires_at;
         // by noah：this indicate that the time queue is not updated or the time queue is null
         if *p_expires_at.get_unmut() == u64::MAX {
@@ -68,8 +67,7 @@ impl TimerQueue {
     
     /// wake up all tasks whose delay time has arrived
     pub(crate) unsafe fn dequeue_expired(&self, now: u64, on_task: impl Fn(OS_TCB_REF)) {
-        #[cfg(feature = "defmt")]
-        trace!("dequeue expired");
+        timer_log!(trace, "dequeue expired");
         let mut cur = self.head.get();
         while let Some(cur_ref) = cur {
             let cur_expires_at = &cur_ref.expires_at;

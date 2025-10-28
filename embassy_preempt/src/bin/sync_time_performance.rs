@@ -12,8 +12,7 @@ use embassy_preempt::os_time::OSTimeDly;
 use embassy_preempt::pac::{gpio, GPIOA, RCC};
 use embassy_preempt::port::bottom_driver::OSWaitBot;
 
-#[cfg(feature = "alarm_test")]
-use defmt::info;
+use embassy_preempt::task_log;
 
 const BLOCK_TIME: usize = 2;
 const ONE_MS:u64 = 100;
@@ -40,8 +39,7 @@ fn sync_time_performance() -> ! {
 // 主要测试任务
 fn test_task(_args: *mut c_void) {
     loop {
-        #[cfg(feature = "alarm_test")]
-        info!("test task");
+        task_log!(info, "test task");
         // set the thread pin low, indicating that the thread time test is finished
         thread_pin_low();
         OSWaitBot();
@@ -68,8 +66,7 @@ fn test_task(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 fn task1(_args: *mut c_void) {
     loop {
-        #[cfg(feature = "alarm_test")]
-        info!("the task1");
+        task_log!(info, "the task1");
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led_on();
         // Timer::after_millis(5 * 100).await;
@@ -83,8 +80,7 @@ fn task1(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 fn task2(_args: *mut c_void) {
     loop {
-        #[cfg(feature = "alarm_test")]
-        info!("the task2");
+        task_log!(info, "the task2");
         delay(BLOCK_TIME);
         // Timer::after_millis(10).await;
         OSTimeDly(10 * ONE_MS);
@@ -94,8 +90,7 @@ fn task2(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 fn task3(_args: *mut c_void) {
     loop {
-        #[cfg(feature = "alarm_test")]
-        info!("the task3");
+        task_log!(info, "the task3");
         delay(BLOCK_TIME);
         // Timer::after_millis(20).await;
         OSTimeDly(20 * ONE_MS);        
@@ -105,8 +100,7 @@ fn task3(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 fn task4(_args: *mut c_void) {
     loop {
-        #[cfg(feature = "alarm_test")]
-        info!("the task4");
+        task_log!(info, "the task4");
         delay(BLOCK_TIME);
         // Timer::after_millis(30).await;
         OSTimeDly(30 * ONE_MS);
@@ -116,8 +110,7 @@ fn task4(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 fn task5(_args: *mut c_void) {
     loop {
-        #[cfg(feature = "alarm_test")]
-        info!("the task5");
+        task_log!(info, "the task5");
         delay(BLOCK_TIME);
         // Timer::after_millis(40).await;
         OSTimeDly(40 * ONE_MS);

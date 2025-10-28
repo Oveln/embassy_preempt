@@ -107,8 +107,7 @@ impl SyncExecutor {
     
     /// set the current to be highrdy
     pub(crate) unsafe fn set_cur_highrdy(&self) {
-        #[cfg(feature = "defmt")]
-        trace!("set_cur_highrdy");
+        scheduler_log!(trace, "set_cur_highrdy");
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
     }
@@ -129,8 +128,7 @@ impl SyncExecutor {
     }
 
     pub(crate) unsafe fn set_highrdy(&self) {
-        #[cfg(feature = "defmt")]
-        trace!("set_highrdy");
+        task_log!(trace, "set_highrdy");
         let tmp = self.OSRdyGrp.get_unmut();
         // if there is no task in the ready queue, return None also set the current running task to the lowest priority
         if *tmp == 0 {
@@ -152,8 +150,7 @@ impl SyncExecutor {
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio as usize]);
     }
     pub(crate) fn find_highrdy_prio(&self) -> OS_PRIO {
-        #[cfg(feature = "defmt")]
-        trace!("find_highrdy_prio");
+        task_log!(trace, "find_highrdy_prio");
         let tmp = self.OSRdyGrp.get_unmut();
         if *tmp == 0 {
             return OS_TASK_IDLE_PRIO;
@@ -199,17 +196,16 @@ impl SyncExecutor {
     }
 
     // by noah:TEST print the ready queue
-    #[cfg(feature = "defmt")]
     pub fn print_ready_queue(&self) {
         let tmp: [u8; OS_RDY_TBL_SIZE];
         unsafe {
             tmp = self.OSRdyTbl.get();
         }
         {
-            info!("the ready queue is:");
+            task_log!(info, "the ready queue is:");
             for i in 0..OS_LOWEST_PRIO + 1 {
                 if tmp[(i / 8) as usize] & (1 << (i % 8)) != 0 {
-                    info!("the {}th task is ready", i);
+                    task_log!(info, "the {}th task is ready", i);
                 }
             }
         }
@@ -516,8 +512,7 @@ pub fn wake_task(task: OS_TCB_REF) {
 
 /// Wake a task by `TaskRef`.
 pub fn wake_task_no_pend(task: OS_TCB_REF) {
-    #[cfg(feature = "defmt")]
-    trace!("wake_task_no_pend");
+    task_log!(trace, "wake_task_no_pend");
     // We have just marked the task as scheduled, so enqueue it.
     unsafe {
         let executor = GlobalSyncExecutor.as_ref().unwrap();

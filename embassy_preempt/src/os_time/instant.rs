@@ -5,7 +5,7 @@ use super::duration::Duration;
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 #[allow(unused)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[cfg_attr(feature = "log-timer", derive(defmt::Format))]
 /// An Instant in time, based on the MCU's clock ticks since startup.
 pub struct Instant {
     ticks: u64,

@@ -4,8 +4,7 @@
 
 use core::ffi::c_void;
 
-#[cfg(feature = "defmt")]
-use defmt::info;
+use embassy_preempt::task_log;
 // <- derive attribute
 use embassy_preempt::executor::{OSInit, OSStart};
 use embassy_preempt::executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
@@ -41,28 +40,22 @@ fn test_basic_schedule() {
 async fn task1(_args: *mut c_void) {
     loop{
         // 任务1
-        #[cfg(feature = "defmt")]
-        info!("---task1 begin---");
+        task_log!(info, "---task1 begin---");
         Timer::after_ticks(SHORT_TIME).await;
-        #[cfg(feature = "defmt")]
-        info!("---task1 mid---");
+        task_log!(info, "---task1 mid---");
         Timer::after_ticks(MID_TIME).await;
-        #[cfg(feature = "defmt")]
-        info!("---task1 end---");
+        task_log!(info, "---task1 end---");
         Timer::after_ticks(LONG_TIME).await;
     }
 }
 fn task2(_args: *mut c_void) {
     loop{
         // 任务2
-        #[cfg(feature = "defmt")]
-        info!("---task2 begin---");
+        task_log!(info, "---task2 begin---");
         OSTimeDly(SHORT_TIME);
-        #[cfg(feature = "defmt")]
-        info!("---task2 mid---");
+        task_log!(info, "---task2 mid---");
         OSTimeDly(MID_TIME);
-        #[cfg(feature = "defmt")]
-        info!("---task2 end---");
+        task_log!(info, "---task2 end---");
         OSTimeDly(LONG_TIME);
     }
 }
@@ -70,28 +63,22 @@ async fn task3(_args: *mut c_void) {
     // 任务3
     loop {
         //
-        #[cfg(feature = "defmt")]
-        info!("---task3 begin---");
+        task_log!(info, "---task3 begin---");
         Timer::after_ticks(LONG_TIME).await;
-        #[cfg(feature = "defmt")]
-        info!("---task3 mid---");
+        task_log!(info, "---task3 mid---");
         Timer::after_ticks(MID_TIME).await;
-        #[cfg(feature = "defmt")]
-        info!("---task3 end---");
+        task_log!(info, "---task3 end---");
         Timer::after_ticks(SHORT_TIME).await;
     }
 }
 fn task4(_args: *mut c_void) {
     loop{
         // 任务4
-        #[cfg(feature = "defmt")]
-        info!("---task4 begin---");
+        task_log!(info, "---task4 begin---");
         OSTimeDly(LONG_TIME);
-        #[cfg(feature = "defmt")]
-        info!("---task4 mid---");
+        task_log!(info, "---task4 mid---");
         OSTimeDly(MID_TIME);
-        #[cfg(feature = "defmt")]
-        info!("---task4 end---");
+        task_log!(info, "---task4 end---");
         OSTimeDly(SHORT_TIME);
     }
 }
