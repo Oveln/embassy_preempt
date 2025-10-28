@@ -1,126 +1,147 @@
-OBJDUMP := rust-objdump --arch-name=arm
-OBJCOPY := rust-objcopy --binary-architecture=arm
-TEST_BINARY := target/thumbv7em-none-eabi/debug/integration.bin
-TEST_BINARY_LIB := target/thumbv7em-none-eabi/debug/ucosii_lib.bin 
+# ==============================================================================
+# Embassy Preempt - Makefile
+# ==============================================================================
+# This Makefile provides targets for building, flashing, and debugging the
+# Embassy Preempt RTOS project.
+# ==============================================================================
+
+# ******************************************************************************
+# VARIABLES
+# ******************************************************************************
+
+# Arch
+ARCH = arm
+PLATFORM := thumbv7em-none-eabi
+DEVICE := STM32F401RE
 ENTRY_PA := 0x08000000
-PORT := 8765
-TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
-# hardware_test
-# prio_test
-# preempt_test
-# scheduling_test
-# ffi_test
-# comprehensive_test
-# bottom_test
-# time_performance
-# stack_cost_test
-TARGET := sync_time_performance
-liam_TARGET := time_performance
-TEST = time_performance
-TEST_FILE = target/$(PLATFORM)/$(MODE)/$(TEST)
-PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
-DEVICE = STM32F401RE
-MODE ?= release
-FILE_ELF := target/$(PLATFORM)/$(MODE)/$(TARGET)
-FILE_BIN := target/$(PLATFORM)/$(MODE)/$(TARGET).bin
 
-liam_FILE_ELF := target/$(PLATFORM)/$(MODE)/$(liam_TARGET)
-liam_FILE_BIN := target/$(PLATFORM)/$(MODE)/$(liam_TARGET).bin
+# Tool definitions
+OBJDUMP := rust-objdump --arch-name=$(ARCH)
+OBJCOPY := rust-objcopy --binary-architecture=$(ARCH)
 
-# 测试文件大小，使用方式为SZ + ELF文件
-SZ = arm-none-eabi-size
-
+# Build mode (default is debug)
+MODE ?= debug
 ifeq ($(MODE), release)
-	MODE_ARG := --release
+    MODE_ARG := --release
 endif
 
-# ifneq ($(filter bin-test debug-test,$(MAKECMDGOALS)),)
-TEST_ELF_NEW_LIB := target/thumbv7em-none-eabi/debug/ucosii_lib
-ifneq ($(filter bin-test debug-test bin-lib debug-lib,$(MAKECMDGOALS)),)
-	TEST_ELF := $(shell cargo test --package ucosii --test integration --no-run 2>&1 | grep -oP 'Executable .* \(\K[^)]+') 
-endif
-ifneq ($(filter bin-lib debug-lib,$(MAKECMDGOALS)),)
-	TEST_ELF_LIB := $(shell cargo test --lib --no-run  2>&1 | grep -oP 'Executable .* \(\K[^)]+') 
-endif
-RTT_ADDR := $(shell rust-nm -S $(TEST_ELF) 2>/dev/null | grep RTT | awk '{print $$1}')
-RTT_SIZE := $(shell rust-nm -S $(TEST_ELF) 2>/dev/null | grep RTT | awk '{print $$2}')
+# RTT configurations
+RTT_PORT := 8765
 
-liam_RTT_ADDR := $(shell rust-nm -S $(liam_FILE_ELF) 2>/dev/null | grep RTT | awk '{print $$1}')
-liam_RTT_SIZE := $(shell rust-nm -S $(liam_FILE_ELF) 2>/dev/null | grep RTT | awk '{print $$2}')
+# Default target configurations
+TARGET ?= sync_time_performance
 
-RTT_ADDR_LIB := $(shell rust-nm -S $(TEST_ELF_LIB) 2>/dev/null | grep RTT | awk '{print $$1}')
-RTT_SIZE_LIB := $(shell rust-nm -S $(TEST_ELF_LIB) 2>/dev/null | grep RTT | awk '{print $$2}')
+# File paths
+TARGET_ELF := target/$(PLATFORM)/$(MODE)/$(TARGET)
+TARGET_BIN := target/$(PLATFORM)/$(MODE)/$(TARGET).bin
 
-bin-test:
-# 将编译的elf文件转为二进制文件
-	$(OBJCOPY) -O binary $(TEST_ELF) $(TEST_BINARY)
-	$(OBJCOPY) $(TEST_ELF) $(TEST_ELF_NEW)
-debug-test: bin-test
-	tmux new-session -d \
-	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(TEST_BINARY) $(ENTRY_PA)' " && \
-	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(TEST_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit'  -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(RTT_ADDR) 0x$(RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
-	tmux -2 attach-session -d
-defmt-test:
-	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW) "
-test-run:
-	cargo test --package ucosii --test integration
+# ******************************************************************************
+# DEFAULT TARGET
+# ******************************************************************************
+.PHONY: all
+all: build
 
-build:$(OBJ_FILES)
+# ******************************************************************************
+# BUILD TARGETS
+# ******************************************************************************
+# Targets for building the project in different configurations
+# ******************************************************************************
+
+.PHONY: build
+build: $(OBJ_FILES)
+	@echo "Building project in $(MODE) mode..."
 	cargo build $(MODE_ARG) --features "stm32f401re","alarm_test"
-# --features "defmt"
 
-liam_build_release:
-	cargo build --release --features "stm32f401re"
-liam_build_debug:
-	cargo build --features "defmt","stm32f401re"
+# ******************************************************************************
+# TARGET BUILD TARGETS
+# ******************************************************************************
+# Targets for building specific binaries
+# ******************************************************************************
+
+.PHONY: $(TARGET)
+$(TARGET): build $(TARGET_ELF)
+	@echo "Creating binary for $(TARGET)..."
+	$(OBJCOPY) -O binary $(TARGET_ELF) $(TARGET_BIN)
+
+.PHONY: bin
 bin: $(TARGET)
 	@echo "Build done"
-liam_bin_debug: liam_TARGET_DEBUG
-	@echo "liam debug bin build done"
-liam_bin_release: liam_TARGET_RELEASE
-	@echo "liam release bin build done"
 
-$(TARGET): build $(FILE_ELF)
-	$(OBJCOPY) -O binary $(FILE_ELF) $(FILE_BIN)
-liam_TARGET_DEBUG: liam_build_debug $(liam_FILE_ELF)
-	$(OBJCOPY) -O binary $(liam_FILE_ELF) $(liam_FILE_BIN)
-liam_TARGET_RELEASE: liam_build_release $(liam_FILE_ELF)
-	$(OBJCOPY) -O binary $(liam_FILE_ELF) $(liam_FILE_BIN)
-liam_debug: liam_build_debug liam_bin_debug
-	tmux new-session -d \
-	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c 'adapter speed 4000' -c init -c "halt" -c 'flash write_image erase $(liam_FILE_BIN) 0x8000000' " && \
-	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(liam_FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-	-ex 'set remotetimeout 5' -ex 'source ./bp.gdb' -ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(liam_RTT_ADDR) 0x$(liam_RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
-	tmux -2 attach-session -d
-liam_debug_release: liam_build_release liam_bin_release
-	tmux new-session -d \
-	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c 'adapter speed 4000' -c init -c "halt" -c 'flash write_image erase $(liam_FILE_BIN) 0x8000000' " && \
-	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(liam_FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-	-ex 'set remotetimeout 5' -ex 'source ./bp.gdb' -ex 'source ./.gdbinit' " && \
-	tmux -2 attach-session -d
-liam_download_debug: liam_build_debug liam_bin_debug
-	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(liam_FILE_BIN) 0x8000000" -c "reset" -c "shutdown"
-liam_download_release: liam_build_release liam_bin_release
-	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(liam_FILE_BIN) 0x8000000" -c "reset" -c "shutdown"
+# ******************************************************************************
+# FLASHING TARGETS (OpenOCD)
+# ******************************************************************************
+# Targets for flashing the binary to the microcontroller using OpenOCD
+# ******************************************************************************
 
+.PHONY: download flash
 download: build bin
-	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(FILE_BIN) 0x8000000" -c "reset" -c "shutdown"
-Jdownload: build bin
-# 生成脚本
-	@echo "h\nerase 0x08000000 0x0807FFFF\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
-	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
-Jdebug: Jdownload JGDBServer
-	tmux new-session -d \
-	"nc localhost 19021 | defmt-print -e $(FILE_ELF) " && \
-	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
-	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
-	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
-	tmux -2 attach-session -d
-JGDBServer:kill
-	@echo "启动 JLinkGDBServer...";
-	@JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > /dev/null & 
-	@sleep 1;
+	@echo "Flashing binary to device using OpenOCD..."
+	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg \
+	-c "adapter speed 1800" \
+	-c "init" \
+	-c "reset_config srst_only" \
+	-c "reset halt" \
+	-c "flash write_image erase $(TARGET_BIN) $(ENTRY_PA)" \
+	-c "verify_image $(TARGET_BIN) $(ENTRY_PA)" \
+	-c "reset run; shutdown"
+
+flash: download
+
+# ******************************************************************************
+# DEBUGGING TARGETS (OpenOCD)
+# ******************************************************************************
+# Targets for debugging with OpenOCD and GDB
+# ******************************************************************************
+
+# Extract RTT address and size for the test ELF
+RTT_ADDR := $(shell rust-nm -S $(TEST_ELF) 2>/dev/null | grep _SEGGER_RTT | awk '{print $$1}')
+RTT_SIZE := $(shell rust-nm -S $(TEST_ELF) 2>/dev/null | grep _SEGGER_RTT | awk '{print $$2}')
+
+.PHONY: debug-test
+debug-test: bin
+	@echo "Starting debugging session with OpenOCD and GDB..."
+	# Flash the binary with verification using safer settings
+	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg \
+		-c "adapter speed 1000" \
+		-c "init" \
+		-c "reset_config srst_only" \
+		-c "reset halt" \
+		-c "flash write_image erase $(TARGET_BIN) $(ENTRY_PA)" \
+		-c "verify_image $(TARGET_BIN) $(ENTRY_PA)" \
+		-c "reset halt" \
+		-c "shutdown" && \
+	# Start OpenOCD server with RTT support
+	( \
+		openocd -f interface/stlink.cfg -f target/stm32f4x.cfg \
+		-c "adapter speed 1000" \
+		-c "init" \
+		-c "reset_config srst_only" \
+		-c "reset halt" \
+		-c "monitor reset halt" \
+		-c "monitor rtt server start $(RTT_PORT) 0" \
+		-c "monitor rtt setup 0x$(shell rust-nm -S $(TARGET_ELF) 2>/dev/null | grep _SEGGER_RTT | awk '{print $1}') 0x$(shell rust-nm -S $(TARGET_ELF) 2>/dev/null | grep _SEGGER_RTT | awk '{print $2}') \"SEGGER RTT\"" \
+		-c "monitor rtt start" & \
+		sleep 2 && \
+		# Start GDB session in background
+		tmux new-session -d -s embassy_debug \
+			"RUST_GDB=/usr/bin/gdb-multiarch rust-gdb \
+			-ex 'file $(TARGET_ELF)' \
+			-ex 'set arch arm' \
+			-ex 'target extended-remote localhost:3333' \
+			-ex 'source ./bp.gdb' \
+			-ex 'source ./.gdbinit' \
+			-ex 'monitor reset halt' \
+			-ex 'load' \
+			-ex 'monitor reset halt' \
+			-ex 'continue'"; \
+		# Start RTT output viewer in another pane
+		tmux split-window -h -t embassy_debug \
+			"nc localhost $(RTT_PORT) | defmt-print -e $(TARGET_ELF)"; \
+		# Attach to the session
+		tmux attach-session -t embassy_debug \
+	)
+
+.PHONY: kill
 kill:
 	@PID=$$(lsof -t -i:2331); \
     if [ -n "$$PID" ]; then \
@@ -129,35 +150,163 @@ kill:
     else \
         echo "No process found on port 2331"; \
     fi
-Jrun:Jdownload JGDBServer
-	nc localhost 19021 | defmt-print -e $(FILE_ELF)
-# lib:
-# 	cargo build --lib $(MODE_ARG)
-clean:kill
+
+# ******************************************************************************
+# HELPER TARGETS
+# ******************************************************************************
+
+.PHONY: clean
+clean: kill
+	@echo "Cleaning project..."
 	cargo clean
+
+.PHONY: run
 run:
+	@echo "Running project in $(MODE) mode..."
 	clear
 	cargo run $(MODE_ARG)
-defmt:
-	zsh -c "nc localhost $(PORT) | defmt-print -e $(FILE_ELF) "
+
+# ******************************************************************************
+# BINARY CONVERSION TARGETS
+# ******************************************************************************
+# Targets to convert ELF files to binary format
+# ******************************************************************************
+
+.PHONY: bin-test
+bin-test:
+	@echo "Converting test ELF to binary..."
+	$(OBJCOPY) -O binary $(TEST_ELF) $(TEST_BINARY)
+	$(OBJCOPY) $(TEST_ELF) $(TEST_ELF_NEW)
+
+.PHONY: bin-lib
 bin-lib:
+	@echo "Converting lib ELF to binary..."
 	$(OBJCOPY) -O binary $(TEST_ELF_LIB) $(TEST_BINARY_LIB)
 	$(OBJCOPY) $(TEST_ELF_LIB) $(TEST_ELF_NEW_LIB)
+
+.PHONY: debug-lib
 debug-lib: bin-lib
-	tmux new-session -d \
-	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(TEST_BINARY_LIB) $(ENTRY_PA)' " && \
-	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(TEST_ELF_LIB)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit'  -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(RTT_ADDR_LIB) 0x$(RTT_SIZE_LIB) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
-	tmux -2 attach-session -d
+	@echo "Starting debugging session for library with OpenOCD and GDB..."
+	# Flash the library binary with verification using safer settings
+	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg \
+		-c "adapter speed 1000" \
+		-c "init" \
+		-c "reset_config srst_only" \
+		-c "reset halt" \
+		-c "flash write_image erase $(TEST_BINARY_LIB) $(ENTRY_PA)" \
+		-c "verify_image $(TEST_BINARY_LIB) $(ENTRY_PA)" \
+		-c "reset halt" \
+		-c "shutdown" && \
+	# Start OpenOCD server with RTT support
+	( \
+		openocd -f interface/stlink.cfg -f target/stm32f4x.cfg \
+		-c "adapter speed 1000" \
+		-c "init" \
+		-c "reset_config srst_only" \
+		-c "reset halt" \
+		-c "monitor reset halt" \
+		-c "monitor rtt server start $(RTT_PORT) 0" \
+		-c "monitor rtt setup 0x$(shell rust-nm -S $(TEST_ELF_LIB) 2>/dev/null | grep _SEGGER_RTT | awk '{print $1}') 0x$(shell rust-nm -S $(TEST_ELF_LIB) 2>/dev/null | grep _SEGGER_RTT | awk '{print $2}') \"SEGGER RTT\"" \
+		-c "monitor rtt start" & \
+		sleep 2 && \
+		# Start GDB session in background
+		tmux new-session -d -s embassy_lib_debug \
+			"RUST_GDB=/usr/bin/gdb-multiarch rust-gdb \
+			-ex 'file $(TEST_ELF_LIB)' \
+			-ex 'set arch arm' \
+			-ex 'target extended-remote localhost:3333' \
+			-ex 'source ./bp.gdb' \
+			-ex 'source ./.gdbinit' \
+			-ex 'monitor reset halt' \
+			-ex 'load' \
+			-ex 'monitor reset halt' \
+			-ex 'continue'"; \
+		# Start RTT output viewer in another pane
+		tmux split-window -h -t embassy_lib_debug \
+			"nc localhost $(RTT_PORT) | defmt-print -e $(TEST_ELF_LIB)"; \
+		# Attach to the session
+		tmux attach-session -t embassy_lib_debug \
+	)
+
+# ******************************************************************************
+# LOGGING/DEBUGGING OUTPUT TARGETS
+# ******************************************************************************
+# Targets for viewing RTT/defmt output
+# ******************************************************************************
+
+.PHONY: defmt-test
+defmt-test:
+	@echo "Displaying defmt output for test..."
+	zsh -c "nc localhost $(RTT_PORT) | defmt-print -e $(TEST_ELF_NEW) "
+
+.PHONY: defmt-lib
 defmt-lib:
-	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW_LIB) "
-liam_defmt:
-	zsh -c "nc localhost $(PORT) | defmt-print -e $(liam_FILE_ELF) "
-lib-run:
-	cargo test --lib
-liam_run:
-	cargo rb $(liam_TARGET) --features "stm32f401re"
-liam_run_release:
-	cargo rrb $(liam_TARGET) --features "stm32f401re"
-lib:
-	cargo build --release
+	@echo "Displaying defmt output for library..."
+	zsh -c "nc localhost $(RTT_PORT) | defmt-print -e $(TEST_ELF_NEW_LIB) "
+
+.PHONY: defmt
+defmt:
+	@echo "Displaying defmt output for current target..."
+	zsh -c "nc localhost $(RTT_PORT) | defmt-print -e $(TARGET_ELF) "
+
+# ******************************************************************************
+# HELP TARGET
+# ******************************************************************************
+# Provides a help message showing available targets
+# ******************************************************************************
+
+.PHONY: help
+help:
+	@echo ""
+	@echo "Embassy Preempt - Makefile Help"
+	@echo "=============================================================================="
+	@echo ""
+	@echo "USAGE:"
+	@echo "  make [TARGET] [OPTIONS]"
+	@echo ""
+	@echo "OPTIONS:"
+	@echo "  MODE=debug|release    Build in debug (default) or release mode"
+	@echo ""
+	@echo "TARGETS:"
+	@echo ""
+	@echo "  Build Targets:"
+	@echo "    all                 Build project in release mode (default)"
+	@echo "    build               Build project in specified mode (default: release)"
+	@echo "    lib                 Build library in $(MODE) mode"
+	@echo "    test-run            Run integration tests"
+	@echo "    lib-run             Run library tests"
+	@echo ""
+	@echo "  Binary Build Targets:"
+	@echo "    bin                 Build the main target binary"
+	@echo "    bin-test            Convert test ELF to binary"
+	@echo "    bin-lib             Convert library ELF to binary"
+	@echo ""
+	@echo "  Flashing Targets (OpenOCD):"
+	@echo "    download            Flash binary to device using OpenOCD"
+	@echo ""
+	@echo ""
+	@echo "  Debugging Targets (OpenOCD):"
+	@echo "    debug-test          Debug test with OpenOCD and GDB"
+	@echo "    debug-lib           Debug library with OpenOCD and GDB"
+	@echo ""
+	@echo "    kill                Kill any processes running on port 2331"
+	@echo ""
+	@echo "  Logging/Output:"
+	@echo "    defmt               Display defmt output for current target"
+	@echo "    defmt-test          Display defmt output for tests"
+	@echo "    defmt-lib           Display defmt output for library"
+	@echo ""
+	@echo "  Other:"
+	@echo "    clean               Remove all build artifacts"
+	@echo "    run                 Run project in specified mode"
+	@echo "    help                Show this help message"
+	@echo ""
+	@echo "EXAMPLES:"
+	@echo "  make build MODE=debug          # Build in debug mode"
+	@echo "  make download                  # Flash release build to device"
+	@echo "  make clean                     # Clean all build artifacts"
+	@echo ""
+
+# ******************************************************************************
+# END OF MAKEFILE
+# ******************************************************************************
