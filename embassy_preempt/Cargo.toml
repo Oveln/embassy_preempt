@@ -1,8 +1,11 @@
+# ==================================================================
+# PACKAGE METADATA
+# ==================================================================
 [workspace.package]
 version = "0.1.0"
-authors = ["liam","noah"]
+authors = ["oveln", "liam", "noah"]
 edition = "2021"
-repository = "https://github.com/KMSorSMS/embassy_preempt"
+repository = "https://github.com/Oveln/embassy_preempt"
 license = "MIT OR Apache-2.0"
 
 [package]
@@ -14,95 +17,111 @@ repository.workspace = true
 license.workspace = true
 readme = "README.md"
 
-
+# ==================================================================
+# LIBRARY CONFIGURATION
+# ==================================================================
 [lib]
-# the name of ucosii library
-# name = "ucosiitest"
 harness = false
-# generate a static library and a rlib
 crate-type = ["rlib", "staticlib"]
 
-# needed for each integration test
-# [[test]]
-# name = "integration"
-# harness = false
-
+# ==================================================================
+# WORKSPACE CONFIGURATION
+# ==================================================================
 [workspace]
 members = []
 
-# [workspace.dependencies.ucosii-executor-macro]
-# version = "0.1.0"
-# path = "executor-macro"
-
 [workspace.dependencies]
 
+# ==================================================================
+# DEPENDENCIES
+# ==================================================================
 [dependencies]
-# import the uc/os-ii library
-cortex-m = { version = "0.7"}
-cortex-m-rt = {version = "0.7", features = ["device"]}
-critical-section = { version = "1.1",features=["restore-state-bool"]}
-defmt = {version = "1.0.1", optional = true}
-defmt-rtt = {version = "1.1.0", optional = true}
+# Core embedded development dependencies
+cortex-m = { version = "0.7" }
+cortex-m-rt = { version = "0.7", features = ["device"] }
+critical-section = { version = "1.1", features = ["restore-state-bool"] }
+
+# Logging and debugging dependencies (optional)
+defmt = { version = "1.0.1", optional = true }
+defmt-rtt = { version = "1.1.0", optional = true }
 log = { version = "0.4.14", optional = true }
+panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
+
+# Synchronization and utility dependencies
 spin = "0.10.0"
-# linked_list_allocator = "0.9.0"
-lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
-panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true}
-cortex-m-semihosting = "0.5.0"
-stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata"]}
+spinning_top = { version = "0.2.5", optional = true }           # Conditional dependency (see features)
+lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
 
-#stm32-metapac = { version = "15", default-features = false, features = ["metadata"]}
-# stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645",  features = ["metadata", "stm32f401re"] }
+# Hardware and platform dependencies
+# cortex-m-semihosting = "0.5.0"
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = [
+    "metadata",
+] }
+cortex-m-semihosting = { version = "0.5.0", optional = true }
 
-
+# Development dependencies for testing
 [dev-dependencies]
 defmt-test = "0.3"
 
-# cargo build/run
+# ==================================================================
+# BUILD PROFILES
+# ==================================================================
+# Development build profile (optimized for debug builds)
 [profile.dev]
 codegen-units = 1
 debug = 2
-debug-assertions = true # <-
+debug-assertions = true
 incremental = false
-opt-level = 3         # <-
-overflow-checks = true  # <-
+opt-level = 3
+overflow-checks = true
 
-# cargo test
+# Test build profile
 [profile.test]
 codegen-units = 1
 debug = 2
-debug-assertions = true # <-
+debug-assertions = true
 incremental = false
-opt-level = 2           # <-
-overflow-checks = true  # <-
+opt-level = 2
+overflow-checks = true
 
-# cargo test --release
+# Benchmark build profile
 [profile.bench]
 codegen-units = 1
 debug = 2
-debug-assertions = false # <-
+debug-assertions = false
 incremental = false
 lto = 'fat'
-opt-level = 3            # <-
-overflow-checks = false  # <-
+opt-level = 3
+overflow-checks = false
 
-# cargo build --release
+# Release build profile (optimized for performance)
 [profile.release]
 codegen-units = 1
-debug = 0  # 生成完整的调试信息
-opt-level = 3  # 优化级别 # <-
-# lto = true
+debug = 0         # Generate full debug info
+opt-level = 3     # Optimization level for release builds
 
-# futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
-# use lazy static to define global variables
-# lazy_static = "1.4.0"
-
-# this part only define features, don't decide whether the feature is active
+# ==================================================================
+# FEATURE FLAGS
+# ==================================================================
+# Default features enabled when no specific features are selected
 [features]
-# when a feature is set in default, it is active
-default = ["GPIOC","rt","use_spin","unstable-pac","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = [
+    "GPIOC",
+    "rt",
+    "use_spin",
+    "unstable-pac",
+    "time_driver_tim3",
+    "OS_STACK_LESS_THAN_64",
+    "cortex_m",
+    "OS_MEM_EN",
+    "OS_PRIO_LESS_THAN_64",
+    "OS_ARG_CHK_EN",
+    "OS_TIME_GET_SET_EN",
+    "OS_TASK_CREATE_EXT_EN",
+    "OS_TASK_REG_TBL_SIZE",
+]
 
-# log features
+# Logging features - Enable different levels of logging
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = ["dep:defmt", "dep:panic-probe", "dep:defmt-rtt"]
 log-os = ["log-base"]
@@ -110,11 +129,14 @@ log-task = ["log-base"]
 log-mem = ["log-base"]
 log-timer = ["log-base"]
 log-scheduler = ["log-base"]
+semihosting = ["dep:cortex-m-semihosting"]
 
+# Experimental features
 nightly = []
-# this feature will be set in build.rs
+
+# OS Configuration Features - Control which OS features are enabled
+# These are defined in build.rs
 OS_EVENT_EN = []
-# this feature will be set in build.rs
 OS_EVENT_NAME_EN = []
 OS_SCHED_LOCK_EN = []
 OS_TASK_DEL_EN = []
@@ -136,58 +158,78 @@ OS_ARG_CHK_EN = []
 OS_MAX_QS = []
 OS_TASK_REG_TBL_SIZE = []
 OS_TASK_STAT_STK_CHK_EN = []
-OS_MAX_MEM_PART=[]
-OS_FLAG_EN=[]
-OS_MAX_FLAGS=[]
-OS_TMR_EN=[]
-OS_CPU_HOOKS_EN=[]
-OS_DEBUG_EN=[]
-OS_TIME_GET_SET_EN=[]
-OS_SAFETY_CRITICAL_IEC61508=[]
+OS_MAX_MEM_PART = []
+OS_FLAG_EN = []
+OS_MAX_FLAGS = []
+OS_TMR_EN = []
+OS_CPU_HOOKS_EN = []
+OS_DEBUG_EN = []
+OS_TIME_GET_SET_EN = []
+OS_SAFETY_CRITICAL_IEC61508 = []
+
+# Architecture features
 cortex_m = []
-OS_STACK_LESS_THAN_64=[]
-OS_STACK_LESS_THAN_256=[]
-OS_EVENT_MULTI_EN=[]
+
+# Stack size configuration features
+OS_STACK_LESS_THAN_64 = []
+OS_STACK_LESS_THAN_256 = []
+
+# Additional OS features
+OS_EVENT_MULTI_EN = []
+
+# Platform features - Enable different platforms or features
 std = []
 host = []
-atomics = []                 # use hardware atomics from core::sync::atomic
-xip = []                     # enable optimizations for execute in place
-time_driver_tim1=[]
-time_driver_tim2=[]
-time_driver_tim3=[]
-time_driver_tim4=[]
-time_driver_tim5=[]
-time_driver_tim8=[]
-time_driver_tim9=[]
-time_driver_tim12=[]
-time_driver_tim15=[]
-time_driver_tim20=[]
-time_driver_tim21=[]
-time_driver_tim22=[]
-time_driver_tim23=[]
-time_driver_tim24=[]
-stm32f401re = [ "stm32-metapac/stm32f401re" ]
-## Enable `stm32-metapac`'s `rt` feature
+atomics = [] # Use hardware atomics from core::sync::atomic
+xip = []     # Enable optimizations for execute in place
+
+# Time driver features - Select which timer to use for time operations
+time_driver_tim1 = []
+time_driver_tim2 = []
+time_driver_tim3 = []
+time_driver_tim4 = []
+time_driver_tim5 = []
+time_driver_tim8 = []
+time_driver_tim9 = []
+time_driver_tim12 = []
+time_driver_tim15 = []
+time_driver_tim20 = []
+time_driver_tim21 = []
+time_driver_tim22 = []
+time_driver_tim23 = []
+time_driver_tim24 = []
+
+# STM32F401RE specific features
+stm32f401re = ["stm32-metapac/stm32f401re"]
+
+# Enable `stm32-metapac`'s `rt` feature (runtime support)
 rt = ["stm32-metapac/rt"]
-low-power=[]
-delay_idle=[]
-GPIOC=[]
-GPIOA=[]
-## Re-export stm32-metapac at `embassy_stm32::pac`.
-## This is unstable because semver-minor (non-breaking) releases of embassy-stm32 may major-bump (breaking) the stm32-metapac version.
-## If this is an issue for you, you're encouraged to directly depend on a fixed version of the PAC.
-## There are no plans to make this stable.
+
+# Power management features
+low-power = []
+delay_idle = []
+
+# GPIO configuration features
+GPIOC = []
+GPIOA = []
+
+# Unstable PAC (Peripheral Access Crate) re-export
+# This provides access to raw hardware registers via embassy_stm32::pac
 unstable-pac = []
+
+# Synchronization method - Use spinning for synchronization
 use_spin = ["spinning_top"]
-## Automatically generate `memory.x` file using [`stm32-metapac`](https://docs.rs/stm32-metapac/)
+
+# Auto-generate memory.x file for linker configuration
 memory-x = ["stm32-metapac/memory-x"]
 
-
-[dependencies.spinning_top]
-version = "0.2.5"
-optional = true
-# unstable-pac=[]
+# ==================================================================
+# TARGET-SPECIFIC DEPENDENCIES & LINTS
+# ==================================================================
+# Loom (model checking tool) dependencies for concurrent code verification
 [target.'cfg(loom)'.dependencies]
 loom = { version = "0.7", features = ["checkpoint"] }
+
+# Rust lints configuration
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
