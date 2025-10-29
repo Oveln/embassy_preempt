@@ -1,8 +1,11 @@
+# ==================================================================
+# PACKAGE METADATA
+# ==================================================================
 [workspace.package]
 version = "0.1.0"
-authors = ["liam","noah"]
+authors = ["oveln", "liam", "noah"]
 edition = "2021"
-repository = "https://github.com/KMSorSMS/embassy_preempt"
+repository = "https://github.com/Oveln/embassy_preempt"
 license = "MIT OR Apache-2.0"
 
 
@@ -15,28 +18,37 @@ repository.workspace = true
 license.workspace = true
 readme = "README.md"
 
-
+# ==================================================================
+# LIBRARY CONFIGURATION
+# ==================================================================
 [lib]
-# the name of ucosii library
-# name = "ucosiitest"
 harness = false
-# generate a static library and a rlib
 crate-type = ["rlib", "staticlib"]
 
-
+# ==================================================================
+# WORKSPACE CONFIGURATION
+# ==================================================================
 [workspace]
 members = []
 
 [workspace.dependencies]
 
+# ==================================================================
+# DEPENDENCIES
+# ==================================================================
 [dependencies]
-# import the uc/os-ii library
-cortex-m = { version = "0.7"}
-cortex-m-rt = {version = "0.7", features = ["device"]}
-critical-section = { version = "1.1",features=["restore-state-bool"]}
-defmt = {version = "1.0.1", optional = true}
-defmt-rtt = {version = "1.1.0", optional = true}
+# Core embedded development dependencies
+cortex-m = { version = "0.7" }
+cortex-m-rt = { version = "0.7", features = ["device"] }
+critical-section = { version = "1.1", features = ["restore-state-bool"] }
+
+# Logging and debugging dependencies (optional)
+defmt = { version = "1.0.1", optional = true }
+defmt-rtt = { version = "1.1.0", optional = true }
 log = { version = "0.4.14", optional = true }
+panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
+
+# Synchronization and utility dependencies
 spin = "0.10.0"
 # linked_list_allocator = "0.9.0"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
@@ -45,6 +57,7 @@ cortex-m-semihosting = "0.5.0"
 stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata"]}
 
 
+# Development dependencies for testing
 [dev-dependencies]
 defmt-test = "0.3"
 
@@ -62,43 +75,58 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
 [profile.dev]
 codegen-units = 1
 debug = 2
-debug-assertions = true # <-
+debug-assertions = true
 incremental = false
-opt-level = 3         # <-
-overflow-checks = true  # <-
+opt-level = 3
+overflow-checks = true
 
-# cargo test
+# Test build profile
 [profile.test]
 codegen-units = 1
 debug = 2
-debug-assertions = true # <-
+debug-assertions = true
 incremental = false
-opt-level = 2           # <-
-overflow-checks = true  # <-
+opt-level = 2
+overflow-checks = true
 
-# cargo test --release
+# Benchmark build profile
 [profile.bench]
 codegen-units = 1
 debug = 2
-debug-assertions = false # <-
+debug-assertions = false
 incremental = false
 lto = 'fat'
-opt-level = 3            # <-
-overflow-checks = false  # <-
+opt-level = 3
+overflow-checks = false
 
-# cargo build --release
+# Release build profile (optimized for performance)
 [profile.release]
 codegen-units = 1
-debug = 0  # 生成完整的调试信息
-opt-level = 3  # 优化级别 # <-
-# lto = true
+debug = 0         # Generate full debug info
+opt-level = 3     # Optimization level for release builds
 
-
+# ==================================================================
+# FEATURE FLAGS
+# ==================================================================
+# Default features enabled when no specific features are selected
 [features]
-# when a feature is set in default, it is active
-default = ["GPIOC","rt","use_spin","unstable-pac","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = [
+    "GPIOC",
+    "rt",
+    "use_spin",
+    "unstable-pac",
+    "time_driver_tim3",
+    "OS_STACK_LESS_THAN_64",
+    "cortex_m",
+    "OS_MEM_EN",
+    "OS_PRIO_LESS_THAN_64",
+    "OS_ARG_CHK_EN",
+    "OS_TIME_GET_SET_EN",
+    "OS_TASK_CREATE_EXT_EN",
+    "OS_TASK_REG_TBL_SIZE",
+]
 
-# log features
+# Logging features - Enable different levels of logging
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = ["dep:defmt", "dep:panic-probe", "dep:defmt-rtt"]
 log-os = ["log-base"]
@@ -106,7 +134,9 @@ log-task = ["log-base"]
 log-mem = ["log-base"]
 log-timer = ["log-base"]
 log-scheduler = ["log-base"]
+semihosting = ["dep:cortex-m-semihosting"]
 
+# Experimental features
 nightly = []
 defmt = ["dep:defmt","panic-probe","defmt-rtt"]
 alarm_test = ["dep:defmt","panic-probe","defmt-rtt"]
