@@ -7,13 +7,12 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-defmt = { version = "1.0.1", optional = true }
 defmt-rtt = { version = "1.1.0", optional = true }
 
 [features]
 # Logging features - Enable different levels of logging
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
-log-base = ["dep:defmt", "dep:defmt-rtt"]
+log-base = ["dep:defmt-rtt"]
 log-os = ["log-base"]
 log-task = ["log-base"]
 log-mem = ["log-base"]
