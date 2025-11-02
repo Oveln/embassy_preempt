@@ -11,12 +11,12 @@ use stm32_metapac::timer::TimGp16;
 **************************************************************************************************************************************
 */
 /// ENABLE
-pub const ENABLE:bool = true;
+pub const ENABLE: bool = true;
 /// DISABLE
-pub const DISENABLE:bool = false;
+pub const DISENABLE: bool = false;
 /// Unsigned  8 bit quantity
 pub type BOOLEAN = bool;
-/// Unsigned  8 bit quantity  
+/// Unsigned  8 bit quantity
 pub type INT8U = u8;
 /// Signed    8 bit quantity
 pub type INT8S = i8;
@@ -87,8 +87,8 @@ pub mod bottom_driver;
 *                                                               critical section
 ********************************************************************************************************************************************
 */
-use cortex_m::{interrupt, Peripherals};
 use cortex_m::register::primask;
+use cortex_m::{interrupt, Peripherals};
 use critical_section::{set_impl, Impl, RawRestoreState};
 
 use crate::os_log;
@@ -121,24 +121,50 @@ unsafe impl Impl for SingleCoreCriticalSection {
 pub fn init_core_peripherals() {
     let mut p = Peripherals::take().unwrap();
     // set the NVIC
-    unsafe{
-        // set the group as 2-2
+    unsafe {
+        // Configure AIRCR for 2-bit preempt, 2-bit subpriority (group 2)
         let aircr = p.SCB.aircr.read();
-        let mut aircr = aircr & !(0b1111 << 8);
-        aircr = aircr | (0b101 << 8);
-        p.SCB.aircr.write(aircr);
-        // infer that the group is 2-2
-        // set the TIM3 prio as 3
-        os_log!(info, "the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
-        p.NVIC.set_priority(stm32_metapac::Interrupt::TIM3, 32);
-        os_log!(info, "the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+        let new_aircr = (0x05FA << 16) | (aircr & !(0b1111 << 8)) | (0b101 << 8);
+        p.SCB.aircr.write(new_aircr);
 
-        os_log!(info, "the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
+        let prio = |preempt: u8| -> u8 { (preempt & 0b11) << 6 }; // sub=0 assumed
+                                                                  // infer that the group is 2-2
+                                                                  // set the TIM3 prio as 3
+        os_log!(
+            trace,
+            "before set TIM3 prio {}",
+            NVIC::get_priority(stm32_metapac::Interrupt::TIM3)
+        );
+        p.NVIC.set_priority(stm32_metapac::Interrupt::TIM3, prio(3));
+
+        os_log!(
+            trace,
+            "after set TIM3 prio {}",
+            NVIC::get_priority(stm32_metapac::Interrupt::TIM3)
+        );
+
+        os_log!(
+            trace,
+            "before set EXTI15_10 prio {}",
+            NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10)
+        );
         // set the EXTI13 prio as 1
-        p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, 16);
-        os_log!(info, "the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
-        os_log!(info, "the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
-        p.SCB.set_priority(SystemHandler::PendSV, 0xf<<4);
-        os_log!(info, "the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
+        p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, prio(1));
+        os_log!(
+            trace,
+            "after set EXTI15_10 prio {}",
+            NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10)
+        );
+        os_log!(
+            trace,
+            "before set PendSV prio {}",
+            SCB::get_priority(SystemHandler::PendSV)
+        );
+        p.SCB.set_priority(SystemHandler::PendSV, 0xf << 4);
+        os_log!(
+            trace,
+            "after set PendSV prio {}",
+            SCB::get_priority(SystemHandler::PendSV)
+        );
     }
 }
