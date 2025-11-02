@@ -50,7 +50,7 @@ all: build
 .PHONY: build
 build: $(OBJ_FILES)
 	@echo "Building project in $(MODE) mode..."
-	cargo build $(MODE_ARG) --features "stm32f401re","alarm_test"
+	cargo build $(MODE_ARG) --features "stm32f401re" --bin $(TARGET)
 
 # ******************************************************************************
 # TARGET BUILD TARGETS
