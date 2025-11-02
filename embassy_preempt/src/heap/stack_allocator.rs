@@ -7,10 +7,9 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
-use crate::mem_log;
-
 use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
+use crate::mem_log;
 
 pub const STACK_START: *mut u8 = 0x20000000 as *mut u8;
 pub const STACK_SIZE: usize = 20 * 1024; // 40 KiB
@@ -139,14 +138,13 @@ pub fn stk_from_ptr(heap_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
         layout,
     }
 }
-#[cfg(all(test, feature = "log-mem"))]
+
+#[cfg(feature = "test-stack")]
 #[defmt_test::tests]
 mod unit_tests {
     use defmt::{assert, println};
 
-    use super::INTERRUPT_STACK;
     use crate::os_core::OSInit;
-    use crate::port::os_cpu::set_int_change_2_psp;
     #[init]
     fn init() {
         // this including set allocate stack for psp and msp, and change psp to that value(msp will chage below)

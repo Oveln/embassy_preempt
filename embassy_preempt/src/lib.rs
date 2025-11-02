@@ -22,7 +22,7 @@
 ********************************************************************************************************************************************
 */
 /// Centralized logging module
-pub mod log;
+pub use embassy_preempt_logs::{mem_log, os_log, scheduler_log, task_log, timer_log};
 
 extern crate alloc;
 /// the mod of uC/OS-II kernel
