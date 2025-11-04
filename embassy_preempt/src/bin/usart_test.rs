@@ -5,13 +5,10 @@
 // FFI接口
 use core::ffi::c_void;
 
-use embassy_preempt::os_task::SyncOSTaskCreate;
-use embassy_preempt::os_core::{OSInit, OSStart};
+use embassy_preempt::executor::{OSInit, OSStart, SyncOSTaskCreate};
 use embassy_preempt::os_time::OSTimeDly;
 use embassy_preempt::pac::{usart, gpio, GPIOA, RCC, USART1};
-
-#[cfg(feature = "alarm_test")]
-use defmt::info;
+use embassy_preempt::{os_log, task_log};
 
 #[cortex_m_rt::entry]
 fn usart_test() -> ! {
@@ -29,8 +26,7 @@ fn usart_test() -> ! {
 
 fn task1(_args: *mut c_void) {
     loop {
-        #[cfg(feature = "alarm_test")]
-        info!("usart_test");
+        task_log!(info, "usart_test");
        usart_send_byte(b'A');
        OSTimeDly(400 * 100);
     }
@@ -74,8 +70,7 @@ static USART_DIV: u16 = (CLOCK / BAUD_RATE) as u16;
 
 #[allow(dead_code)]
 fn usart_init() {
-    #[cfg(feature = "alarm_test")]
-    info!("usart_init");
+    os_log!(info, "usart_init");
 
     // 启用 GPIOA 和 USART1 的时钟
     RCC.ahb1enr().modify(|f| {
@@ -114,8 +109,7 @@ fn usart_init() {
 
 #[allow(dead_code)]
 fn usart_send_byte(data: u8) {
-    #[cfg(feature = "alarm_test")]
-        info!("usart_test_send");
+    os_log!(info, "usart_test_send");
     while !USART1.sr().read().txe() {}
     USART1.dr().write(|f| f.set_dr(data as u16 & 0x01FF));
 }

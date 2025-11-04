@@ -10,9 +10,7 @@ use embassy_preempt::executor::SyncOSTaskCreate;
 use embassy_preempt::executor::{OSInit, OSStart};
 use embassy_preempt::os_time::OSTimeDly;
 use embassy_preempt::pac::{gpio, GPIOA, GPIOC, RCC};
-
-#[cfg(feature = "alarm_test")]
-use defmt::info;
+use embassy_preempt::task_log;
 
 #[cortex_m_rt::entry]
 fn iic_test() -> ! {
@@ -30,8 +28,7 @@ fn iic_test() -> ! {
 
 fn task1(_args: *mut c_void) {
     loop {
-        #[cfg(feature = "alarm_test")]
-        info!("iic_test");
+        task_log!(info, "iic_test");
        
        OSTimeDly(400 * 100);
     }

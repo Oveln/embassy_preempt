@@ -7,11 +7,7 @@ use core::ptr::NonNull;
 use cortex_m::register::control::{self, Spsel};
 use cortex_m::register::{msp, psp};
 use cortex_m_rt::exception;
-#[cfg(feature = "alarm_test")]
-use defmt::{trace, info};
-#[cfg(feature = "defmt")]
-#[allow(unused_imports)]
-use defmt::{info, trace};
+use crate::{os_log, scheduler_log};
 
 use super::OS_STK;
 use crate::app::led::{stack_pin_high, stack_pin_low};
@@ -87,8 +83,8 @@ fn PendSV() {
     // add global context switch counter
     OSCtxSwCtr.fetch_add(1, core::sync::atomic::Ordering::SeqCst);
 
-    #[cfg(feature = "defmt")]
-    info!("OSCtxSwCtr is {}", OSCtxSwCtr.load(core::sync::atomic::Ordering::SeqCst));
+    
+    os_log!(info, "OSCtxSwCtr is {}", OSCtxSwCtr.load(core::sync::atomic::Ordering::SeqCst));
 
     let stk_ptr: crate::executor::mem::heap::OS_STK_REF = global_executor.OSTCBHighRdy.get_mut().take_stk();
     let stk_heap_ref = stk_ptr.HEAP_REF;

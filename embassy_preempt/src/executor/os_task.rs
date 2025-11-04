@@ -13,6 +13,7 @@
 */
 
 use alloc::string::ToString;
+use crate::task_log;
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::future::Future;
@@ -24,14 +25,6 @@ use crate::cfg::{OS_LOWEST_PRIO, OS_TASK_REG_TBL_SIZE};
 use crate::executor::mem::heap::{dealloc_stack, stk_from_ptr};
 use crate::port::{INT8U, USIZE, OS_STK};
 use crate::cfg::ucosii::{OS_PRIO_SELF, OS_TASK_IDLE_PRIO, OSRunning, OSIntNesting, OSTaskCtr, OS_ERR_STATE};
-
-#[cfg(feature = "defmt")]
-#[allow(unused)]
-use defmt::{trace,info};
-#[cfg(feature = "alarm_test")]
-#[allow(unused)]
-use defmt::{trace,info};
-
 
 const DEFAULT_REVOKE_STACK_SIZE: usize = 128;
 
@@ -59,23 +52,23 @@ where
     F: FnOnce(*mut c_void) -> R + 'static,
     R: ReturnUnitOrNeverReturn,
 {
-    #[cfg(feature = "defmt")]
-    trace!("SyncOSTaskCreate");
+    
+    task_log!(trace, "SyncOSTaskCreate");
     // check the priority
     if prio > OS_LOWEST_PRIO as u8 {
         return OS_ERR_STATE::OS_ERR_PRIO_INVALID;
     }
     // warp the normal func to a async func
     let future_func = move || async move { task(p_arg) };
-    #[cfg(feature = "defmt")]
-    trace!("the size of future is {}", core::mem::size_of_val(&future_func));
+    
+    task_log!(trace, "the size of future is {}", core::mem::size_of_val(&future_func));
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
         let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 4).unwrap();
         let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
         // by noah: used to test ffi
-        #[cfg(feature = "defmt")]
-        trace!("Task Create");
+        
+        task_log!(trace, "Task Create");
         let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);
         dealloc_stack(&mut stk);
     }
@@ -90,8 +83,8 @@ where
     F: Future + 'static,
     FutFn: FnOnce(*mut c_void) -> F + 'static,
 {
-    #[cfg(feature = "defmt")]
-    trace!("AsyncOSTaskCreate");
+    
+    task_log!(trace, "AsyncOSTaskCreate");
     let future_func = || task(p_arg);
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
@@ -113,8 +106,8 @@ pub extern "aapcs" fn OSTaskCreate(
     ptos: *mut OS_STK,
     prio: INT8U,
 ) -> OS_ERR_STATE {
-    #[cfg(feature = "defmt")]
-    trace!("OSTaskCreate");
+    
+    task_log!(trace, "OSTaskCreate");
     let fun_ptr = move |p_arg| fun_ptr(p_arg);
     SyncOSTaskCreate(fun_ptr, p_arg, ptos, prio)
 }
@@ -135,8 +128,8 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
             return false;
         }
     }) {
-        #[cfg(feature = "defmt")]
-        trace!("the prio is exist");
+        
+        task_log!(trace, "the prio is exist");
         return OS_ERR_STATE::OS_ERR_PRIO_EXIST;
     }
 
@@ -170,8 +163,7 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
 /// This function allows you to change the priority of a task dynamically.  
 /// Note that the new priority MUST be available.
 pub fn OSTaskChangePrio(old_prio: INT8U, new_prio:INT8U) -> OS_ERR_STATE {
-    #[cfg(feature = "alarm_test")]
-    trace!("OSTaskChangePrio");
+      task_log!(trace, "OSTaskChangePrio");
     let mut old_prio = old_prio;
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     #[cfg(feature = "OS_ARG_CHK_EN")]
@@ -260,8 +252,7 @@ pub fn OSTaskChangePrio(old_prio: INT8U, new_prio:INT8U) -> OS_ERR_STATE {
 // #[cfg(feature = "OS_TASK_DEL_EN")]
 /// this function allows you to delete a task 
 pub fn OSTaskDel(prio: INT8U) -> OS_ERR_STATE {
-    #[cfg(feature = "alarm_test")]
-    trace!("OSTaskDel");
+    task_log!(trace, "OSTaskDel");
     
     let mut prio = prio;
     // See if trying to delete from ISR 

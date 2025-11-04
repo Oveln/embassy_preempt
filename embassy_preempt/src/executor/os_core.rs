@@ -36,7 +36,9 @@ use core::ffi::c_void;
 use core::sync::atomic::Ordering;
 
 use bottom_driver::BOT_DRIVER;
-use crate::{task_log};
+
+// Import logging macros when logging is enabled
+use crate::{task_log, os_log};
 // use critical_section::Mutex;
 // use core::cell::RefCell;
 use os_cpu::*;
@@ -44,7 +46,6 @@ use os_cpu::*;
 use crate::executor::mem::heap::{Init_Heap, OS_InitStackAllocator};
 use crate::executor::GlobalSyncExecutor;
 use crate::executor::SyncOSTaskCreate;
-#[cfg(feature = "alarm_test")]
 use crate::os_time::blockdelay;
 use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
@@ -242,8 +243,8 @@ pub extern "C" fn OSInit() {
 /// an interrupt service routine (ISR).  This allows uC/OS-II to keep track
 /// of interrupt nesting and thus only perform rescheduling at the last nested ISR.
 pub fn OSIntEnter() {
-    #[cfg(feature = "defmt")]
-    trace!("OSIntEnter");
+    
+    task_log!(trace, "OSIntEnter");
     if OSRunning.load(Ordering::Acquire) {
         if OSIntNesting.load(Ordering::Acquire) < 255 {
             OSIntNesting.fetch_add(1, Ordering::SeqCst);
@@ -274,8 +275,8 @@ pub fn OSIntEnter() {
 /// an ISR.  When the last nested ISR has completed, uC/OS-II will call the
 /// scheduler to determine whether a new, high-priority task, is ready to run.
 pub unsafe fn OSIntExit() {
-    #[cfg(feature = "defmt")]
-    trace!("OSIntExit");
+    
+    task_log!(trace, "OSIntExit");
     if OSRunning.load(Ordering::Acquire) {
         critical_section::with(|_| {
             if OSIntNesting.load(Ordering::Acquire) > 0 {
@@ -313,8 +314,8 @@ pub unsafe fn OSIntExit() {
 /// you are ready to permit context switching.
 #[cfg(feature = "OS_SCHED_LOCK_EN")]
 pub fn OSSchedLock() {
-    #[cfg(feature = "defmt")]
-    trace!("OSSchedLock");
+    
+    task_log!(trace, "OSSchedLock");
     if OSRunning.load(Ordering::Acquire) {
         critical_section::with(|_| {
             if OSIntNesting.load(Ordering::Acquire) == 0 {
@@ -344,8 +345,8 @@ pub fn OSSchedLock() {
 /// This function is used to re-allow rescheduling.
 #[cfg(feature = "OS_SCHED_LOCK_EN")]
 pub fn OSSchedUnlock() {
-    #[cfg(feature = "defmt")]
-    trace!("OSSchedUnlock");
+    
+    task_log!(trace, "OSSchedUnlock");
     if OSRunning.load(Ordering::Acquire) {
 
         critical_section::with(|_| {
@@ -684,9 +685,8 @@ fn OS_InitTaskIdle() {
     os_log!(trace, "OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
-            #[cfg(feature = "alarm_test")]
             {
-                trace!("task idle");
+                task_log!(trace, "task idle");
                 blockdelay::delay(1);
             }
             OSIdleCtr.fetch_add(1, Ordering::SeqCst);

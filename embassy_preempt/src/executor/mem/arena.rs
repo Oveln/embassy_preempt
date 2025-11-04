@@ -19,7 +19,10 @@ use core::mem::MaybeUninit;
 use core::ptr::null_mut;
 
 use crate::cfg::OS_ARENA_SIZE;
+
+// Import logging macros when logging is enabled
 use critical_section::{CriticalSection, Mutex};
+use crate::{mem_log, task_log};
 
 /*
 ********************************************************************************************************************************************
@@ -80,8 +83,8 @@ impl<const N: usize> Arena<N> {
     }
     /// deallocate the most recently allocated memory block
     pub fn dealloc<T>(&'static self, cs: CriticalSection, ptr: *mut T) {
-        #[cfg(feature = "defmt")]
-        trace!("dealloc of Arena");
+        
+        task_log!(trace, "dealloc of Arena");
         let layout = Layout::new::<T>();
 
         let start = self.buf.get().cast::<u8>();

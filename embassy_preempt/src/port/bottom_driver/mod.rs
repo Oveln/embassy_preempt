@@ -5,6 +5,9 @@ use core::sync::atomic::{compiler_fence, Ordering};
 
 use cortex_m::peripheral::NVIC;
 use critical_section::Mutex;
+
+// Import logging macros when logging is enabled
+use crate::{os_log};
 // use critical_section::{CriticalSection, Mutex};
 use stm32_metapac::{gpio::vals, EXTI, RCC, SYSCFG};
 #[cfg(feature = "GPIOA")]

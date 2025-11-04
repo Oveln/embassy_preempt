@@ -1,5 +1,6 @@
 //! Task implementation
 use alloc::string::String;
+use crate::task_log;
 use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll};
@@ -19,11 +20,6 @@ use crate::cfg::OS_TASK_REG_TBL_SIZE;
 use crate::executor::cell::{SyncUnsafeCell, UninitCell};
 #[cfg(feature = "OS_EVENT_EN")]
 use crate::event::OS_EVENT_REF;
-
-#[cfg(feature = "alarm_test")]
-use defmt::{trace,info};
-#[cfg(feature = "defmt")]
-use defmt::{trace,info};
 
 /// the TCB of the task. It contains the task's info
 #[allow(unused)]
@@ -228,8 +224,8 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         _name: String,
         future_func: impl FnOnce() -> F,
     ) -> OS_ERR_STATE {
-        #[cfg(feature = "defmt")]
-        trace!("init of OS_TASK_STORAGE");
+        
+        task_log!(trace, "init of OS_TASK_STORAGE");
         // by noah: claim a TaskStorage
         let task_ref = OS_TASK_STORAGE::<F>::claim();
 
@@ -302,14 +298,14 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         let mut cx = Context::from_waker(&waker);
         match future.poll(&mut cx) {
             Poll::Ready(_) => {
-                #[cfg(feature = "defmt")]
-                trace!("the task {} is ready", this.task_tcb.OSTCBPrio);
+                
+                task_log!(trace, "the task {} is ready", this.task_tcb.OSTCBPrio);
                 this.future.drop_in_place();
                 this.task_tcb.OSTCBStat.despawn();
             }
             Poll::Pending => {
-                #[cfg(feature = "defmt")]
-                trace!("the task {} is pending", this.task_tcb.OSTCBPrio);
+                
+                task_log!(trace, "the task {} is pending", this.task_tcb.OSTCBPrio);
             }
         }
 
@@ -324,8 +320,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // by noah: for we can create task after OSTaskCreate, so we need a cs
         critical_section::with(|cs| {
             let task_storage = ARENA.alloc::<OS_TASK_STORAGE<F>>(cs);
-            #[cfg(feature = "alarm_test")]
-            trace!("size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
+                task_log!(trace, "size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
             // create a new task which is not init
             task_storage.write(OS_TASK_STORAGE::new());
             // by noah：no panic will occurred here because if the Arena is not enough, the program will panic when alloc

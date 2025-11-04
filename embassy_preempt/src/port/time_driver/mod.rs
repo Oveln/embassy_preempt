@@ -9,9 +9,6 @@ use core::{mem, ptr};
 
 use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
-#[cfg(any(feature = "defmt",feature = "alarm_test"))]
-#[allow(unused_imports)]
-use defmt::{info,trace};
 use stm32_metapac::flash::vals::Latency;
 use stm32_metapac::rcc::vals::*;
 use stm32_metapac::timer::{regs, vals};
@@ -22,8 +19,8 @@ use crate::executor::waker;
 use crate::port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE};
 use crate::app::led::{interrupt_pin_high, interrupt_pin_low};
 
-// 导入日志宏
-use crate::timer_log;
+// Import logging macros
+use crate::{os_log, timer_log};
 
 #[cfg(any(
     feature = "time_driver_tim9",
@@ -47,11 +44,11 @@ const ALARM_COUNT: USIZE = 3;
 /// TIM3 interrupt handler
 pub extern "C" fn TIM3() {
     interrupt_pin_high();
-    #[cfg(feature = "defmt")]
-    trace!("TIM3");
+    
+    os_log!(trace, "TIM3");
     RTC_DRIVER.on_interrupt();
-    #[cfg(feature = "defmt")]
-    trace!("exit TIM3");
+    
+    os_log!(trace, "exit TIM3");
     interrupt_pin_low();
 }
 /*
@@ -164,8 +161,8 @@ impl AlarmHandle {
 
 impl RtcDriver {
     pub(crate) fn init(&'static self) {
-        #[cfg(feature = "defmt")]
-        trace!("init of RtcDriver");
+        
+        os_log!(trace, "init of RtcDriver");
         // rcc config（need to configure RCC according to your own chip）
         rcc_init();
         // enable the Timer Driver
@@ -292,7 +289,7 @@ impl RtcDriver {
         // We only modify the period from the timer interrupt, so we know this can't race.
         let period = self.period.load(Ordering::Relaxed) + 1;
         // #[cfg(feature = "alarm_test")]
-        // info!("RTC's period is {}", self.period.load(Ordering::Relaxed));
+        // os_log!(info, "RTC's period is {}", self.period.load(Ordering::Relaxed));
         self.period.store(period, Ordering::Relaxed);
         let t = (period as u64) << 15;
 

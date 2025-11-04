@@ -1,8 +1,9 @@
+// Import logging macros
+use crate::timer_log;
+
 use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
-
-use crate::timer_log;
 
 use super::duration::Duration;
 use super::instant::Instant;

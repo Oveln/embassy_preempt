@@ -21,8 +21,6 @@
 *                                                               pub mod
 ********************************************************************************************************************************************
 */
-#[cfg(any(feature = "defmt",feature = "alarm_test"))]
-use defmt_rtt as _;
 // global logger
 pub extern crate alloc;
 
@@ -43,6 +41,10 @@ pub mod event;
 #[macro_use]
 /// the atomic_macros module is used to define atomic operations
 pub mod atomic_macros;
+
+/// Logging macros for the RTOS
+#[macro_use]
+pub mod log;
 
 // This must go last, so that it sees all the impl_foo! macros defined earlier.
 // pub(crate) mod _generated {

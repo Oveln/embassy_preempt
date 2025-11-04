@@ -4,7 +4,6 @@
 //! When the "logs" feature is enabled, these macros will output log messages.
 //! When the feature is disabled, the macros become no-ops for performance.
 
-#[cfg(log_enabled)]
 use defmt_rtt as _;
 
 /// Logs a debug message using defmt.
@@ -18,7 +17,6 @@ use defmt_rtt as _;
 /// debug!("This is a debug message");
 /// debug!("Value: {}", value);
 /// ```
-#[cfg(log_enabled)]
 #[macro_export]
 macro_rules! debug {
     ($($arg:tt)*) => {
@@ -37,7 +35,6 @@ macro_rules! debug {
 /// error!("This is an error message");
 /// error!("Error code: {}", error_code);
 /// ```
-#[cfg(log_enabled)]
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {
@@ -56,7 +53,6 @@ macro_rules! error {
 /// info!("This is an info message");
 /// info!("System initialized at {}", timestamp);
 /// ```
-#[cfg(log_enabled)]
 #[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => {
@@ -75,7 +71,6 @@ macro_rules! info {
 /// trace!("This is a trace message");
 /// trace!("Function called with parameter: {}", param);
 /// ```
-#[cfg(log_enabled)]
 #[macro_export]
 macro_rules! trace {
     ($($arg:tt)*) => {
@@ -94,7 +89,6 @@ macro_rules! trace {
 /// warn!("This is a warning message");
 /// warn!("Resource usage is high: {}%", usage);
 /// ```
-#[cfg(log_enabled)]
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {

@@ -1,9 +1,11 @@
 //! Timer Queue for task delay
-#[cfg(feature = "defmt")]
+
 #[allow(unused)]
-use defmt::{trace,info};
 
 use super::OS_TCB_REF;
+
+// Import logging macros
+use crate::timer_log;
 use crate::executor::cell::SyncUnsafeCell;
 
 pub(crate) struct TimerQueue {
@@ -50,8 +52,8 @@ impl TimerQueue {
         } else {
             self.head.set(Some(p));
         }
-        // #[cfg(feature = "defmt")]
-        // trace!("exit timer update");
+        // 
+        // task_log!(trace, "exit timer update");
         return *self.head.get_unmut().as_ref().unwrap().expires_at.get_unmut();
     }
 

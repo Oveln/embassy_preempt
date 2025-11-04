@@ -305,8 +305,8 @@ pub fn OS_EventTaskRemove(ptcb: OS_TCB_REF, mut pevent: OS_EVENT_REF) {
     if pevent.OSEventTbl[y as usize] == 0 {
         pevent.OSEventGrp &= !ptcb.OSTCBY;
     }
+    #[cfg(feature = "OS_EVENT_EN")]
     unsafe {
-        #[cfg(feature = "OS_EVENT_EN")]
         ptcb.OSTCBEventPtr.set(None);
     }
 }

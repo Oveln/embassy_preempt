@@ -1,14 +1,11 @@
-#[cfg(feature = "defmt")]
-#[allow(unused_imports)]
-use defmt::{info, trace};
-#[cfg(feature = "alarm_test")]
-use defmt::{info, trace};
+// Import logging macros
+use crate::timer_log;
 use core::sync::atomic::Ordering;
 
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::{INT8U, INT64U, USIZE};
-use crate::cfg::{TICK_HZ, OS_LOWEST_PRIO};
+use crate::cfg::OS_LOWEST_PRIO;
 use crate::cfg::ucosii::{OSRunning, OSIntNesting, OSLockNesting, OS_ERR_STATE};
 /// the mod of blockdelay of uC/OS-II kernel
 pub mod blockdelay;
@@ -79,8 +76,7 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
 
 /// we have to make this delay acting like preemptive delay
 pub fn OSTimeDly(_ticks: INT64U) {
-    #[cfg(feature = "defmt")]
-    trace!("OSTimeDly");
+    timer_log!(trace, "OSTimeDly");
     // See if trying to call from an ISR  
     if OSIntNesting.load(Ordering::Acquire) > 0 {
         return;
@@ -122,8 +118,7 @@ pub fn OSTimeDly(_ticks: INT64U) {
 #[cfg(feature = "OS_TIME_DLY_HMSM_EN")]
 /// this call allows you to specify the delay time
 pub fn OSTimeDlyHMSM(hours: INT8U, minutes: INT8U, seconds: INT8U, ms: INT64U) -> OS_ERR_STATE {
-    #[cfg(feature = "defmt")]
-    trace!("OSTimeDlyHMSM");
+    timer_log!(trace, "OSTimeDlyHMSM");
     // See if trying to call from an ISR  
     if OSIntNesting.load(Ordering::Acquire) > 0 {
         return  OS_ERR_STATE::OS_ERR_TIME_DLY_ISR;
@@ -165,9 +160,7 @@ pub fn OSTimeDlyHMSM(hours: INT8U, minutes: INT8U, seconds: INT8U, ms: INT64U) -
 /// This function is used resume a task that has been delayed 
 /// through a call to either OSTimeDly() or OSTimeDlyHMSM().
 pub fn OSTimeDlyResume(prio: INT8U) -> OS_ERR_STATE {
-    // #[cfg(feature = "defmt")]
-    #[cfg(feature = "alarm_test")]
-    trace!("OSTimeDlyResume");
+    timer_log!(trace, "OSTimeDlyResume");
 
     if prio >= OS_LOWEST_PRIO {
         return OS_ERR_STATE::OS_ERR_PRIO_INVALID;
@@ -207,8 +200,7 @@ pub fn OSTimeDlyResume(prio: INT8U) -> OS_ERR_STATE {
 /// Obtain the current value of the clock ticks since OS boot.
 #[cfg(feature = "OS_TIME_GET_SET_EN")]
 pub fn OSTimeGet() -> INT64U {
-    #[cfg(feature = "defmt")]
-    trace!("OSTimeGet");
+    timer_log!(trace, "OSTimeGet");
     RTC_DRIVER.now() 
 }
 

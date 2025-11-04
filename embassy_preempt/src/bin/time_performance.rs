@@ -6,8 +6,6 @@
 use core::arch::asm;
 use core::ffi::c_void;
 
-#[cfg(feature = "alarm_test")]
-use defmt::trace;
 use embassy_preempt::executor::{OSInit, OSStart};
 use embassy_preempt::executor::AsyncOSTaskCreate;
 use embassy_preempt::os_time::timer::Timer;

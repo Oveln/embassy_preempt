@@ -1,12 +1,10 @@
 #![allow(non_camel_case_types)]
-use cortex_m::peripheral::scb::SystemHandler;
-#[allow(unused_imports)]
-use cortex_m::peripheral::{NVIC, SCB, SYST, syst};
+use cortex_m::peripheral::{scb::SystemHandler, SCB};
 use stm32_metapac::timer::TimGp16;
-// #[cfg(feature = "defmt")]
-#[cfg(any(feature = "alarm_test", feature = "defmt"))]
-#[allow(unused_imports)]
-use defmt::{info,trace};
+
+// Import logging macros
+use crate::os_log;
+// 
 
 /*
 **************************************************************************************************************************************
@@ -95,7 +93,7 @@ use cortex_m::{interrupt, Peripherals};
 use cortex_m::register::primask;
 use critical_section::{set_impl, Impl, RawRestoreState};
 
-use crate::os_log;
+// Import logging macros when logging is enabled
 
 struct SingleCoreCriticalSection;
 set_impl!(SingleCoreCriticalSection);
@@ -123,6 +121,7 @@ unsafe impl Impl for SingleCoreCriticalSection {
 
 /// by noah: init the core peripherals. For the task() just can be called **once**, we should init the core peripherals together
 pub fn init_core_peripherals() {
+    use cortex_m::peripheral::NVIC;
     let mut p = Peripherals::take().unwrap();
     // set the NVIC
     unsafe{
@@ -133,8 +132,8 @@ pub fn init_core_peripherals() {
         p.SCB.aircr.write(aircr);
         // infer that the group is 2-2
         // set the TIM3 prio as 3
-        #[cfg(feature = "defmt")]
-        info!("the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+        
+        os_log!(info, "the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
 
         #[cfg(feature = "time_driver_tim1")]{
             p.NVIC.set_priority(stm32_metapac::Interrupt::TIM1_CC, 32);
@@ -169,8 +168,8 @@ pub fn init_core_peripherals() {
 
         
 
-        #[cfg(feature = "defmt")]
-        info!("the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+        
+        os_log!(info, "the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
 
         os_log!(info, "the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
         // set the EXTI13 prio as 1
@@ -218,9 +217,9 @@ pub fn init_core_peripherals() {
 //     unsafe {
         
 //         #[cfg(feature = "alarm_test")]
-//         info!("systick count is {}", SYST::get_current());
+//         os_log!(info, "systick count is {}", SYST::get_current());
 //         #[cfg(feature = "alarm_test")]
-//         info!("systick count is {}", SYST::get_reload());
+//         os_log!(info, "systick count is {}", SYST::get_reload());
        
 //     }
 // }

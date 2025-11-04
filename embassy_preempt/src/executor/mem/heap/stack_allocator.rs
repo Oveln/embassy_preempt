@@ -7,10 +7,8 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
-// #[cfg(feature = "defmt")]
-#[cfg(any(feature = "alarm_test", feature = "defmt"))]
-#[allow(unused_imports)]
-use defmt::{info,trace};
+// Import logging macros
+use crate::task_log; 
 
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
@@ -41,8 +39,8 @@ lazy_static::lazy_static! {
 */
 /// init the stack allocator and set up the program stack and the interrupt stack
 pub fn OS_InitStackAllocator() {
-    #[cfg(feature = "defmt")]
-    trace!("Init Stack Allocator");
+    
+    task_log!(trace, "Init Stack Allocator");
     unsafe {
         STACK_ALLOCATOR.lock().init(STACK_START as *mut u8, STACK_SIZE);
     }
@@ -66,21 +64,20 @@ pub fn OS_InitStackAllocator() {
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
-    #[cfg(feature = "defmt")]
-    trace!("alloc_stack");
+    
+    task_log!(trace, "alloc_stack");
     let heap_ptr: *mut u8;
     unsafe {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);
     }
-    // #[cfg(feature = "defmt")]
-    #[cfg(feature = "alarm_test")]
-    trace!("alloc a stack at {}", heap_ptr);
+    // 
+    task_log!(trace, "alloc a stack at {}", heap_ptr);
     stk_from_ptr(heap_ptr, layout)
 }
 /// dealloc a stack
 pub fn dealloc_stack(stk: &mut OS_STK_REF) {
-    #[cfg(feature = "defmt")]
-    trace!("dealloc_stack");
+    
+    task_log!(trace, "dealloc_stack");
     if stk.STK_REF == NonNull::dangling() || stk.HEAP_REF == NonNull::dangling() {
         return;
     }

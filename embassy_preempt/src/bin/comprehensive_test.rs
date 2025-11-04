@@ -9,10 +9,6 @@ use embassy_preempt::app::led::LED_Init;
 // <- derive attribute
 use embassy_preempt::executor::{OSInit, OSStart};
 use embassy_preempt::executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
-// use embassy_preempt::os_time::blockdelay::delay;
-use embassy_preempt::os_time::timer::Timer;
-use embassy_preempt::os_time::OSTimeDly;
-// use embassy_preempt::{self as _};
 
 // the unit is tick
 // test long TIME delay
