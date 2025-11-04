@@ -4,7 +4,7 @@
 use core::ffi::c_void;
 
 // extern crate embassy_preempt;
-use embassy_preempt::task_log;
+use embassy_preempt::{PLATFORM, task_log};
 use embassy_preempt::app::led::{LED_Init, LED_OFF, LED_ON};
 use embassy_preempt::os_core::{OSInit, OSStart};
 use embassy_preempt::os_task::AsyncOSTaskCreate;
@@ -14,7 +14,7 @@ use embassy_preempt_platform::Platform;
 // use embassy_preempt::{self as _};
 #[cortex_m_rt::entry]
 fn test_hardware() -> ! {
-    embassy_preempt::PLATFORM.init_platform();
+    PLATFORM.init_platform();
     // os初始化
     OSInit();
     // init the led
@@ -32,7 +32,6 @@ async fn task1(_args: *mut c_void) {
         // led on
         LED_ON();
         task_log!(info, "led on");
-        bottom::wait_for_rising_edge().await;
         // led off
         LED_OFF();
         task_log!(info, "led off");

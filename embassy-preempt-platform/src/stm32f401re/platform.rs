@@ -13,26 +13,26 @@ use cortex_m::Peripherals;
 
 use embassy_preempt_logs::{scheduler_log, task_log};
 
-use crate::{GpioDriver, Platform, OS_STK};
+use crate::{ButtonDriver, Platform, OS_STK};
 
 // Import the timer and GPIO drivers
-use super::{Stm32f401reGpioDriver, Stm32f401reTimerDriver};
+use super::{Stm32f401reButtonDriver, Stm32f401reTimerDriver};
 use super::{APB_HZ, TICK_HZ};
 
 /// STM32F401RE platform implementation
 pub struct Stm32f401rePlatform {
     pub timer_driver: &'static Stm32f401reTimerDriver,
-    pub gpio_driver: &'static Stm32f401reGpioDriver,
+    pub button_driver: &'static Stm32f401reButtonDriver,
 }
 
 impl Stm32f401rePlatform {
     pub const fn new(
         timer_driver: &'static Stm32f401reTimerDriver,
-        gpio_driver: &'static Stm32f401reGpioDriver,
+        button_driver: &'static Stm32f401reButtonDriver,
     ) -> Self {
         Self {
             timer_driver,
-            gpio_driver,
+            button_driver,
         }
     }
 }
@@ -202,12 +202,12 @@ impl Platform for Stm32f401rePlatform {
         self.timer_driver.init();
     }
 
-    fn init_gpio_driver(&self) {
-        self.gpio_driver.init();
+    fn init_button_driver(&self) {
+        self.button_driver.init();
     }
 
-    fn wait_bottom(&self) {
-        self.gpio_driver.wait_bottom();
+    fn wait_button(&self) {
+        self.button_driver.wait_bottom();
     }
 }
 
@@ -221,10 +221,10 @@ fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker) {
 static TIME_DRIVER: Stm32f401reTimerDriver =
     Stm32f401reTimerDriver::new(stm32_metapac::TIM3, APB_HZ as u32, TICK_HZ as u32);
 
-static GPIO_DRIVER: Stm32f401reGpioDriver = Stm32f401reGpioDriver::new();
+static BUTTON_DRIVER: Stm32f401reButtonDriver = Stm32f401reButtonDriver::new();
 
 /// 预配置的 STM32F401RE 平台实例
-pub static PLATFORM: Stm32f401rePlatform = Stm32f401rePlatform::new(&TIME_DRIVER, &GPIO_DRIVER);
+pub static PLATFORM: Stm32f401rePlatform = Stm32f401rePlatform::new(&TIME_DRIVER, &BUTTON_DRIVER);
 
 // RCC initialization for STM32F401RE (moved from timer driver)
 fn rcc_init() {

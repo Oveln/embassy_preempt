@@ -22,14 +22,16 @@
 pub mod types;
 pub mod platform;
 pub mod timer_driver;
-pub mod gpio_driver;
+pub mod button_driver;
+pub mod button;
 pub mod time_driver;
 
 // Re-export all modules and traits for convenience
 pub use types::*;
 pub use platform::*;
 pub use timer_driver::*;
-pub use gpio_driver::*;
+pub use button_driver::*;
+pub use button::*;
 pub use time_driver::*;
 
 // Platform-specific implementations

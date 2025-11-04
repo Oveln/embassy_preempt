@@ -41,9 +41,9 @@ pub trait Platform {
     /// Initialize timer driver
     fn init_timer_driver(&self);
 
-    /// Initialize GPIO/button driver
-    fn init_gpio_driver(&self);
+    /// Initialize button driver
+    fn init_button_driver(&self);
 
-    /// Wait for a bottom (button press or similar event)
-    fn wait_bottom(&self);
+    /// Wait for a button press or similar event
+    fn wait_button(&self);
 }
