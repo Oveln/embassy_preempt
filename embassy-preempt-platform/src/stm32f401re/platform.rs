@@ -13,7 +13,7 @@ use cortex_m::Peripherals;
 
 use embassy_preempt_logs::{scheduler_log, task_log};
 
-use crate::{GpioDriver, Platform, BOOLEAN, INT64U, OS_STK};
+use crate::{GpioDriver, Platform, OS_STK};
 
 // Import the timer and GPIO drivers
 use super::{Stm32f401reGpioDriver, Stm32f401reTimerDriver};
@@ -40,7 +40,7 @@ impl Stm32f401rePlatform {
 impl Platform for Stm32f401rePlatform {
     fn init_platform(&self) {
         // Initialize RCC and clock configuration for STM32F401RE
-        // rcc_init();
+        rcc_init();
     }
 
     fn init_core_peripherals(&self) {
@@ -188,12 +188,12 @@ impl Platform for Stm32f401rePlatform {
         }
     }
 
-    fn now(&self) -> INT64U {
+    fn now(&self) -> u64 {
         // self.timer_driver.now()
         0
     }
 
-    fn schedule_wake(&self, at: INT64U, waker: &core::task::Waker) {
+    fn schedule_wake(&self, at: u64, waker: &core::task::Waker) {
         // Implementation would hook into the timer driver
         _embassy_time_schedule_wake(at, waker);
     }
@@ -212,7 +212,7 @@ impl Platform for Stm32f401rePlatform {
 }
 
 // Time schedule wake function (placeholder)
-fn _embassy_time_schedule_wake(at: INT64U, waker: &core::task::Waker) {
+fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker) {
     // Implementation would handle scheduling wake events
     // This would be implemented in the main crate
 }

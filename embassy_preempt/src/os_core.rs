@@ -46,7 +46,7 @@ use crate::os_task::SyncOSTaskCreate;
 use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
-use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, PLATFORM, Platform, USIZE};
+use embassy_preempt_platform::{PLATFORM, Platform};
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
 use crate::ucosii::OSTaskRegNextAvailID;
 use crate::ucosii::{
@@ -63,7 +63,7 @@ use crate::ucosii::{
 */
 
 #[allow(unused)]
-const OSUnMapTbl: [INT8U; 256] = [
+const OSUnMapTbl: [u8; 256] = [
     0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x00 to 0x0F                   */
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x10 to 0x1F                   */
     5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x20 to 0x2F                   */
@@ -200,7 +200,7 @@ pub extern "C" fn OSInit() {
     // by liam: we need to init the stack allocator
     init_stack_allocator();
     // by noah：we need to init the Timer as the time driver
-    OSTimerInit();
+    PLATFORM.init_platform();
     // by noah: *TEST*
     // OS_InitEventList();
 }
@@ -388,7 +388,7 @@ pub extern "C" fn OSStart() -> ! {
 /// This function is used to return the version number of uC/OS-II.
 /// The returned value corresponds to uC/OS-II's version number multiplied by 10000.
 /// In other words, version 2.01.00 would be returned as 20100.
-pub fn OSVersion() -> INT16U {
+pub fn OSVersion() -> u16 {
     return 0;
 }
 
@@ -439,7 +439,7 @@ pub fn OS_Dummy() {}
 /// This function is called by other uC/OS-II services and is used to ready
 /// a task that was waiting for an event to occur.
 #[cfg(feature = "OS_EVENT_EN")]
-pub fn OS_EventTaskRdy() -> INT8U {
+pub fn OS_EventTaskRdy() -> u8 {
     return 0;
 }
 
@@ -757,7 +757,7 @@ fn OS_SchedNew() {}
 */
 
 /// This function is called by other uC/OS-II services to determine the size of an ASCII string (excluding the NUL character)
-pub fn OS_StrLen(_psrc: &str) -> INT8U {
+pub fn OS_StrLen(_psrc: &str) -> u8 {
     return 0;
 }
 
@@ -821,7 +821,7 @@ pub fn OS_TaskStatStkChk() {}
 *
 *              id            is the task's ID (0..65535)
 *
-*              stk_size      is the size of the stack (in 'stack units').  If the stack units are INT8Us
+*              stk_size      is the size of the stack (in 'stack units').  If the stack units are u8s
 *                            then, 'stk_size' contains the number of bytes for the stack.  If the stack
 *                            units are INT32Us then, the stack contains '4 * stk_size' bytes.  The stack
 *                            units are established by the #define constant OS_STK which is CPU

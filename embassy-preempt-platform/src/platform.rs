@@ -1,7 +1,7 @@
 //! Core platform functionality trait definition
 
 use core::ptr::NonNull;
-use crate::{OS_STK, INT64U};
+use crate::OS_STK;
 
 /// Core platform functionality required by the RTOS
 pub trait Platform {
@@ -33,10 +33,10 @@ pub trait Platform {
     fn exit_critical_section(&self);
 
     /// Get current timestamp in ticks
-    fn now(&self) -> INT64U;
+    fn now(&self) -> u64;
 
     /// Schedule a wake-up for the given timestamp
-    fn schedule_wake(&self, at: INT64U, waker: &core::task::Waker);
+    fn schedule_wake(&self, at: u64, waker: &core::task::Waker);
 
     /// Initialize timer driver
     fn init_timer_driver(&self);

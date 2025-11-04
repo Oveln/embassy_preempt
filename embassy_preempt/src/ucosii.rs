@@ -37,7 +37,6 @@ use lazy_static::lazy_static;
 use embassy_preempt_platform::{OS_LOWEST_PRIO, OS_TASK_REG_TBL_SIZE, OS_MAX_MEM_PART, OS_ARENA_SIZE, TICK_HZ, APB_HZ};
 use crate::executor::OS_TCB_REF;
 use crate::port::*;
-use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 
 /*
 *********************************************************************************************************
@@ -46,17 +45,17 @@ use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 */
 
 #[allow(unused)]
-const OS_PRIO_SELF: INT32U = 0xFF; /* Indicate SELF priority                      */
+const OS_PRIO_SELF: u32 = 0xFF; /* Indicate SELF priority                      */
 #[allow(unused)]
-const OS_PRIO_MUTEX_CEIL_DIS: INT32U = 0xFF; /* Disable mutex priority ceiling promotion    */
+const OS_PRIO_MUTEX_CEIL_DIS: u32 = 0xFF; /* Disable mutex priority ceiling promotion    */
 
 // by noah：For there is no Task Idle, so the OS_N_SYS_TASKS is set as 0 or 1(when OS_TASK_STAT_EN)
 #[cfg(feature = "OS_TASK_STAT_EN")]
-pub const OS_N_SYS_TASKS: INT32U = 1;
+pub const OS_N_SYS_TASKS: u32 = 1;
 #[cfg(not(feature = "OS_TASK_STAT_EN"))]
 #[allow(unused)]
 /// Number of system tasks
-pub const OS_N_SYS_TASKS: USIZE = 0;
+pub const OS_N_SYS_TASKS: usize = 0;
 
 // by noah：maybe because the lazy_static, the const val can be calculate when it is used for the first time
 // maybe use a static val is a good choice.
@@ -66,20 +65,20 @@ pub(crate) const OS_TASK_STAT_PRIO: OS_PRIO = OS_LOWEST_PRIO - 1; /* Statistic t
 pub(crate) const OS_TASK_IDLE_PRIO: OS_PRIO = OS_LOWEST_PRIO; /* IDLE      task priority                     */
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
-const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE; /* Size of event table                         */
+const OS_EVENT_TBL_SIZE: usize = (OS_LOWEST_PRIO / 8 + 1) as usize; /* Size of event table                         */
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
-const OS_EVENT_TBL_SIZE: USIZE = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
+const OS_EVENT_TBL_SIZE: usize = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
 
 /// Size of ready table
 #[allow(unused)]
-pub const OS_RDY_TBL_SIZE: USIZE = OS_EVENT_TBL_SIZE;
+pub const OS_RDY_TBL_SIZE: usize = OS_EVENT_TBL_SIZE;
 
 #[allow(unused)]
-const OS_TASK_IDLE_ID: INT32U = 65535; /* ID numbers for Idle, Stat and Timer tasks   */
+const OS_TASK_IDLE_ID: u32 = 65535; /* ID numbers for Idle, Stat and Timer tasks   */
 #[allow(unused)]
-const OS_TASK_STAT_ID: INT32U = 65534;
+const OS_TASK_STAT_ID: u32 = 65534;
 #[allow(unused)]
-const OS_TASK_TMR_ID: INT32U = 65533;
+const OS_TASK_TMR_ID: u32 = 65533;
 
 /*
 *********************************************************************************************************
@@ -88,7 +87,7 @@ const OS_TASK_TMR_ID: INT32U = 65533;
 */
 
 #[allow(unused)]
-const OS_VERSION: INT32U = 29300; /* Version of uC/OS-II (Vx.yy mult. by 10000)  */
+const OS_VERSION: u32 = 29300; /* Version of uC/OS-II (Vx.yy mult. by 10000)  */
 
 /*
 *********************************************************************************************************
@@ -97,23 +96,23 @@ const OS_VERSION: INT32U = 29300; /* Version of uC/OS-II (Vx.yy mult. by 10000) 
 */
 
 #[allow(unused)]
-const OS_STAT_RDY: INT32U = 0x00; /* Ready to run                                            */
+const OS_STAT_RDY: u32 = 0x00; /* Ready to run                                            */
 #[allow(unused)]
-const OS_STAT_SEM: INT32U = 0x01; /* Pending on semaphore                                    */
+const OS_STAT_SEM: u32 = 0x01; /* Pending on semaphore                                    */
 #[allow(unused)]
-const OS_STAT_MBOX: INT32U = 0x02; /* Pending on mailbox                                      */
+const OS_STAT_MBOX: u32 = 0x02; /* Pending on mailbox                                      */
 #[allow(unused)]
-const OS_STAT_Q: INT32U = 0x04; /* Pending on queue                                        */
+const OS_STAT_Q: u32 = 0x04; /* Pending on queue                                        */
 #[allow(unused)]
-const OS_STAT_SUSPEND: INT32U = 0x08; /* Task is suspended                                       */
+const OS_STAT_SUSPEND: u32 = 0x08; /* Task is suspended                                       */
 #[allow(unused)]
-const OS_STAT_MUTEX: INT32U = 0x10; /* Pending on mutual exclusion semaphore                   */
+const OS_STAT_MUTEX: u32 = 0x10; /* Pending on mutual exclusion semaphore                   */
 #[allow(unused)]
-const OS_STAT_FLAG: INT32U = 0x20; /* Pending on event flag group                             */
+const OS_STAT_FLAG: u32 = 0x20; /* Pending on event flag group                             */
 #[allow(unused)]
-const OS_STAT_MULTI: INT32U = 0x80; /* Pending on multiple events                              */
+const OS_STAT_MULTI: u32 = 0x80; /* Pending on multiple events                              */
 #[allow(unused)]
-const OS_STAT_PEND_ANY: INT32U = (OS_STAT_SEM | OS_STAT_MBOX | OS_STAT_Q | OS_STAT_MUTEX | OS_STAT_FLAG);
+const OS_STAT_PEND_ANY: u32 = (OS_STAT_SEM | OS_STAT_MBOX | OS_STAT_Q | OS_STAT_MUTEX | OS_STAT_FLAG);
 
 /*
 *********************************************************************************************************
@@ -122,11 +121,11 @@ const OS_STAT_PEND_ANY: INT32U = (OS_STAT_SEM | OS_STAT_MBOX | OS_STAT_Q | OS_ST
 */
 
 #[allow(unused)]
-const OS_STAT_PEND_OK: INT32U = 0; /* Pending status OK, not pending, or pending complete     */
+const OS_STAT_PEND_OK: u32 = 0; /* Pending status OK, not pending, or pending complete     */
 #[allow(unused)]
-const OS_STAT_PEND_TO: INT32U = 1; /* Pending timed out                                       */
+const OS_STAT_PEND_TO: u32 = 1; /* Pending timed out                                       */
 #[allow(unused)]
-const OS_STAT_PEND_ABORT: INT32U = 2; /* Pending aborted                                         */
+const OS_STAT_PEND_ABORT: u32 = 2; /* Pending aborted                                         */
 
 /*
 *********************************************************************************************************
@@ -135,19 +134,19 @@ const OS_STAT_PEND_ABORT: INT32U = 2; /* Pending aborted                        
 */
 
 #[allow(unused)]
-const OS_EVENT_TYPE_UNUSED: INT32U = 0;
+const OS_EVENT_TYPE_UNUSED: u32 = 0;
 #[allow(unused)]
-const OS_EVENT_TYPE_MBOX: INT32U = 1;
+const OS_EVENT_TYPE_MBOX: u32 = 1;
 #[allow(unused)]
-const OS_EVENT_TYPE_Q: INT32U = 2;
+const OS_EVENT_TYPE_Q: u32 = 2;
 #[allow(unused)]
-const OS_EVENT_TYPE_SEM: INT32U = 3;
+const OS_EVENT_TYPE_SEM: u32 = 3;
 #[allow(unused)]
-const OS_EVENT_TYPE_MUTEX: INT32U = 4;
+const OS_EVENT_TYPE_MUTEX: u32 = 4;
 #[allow(unused)]
-const OS_EVENT_TYPE_FLAG: INT32U = 5;
+const OS_EVENT_TYPE_FLAG: u32 = 5;
 #[allow(unused)]
-const OS_TMR_TYPE: INT32U = 100; /* Used to identify Timers ...                             */
+const OS_TMR_TYPE: u32 = 100; /* Used to identify Timers ...                             */
 /* ... (Must be different value than OS_EVENT_TYPE_xxx)    */
 
 /*
@@ -157,32 +156,32 @@ const OS_TMR_TYPE: INT32U = 100; /* Used to identify Timers ...                 
 */
 
 #[allow(unused)]
-const OS_FLAG_WAIT_CLR_ALL: INT32U = 0; /* Wait for ALL    the bits specified to be CLR (i.e. 0)   */
+const OS_FLAG_WAIT_CLR_ALL: u32 = 0; /* Wait for ALL    the bits specified to be CLR (i.e. 0)   */
 #[allow(unused)]
-const OS_FLAG_WAIT_CLR_AND: INT32U = 0;
+const OS_FLAG_WAIT_CLR_AND: u32 = 0;
 
 #[allow(unused)]
-const OS_FLAG_WAIT_CLR_ANY: INT32U = 1; /* Wait for ANY of the bits specified to be CLR (i.e. 0)   */
+const OS_FLAG_WAIT_CLR_ANY: u32 = 1; /* Wait for ANY of the bits specified to be CLR (i.e. 0)   */
 #[allow(unused)]
-const OS_FLAG_WAIT_CLR_OR: INT32U = 1;
+const OS_FLAG_WAIT_CLR_OR: u32 = 1;
 
 #[allow(unused)]
-const OS_FLAG_WAIT_SET_ALL: INT32U = 2; /* Wait for ALL    the bits specified to be SET (i.e. 1)   */
+const OS_FLAG_WAIT_SET_ALL: u32 = 2; /* Wait for ALL    the bits specified to be SET (i.e. 1)   */
 #[allow(unused)]
-const OS_FLAG_WAIT_SET_AND: INT32U = 2;
+const OS_FLAG_WAIT_SET_AND: u32 = 2;
 
 #[allow(unused)]
-const OS_FLAG_WAIT_SET_ANY: INT32U = 3; /* Wait for ANY of the bits specified to be SET (i.e. 1)   */
+const OS_FLAG_WAIT_SET_ANY: u32 = 3; /* Wait for ANY of the bits specified to be SET (i.e. 1)   */
 #[allow(unused)]
-const OS_FLAG_WAIT_SET_OR: INT32U = 3;
+const OS_FLAG_WAIT_SET_OR: u32 = 3;
 
 #[allow(unused)]
-const OS_FLAG_CONSUME: INT32U = 0x80; /* Consume the flags if condition(s) satisfied             */
+const OS_FLAG_CONSUME: u32 = 0x80; /* Consume the flags if condition(s) satisfied             */
 
 #[allow(unused)]
-const OS_FLAG_CLR: INT32U = 0;
+const OS_FLAG_CLR: u32 = 0;
 #[allow(unused)]
-const OS_FLAG_SET: INT32U = 1;
+const OS_FLAG_SET: u32 = 1;
 
 /*
 *********************************************************************************************************
@@ -199,9 +198,9 @@ const OS_FLAG_SET: INT32U = 1;
 */
 
 #[allow(unused)]
-const OS_DEL_NO_PEND: INT32U = 0;
+const OS_DEL_NO_PEND: u32 = 0;
 #[allow(unused)]
-const OS_DEL_ALWAYS: INT32U = 1;
+const OS_DEL_ALWAYS: u32 = 1;
 
 /*
 *********************************************************************************************************
@@ -212,9 +211,9 @@ const OS_DEL_ALWAYS: INT32U = 1;
 */
 
 #[allow(unused)]
-const OS_PEND_OPT_NONE: INT32U = 0; /* NO option selected                                      */
+const OS_PEND_OPT_NONE: u32 = 0; /* NO option selected                                      */
 #[allow(unused)]
-const OS_PEND_OPT_BROADCAST: INT32U = 1; /* Broadcast action to ALL tasks waiting                   */
+const OS_PEND_OPT_BROADCAST: u32 = 1; /* Broadcast action to ALL tasks waiting                   */
 
 /*
 *********************************************************************************************************
@@ -225,13 +224,13 @@ const OS_PEND_OPT_BROADCAST: INT32U = 1; /* Broadcast action to ALL tasks waitin
 */
 
 #[allow(unused)]
-const OS_POST_OPT_NONE: INT32U = 0x00; /* NO option selected                                      */
+const OS_POST_OPT_NONE: u32 = 0x00; /* NO option selected                                      */
 #[allow(unused)]
-const OS_POST_OPT_BROADCAST: INT32U = 0x01; /* Broadcast message to ALL tasks waiting                  */
+const OS_POST_OPT_BROADCAST: u32 = 0x01; /* Broadcast message to ALL tasks waiting                  */
 #[allow(unused)]
-const OS_POST_OPT_FRONT: INT32U = 0x02; /* Post to highest priority task waiting                   */
+const OS_POST_OPT_FRONT: u32 = 0x02; /* Post to highest priority task waiting                   */
 #[allow(unused)]
-const OS_POST_OPT_NO_SCHED: INT32U = 0x04; /* Do not call the scheduler if this option is selected    */
+const OS_POST_OPT_NO_SCHED: u32 = 0x04; /* Do not call the scheduler if this option is selected    */
 
 /*
 *********************************************************************************************************
@@ -240,15 +239,15 @@ const OS_POST_OPT_NO_SCHED: INT32U = 0x04; /* Do not call the scheduler if this 
 */
 
 #[allow(unused)]
-const OS_TASK_OPT_NONE: INT32U = 0x0000; /* NO option selected                                      */
+const OS_TASK_OPT_NONE: u32 = 0x0000; /* NO option selected                                      */
 #[allow(unused)]
-const OS_TASK_OPT_STK_CHK: INT32U = 0x0001; /* Enable stack checking for the task                      */
+const OS_TASK_OPT_STK_CHK: u32 = 0x0001; /* Enable stack checking for the task                      */
 #[allow(unused)]
-const OS_TASK_OPT_STK_CLR: INT32U = 0x0002; /* Clear the stack when the task is create                 */
+const OS_TASK_OPT_STK_CLR: u32 = 0x0002; /* Clear the stack when the task is create                 */
 #[allow(unused)]
-const OS_TASK_OPT_SAVE_FP: INT32U = 0x0004; /* Save the contents of any floating-point registers       */
+const OS_TASK_OPT_SAVE_FP: u32 = 0x0004; /* Save the contents of any floating-point registers       */
 #[allow(unused)]
-const OS_TASK_OPT_NO_TLS: INT32U = 0x0008; /* Specify that task doesn't needs TLS                     */
+const OS_TASK_OPT_NO_TLS: u32 = 0x0008; /* Specify that task doesn't needs TLS                     */
 
 /*
 *********************************************************************************************************
@@ -257,17 +256,17 @@ const OS_TASK_OPT_NO_TLS: INT32U = 0x0008; /* Specify that task doesn't needs TL
 */
 
 #[allow(unused)]
-const OS_TMR_OPT_NONE: INT32U = 0; /* No option selected                                      */
+const OS_TMR_OPT_NONE: u32 = 0; /* No option selected                                      */
 
 #[allow(unused)]
-const OS_TMR_OPT_ONE_SHOT: INT32U = 1; /* Timer will not automatically restart when it expires    */
+const OS_TMR_OPT_ONE_SHOT: u32 = 1; /* Timer will not automatically restart when it expires    */
 #[allow(unused)]
-const OS_TMR_OPT_PERIODIC: INT32U = 2; /* Timer will     automatically restart when it expires    */
+const OS_TMR_OPT_PERIODIC: u32 = 2; /* Timer will     automatically restart when it expires    */
 
 #[allow(unused)]
-const OS_TMR_OPT_CALLBACK: INT32U = 3; /* OSTmrStop() option to call 'callback' w/ timer arg.     */
+const OS_TMR_OPT_CALLBACK: u32 = 3; /* OSTmrStop() option to call 'callback' w/ timer arg.     */
 #[allow(unused)]
-const OS_TMR_OPT_CALLBACK_ARG: INT32U = 4; /* OSTmrStop() option to call 'callback' w/ new   arg.     */
+const OS_TMR_OPT_CALLBACK_ARG: u32 = 4; /* OSTmrStop() option to call 'callback' w/ new   arg.     */
 
 /*
 *********************************************************************************************************
@@ -276,13 +275,13 @@ const OS_TMR_OPT_CALLBACK_ARG: INT32U = 4; /* OSTmrStop() option to call 'callba
 */
 
 #[allow(unused)]
-const OS_TMR_STATE_UNUSED: INT32U = 0;
+const OS_TMR_STATE_UNUSED: u32 = 0;
 #[allow(unused)]
-const OS_TMR_STATE_STOPPED: INT32U = 1;
+const OS_TMR_STATE_STOPPED: u32 = 1;
 #[allow(unused)]
-const OS_TMR_STATE_COMPLETED: INT32U = 2;
+const OS_TMR_STATE_COMPLETED: u32 = 2;
 #[allow(unused)]
-const OS_TMR_STATE_RUNNING: INT32U = 3;
+const OS_TMR_STATE_RUNNING: u32 = 3;
 
 /*
 *********************************************************************************************************
@@ -497,11 +496,11 @@ pub enum OS_ERR_STATE {
 pub type OS_PRIO = u8;
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
-pub type OS_PRIO = INT16U;
+pub type OS_PRIO = u16;
 
 // if use both of the features, there will be an error
 #[cfg(not(any(feature = "OS_PRIO_LESS_THAN_64", feature = "OS_PRIO_LESS_THAN_256")))]
-pub type OS_PRIO = INT8U;
+pub type OS_PRIO = u8;
 // there will be an error if both features is active
 #[cfg(all(feature = "OS_PRIO_LESS_THAN_64", feature = "OS_PRIO_LESS_THAN_256"))]
 compile_error!("You may not enable both `OS_PRIO_LESS_THAN_64` and `OS_PRIO_LESS_THAN_256` features.");
@@ -530,9 +529,9 @@ pub enum ECBPTR {
 #[cfg(feature = "OS_EVENT_EN")]
 #[allow(unused)]
 pub(crate) struct OS_EVENT {
-    OSEventType: INT8U,         /* Type of event control block (see OS_EVENT_TYPE_xxxx)    */
+    OSEventType: u8,         /* Type of event control block (see OS_EVENT_TYPE_xxxx)    */
     OSEventPtr: Option<ECBPTR>, /* Pointer to message or queue structure                   */
-    OSEventCnt: INT16U,         /* Semaphore Count (not used if other EVENT type)          */
+    OSEventCnt: u16,         /* Semaphore Count (not used if other EVENT type)          */
     OSEventGrp: OS_PRIO,        /* Group corresponding to tasks waiting for event to occur */
     OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE as usize], /* List of tasks waiting for event to occur                */
     #[cfg(feature = "OS_EVENT_NAME_EN")]
@@ -571,9 +570,9 @@ pub struct OS_MBOX_DATA {
 //     OSMemAddr: Addr,      /* Pointer to beginning of memory partition              */
 //     /// Pointer to list of free memory blocks
 //     pub OSMemFreeList: Addr,
-//     OSMemBlkSize: INT32U, /* Size (in bytes) of each block in the partition        */
-//     OSMemNBlks: INT32U,   /* Total number of blocks in the partition               */
-//     OSMemNFree: INT32U,   /* Number of free memory blocks in the partition         */
+//     OSMemBlkSize: u32, /* Size (in bytes) of each block in the partition        */
+//     OSMemNBlks: u32,   /* Total number of blocks in the partition               */
+//     OSMemNFree: u32,   /* Number of free memory blocks in the partition         */
 //     #[cfg(feature = "OS_MEM_NAME_EN")]
 //     OSMemName: str, /* Memory partition name                                */
 // }
@@ -585,10 +584,10 @@ pub struct OS_MBOX_DATA {
 pub struct OS_MEM_DATA {
     OSAddr: PTR,       /* Ptr to the beginning address of the memory partition    */
     OSFreeList: PTR,   /* Ptr to the beginning of the free list of memory blocks  */
-    OSBlkSize: INT32U, /* Size (in bytes) of each memory block                    */
-    OSNBlks: INT32U,   /* Total number of blocks in the partition                 */
-    OSNFree: INT32U,   /* Number of memory blocks free                            */
-    OSNUsed: INT32U,   /* Number of memory blocks used                            */
+    OSBlkSize: u32, /* Size (in bytes) of each memory block                    */
+    OSNBlks: u32,   /* Total number of blocks in the partition                 */
+    OSNFree: u32,   /* Number of memory blocks free                            */
+    OSNUsed: u32,   /* Number of memory blocks used                            */
 }
 
 /*
@@ -603,9 +602,9 @@ pub struct OS_MEM_DATA {
 pub struct OS_MUTEX_DATA {
     OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
     OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
-    OSValue: BOOLEAN,                         /* Mutex value (OS_FALSE = used, OS_TRUE = available)      */
-    OSOwnerPrio: INT8U,                       /* Mutex owner's task priority or 0xFF if no owner         */
-    OSMutexPCP: INT8U,                        /* Priority Ceiling Priority or 0xFF if PCP disabled       */
+    OSValue: bool,                         /* Mutex value (OS_FALSE = used, OS_TRUE = available)      */
+    OSOwnerPrio: u8,                       /* Mutex owner's task priority or 0xFF if no owner         */
+    OSMutexPCP: u8,                        /* Priority Ceiling Priority or 0xFF if PCP disabled       */
 }
 
 /*
@@ -623,8 +622,8 @@ pub(crate) struct OS_Q {
     osqend: PTR,              /* Ptr to end   of queue data.is a second level ptr            */
     osqin: PTR,               /* Ptr to where next message will be inserted  in   the Q. is a second level ptr*/
     osqout: PTR,              /* Ptr to where next message will be extracted from the Q. is a second level ptr*/
-    osqsize: INT16U,          /* Size of queue (maximum number of entries)               */
-    osqentries: INT16U,       /* Current number of entries in the queue                  */
+    osqsize: u16,          /* Size of queue (maximum number of entries)               */
+    osqentries: u16,       /* Current number of entries in the queue                  */
 }
 
 /// the ref to OS_Q
@@ -639,8 +638,8 @@ pub struct OS_Q_REF {
 #[allow(unused)]
 pub struct OS_Q_DATA {
     OSMsg: PTR,                               /* Pointer to next message to be extracted from queue      */
-    OSNMsgs: INT16U,                          /* Number of messages in message queue                     */
-    OSQSize: INT16U,                          /* Size of message queue                                   */
+    OSNMsgs: u16,                          /* Number of messages in message queue                     */
+    OSQSize: u16,                          /* Size of message queue                                   */
     OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur         */
     OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
 }
@@ -655,7 +654,7 @@ pub struct OS_Q_DATA {
 #[cfg(feature = "OS_SEM_EN")]
 #[allow(unused)]
 pub struct OS_SEM_DATA {
-    OSCnt: INT16U,                            /* Semaphore count                                         */
+    OSCnt: u16,                            /* Semaphore count                                         */
     OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
     OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
 }
@@ -670,8 +669,8 @@ pub struct OS_SEM_DATA {
 #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
 #[allow(unused)]
 pub struct OS_STK_DATA {
-    OSFree: INT32U, /* Number of free entries on the stack                     */
-    OSUsed: INT32U, /* Number of entries used on the stack                     */
+    OSFree: u32, /* Number of free entries on the stack                     */
+    OSUsed: u32, /* Number of entries used on the stack                     */
 }
 
 /*
@@ -704,7 +703,7 @@ pub struct OS_STK_DATA {
 // /// the free memory partition table list
 // pub static mut OSMemFreeList: Addr = core::ptr::null_mut();
 // #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
-// const OS_MAX_MEM_PART: INT32U = env!("OS_MAX_MEM_PART").parse::<INT32U>().unwrap();
+// const OS_MAX_MEM_PART: u32 = env!("OS_MAX_MEM_PART").parse::<u32>().unwrap();
 // #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 // #[allow(non_upper_case_globals)]
 // #[allow(unused)]

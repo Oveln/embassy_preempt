@@ -1,7 +1,7 @@
 #![allow(non_camel_case_types)]
 
 use embassy_preempt_platform::{PLATFORM, Platform};
-pub use embassy_preempt_platform::{BOOLEAN, INT8U, INT16U, INT32U, INT64U, OS_STK, OS_CPU_SR, USIZE};
+pub use embassy_preempt_platform::{OS_STK, OS_CPU_SR};
 
 /*
 **************************************************************************************************************************************

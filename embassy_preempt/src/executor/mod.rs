@@ -30,7 +30,6 @@ use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_
 use crate::os_time::blockdelay::delay;
 // use spawner::SpawnToken;
 use crate::port::*;
-use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 use crate::ucosii::*;
 use crate::util::{SyncUnsafeCell, UninitCell};
 
@@ -72,29 +71,29 @@ pub struct OS_TCB {
     #[cfg(any(all(feature = "OS_Q_EN", feature = "OS_MAX_QS"), feature = "OS_MBOX_EN"))]
     OSTCBMsg: PTR, /* Message received from OSMboxPost() or OSQPost()         */
 
-    OSTCBDly: INT32U, /* Nbr ticks to delay task or, timeout waiting for event   */
+    OSTCBDly: u32, /* Nbr ticks to delay task or, timeout waiting for event   */
     OSTCBStat: State, /* Task      status                                        */
     // no need
-    // OSTCBStatPend: INT8U, /* Task PEND status                                        */
-    OSTCBPrio: INT8U, /* Task priority (0 == highest)                            */
+    // OSTCBStatPend: u8, /* Task PEND status                                        */
+    OSTCBPrio: u8, /* Task priority (0 == highest)                            */
 
-    OSTCBX: INT8U,    /* Bit position in group  corresponding to task priority   */
-    OSTCBY: INT8U,    /* Index into ready table corresponding to task priority   */
-    OSTCBBitX: INT8U, /* Bit mask to access bit position in ready table          */
-    OSTCBBitY: INT8U, /* Bit mask to access bit position in ready group          */
+    OSTCBX: u8,    /* Bit position in group  corresponding to task priority   */
+    OSTCBY: u8,    /* Index into ready table corresponding to task priority   */
+    OSTCBBitX: u8, /* Bit mask to access bit position in ready table          */
+    OSTCBBitY: u8, /* Bit mask to access bit position in ready group          */
 
     #[cfg(feature = "OS_TASK_DEL_EN")]
-    OSTCBDelReq: INT8U, /* Indicates whether a task needs to delete itself         */
+    OSTCBDelReq: u8, /* Indicates whether a task needs to delete itself         */
 
     #[cfg(feature = "OS_TASK_PROFILE_EN")]
-    OSTCBCtxSwCtr: INT32U, /* Number of time the task was switched in                 */
-    OSTCBCyclesTot: INT32U,           /* Total number of clock cycles the task has been running  */
-    OSTCBCyclesStart: INT32U,         /* Snapshot of cycle counter at start of task resumption   */
+    OSTCBCtxSwCtr: u32, /* Number of time the task was switched in                 */
+    OSTCBCyclesTot: u32,           /* Total number of clock cycles the task has been running  */
+    OSTCBCyclesStart: u32,         /* Snapshot of cycle counter at start of task resumption   */
     OSTCBStkBase: Option<OS_STK_REF>, /* Pointer to the beginning of the task stack              */
-    OSTCBStkUsed: INT32U,             /* Number of bytes used from the stack                     */
+    OSTCBStkUsed: u32,             /* Number of bytes used from the stack                     */
 
     #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
-    OSTCBRegTbl: [INT32U; OS_TASK_REG_TBL_SIZE],
+    OSTCBRegTbl: [u32; OS_TASK_REG_TBL_SIZE],
 
     #[cfg(feature = "OS_TASK_NAME_EN")]
     OSTCBTaskName: String,
@@ -115,9 +114,9 @@ pub struct OS_TCB {
 pub(crate) struct OS_TCB_EXT {
     OSTCBExtPtr: PTR,                   /* Pointer to user definable data for TCB extension        */
     OSTCBStkBottom: Option<OS_STK_REF>, /* Pointer to bottom of stack                              */
-    OSTCBStkSize: INT32U,               /* Size of task stack (in number of stack elements)        */
-    OSTCBOpt: INT16U,                   /* Task options as passed by OSTaskCreateExt()             */
-    OSTCBId: INT16U,                    /* Task ID (0..65535)                                      */
+    OSTCBStkSize: u32,               /* Size of task stack (in number of stack elements)        */
+    OSTCBOpt: u16,                   /* Task options as passed by OSTaskCreateExt()             */
+    OSTCBId: u16,                    /* Task ID (0..65535)                                      */
 }
 
 /// the storage of the task. It contains the task's TCB and the future
@@ -190,7 +189,7 @@ impl OS_TCB {
 }
 
 impl OS_TCB_EXT {
-    fn init(&mut self, pext: *mut (), opt: INT16U, id: INT16U) {
+    fn init(&mut self, pext: *mut (), opt: u16, id: u16) {
         self.OSTCBExtPtr = pext;
         // info about stack is no need to be init here
         // self.OSTCBStkBottom=None;
@@ -256,10 +255,10 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     //  this func will be called by OS_TASK_CTREATE
     //  just like OSTCBInit in uC/OS, but we don't need the stack ptr
     pub fn init(
-        prio: INT8U,
-        id: INT16U,
+        prio: u8,
+        id: u16,
         pext: *mut (),
-        opt: INT16U,
+        opt: u16,
         _name: String,
         future_func: impl FnOnce() -> F,
     ) -> OS_ERR_STATE {
@@ -741,24 +740,24 @@ impl SyncExecutor {
         });
     }
     // check if an prio is exiting
-    pub extern "aapcs" fn prio_exist(&self, prio: INT8U) -> bool {
+    pub extern "aapcs" fn prio_exist(&self, prio: u8) -> bool {
         let prio_tbl: &[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_unmut();
-        prio_tbl[prio as USIZE].ptr.is_some()
+        prio_tbl[prio as usize].ptr.is_some()
     }
 
-    pub extern "aapcs" fn reserve_bit(&self, prio: INT8U) {
+    pub extern "aapcs" fn reserve_bit(&self, prio: u8) {
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
-        prio_tbl[prio as USIZE].ptr = Some(NonNull::dangling());
+        prio_tbl[prio as usize].ptr = Some(NonNull::dangling());
     }
 
-    pub extern "aapcs" fn clear_bit(&self, prio: INT8U) {
+    pub extern "aapcs" fn clear_bit(&self, prio: u8) {
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
-        prio_tbl[prio as USIZE].ptr = None;
+        prio_tbl[prio as usize].ptr = None;
     }
 
     // by noah:TEST print the ready queue

@@ -1,6 +1,6 @@
 //! Time driver trait definition
 
-use crate::{AlarmHandle, BOOLEAN, INT64U};
+use crate::AlarmHandle;
 
 /// Time driver
 pub trait TimeDriver: Send + Sync + 'static {
@@ -14,7 +14,7 @@ pub trait TimeDriver: Send + Sync + 'static {
     ///   10_000 years from now.). This means if your hardware only has 16bit/32bit timers
     ///   you MUST extend them to 64-bit, for example by counting overflows in software,
     ///   or chaining multiple timers together.
-    fn now(&self) -> INT64U;
+    fn now(&self) -> u64;
 
     /// Try allocating an alarm handle. Returns None if no alarms left.
     /// Initially the alarm has no callback set, and a null `ctx` pointer.
@@ -42,5 +42,5 @@ pub trait TimeDriver: Send + Sync + 'static {
     /// When callback is called, it is guaranteed that now() will return a value greater or equal than timestamp.
     ///
     /// Only one alarm can be active at a time for each AlarmHandle. This overwrites any previously-set alarm if any.
-    fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> BOOLEAN;
+    fn set_alarm(&self, alarm: AlarmHandle, timestamp: u64) -> bool;
 }

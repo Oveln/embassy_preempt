@@ -1,7 +1,6 @@
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::*;
-use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 
 // 导入日志宏
 use crate::timer_log;
@@ -20,14 +19,14 @@ pub fn OSTimerInit() {
     RTC_DRIVER.init();
 }
 /// we have to make this delay acting like preemptive delay
-pub fn OSTimeDly(_ticks: INT64U) {
+pub fn OSTimeDly(_ticks: u64) {
     timer_log!(trace, "OSTimeDly");
     unsafe {
         delay_tick(_ticks);
     }
 }
 
-pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
+pub(crate) unsafe fn delay_tick(_ticks: u64) {
     // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();

@@ -17,11 +17,10 @@ use core::ffi::c_void;
 use core::future::Future;
 use core::sync::atomic::Ordering::Acquire;
 
-use embassy_preempt_platform::OS_LOWEST_PRIO;
+use embassy_preempt_platform::{OS_LOWEST_PRIO, OS_STK};
 use crate::executor::{GlobalSyncExecutor, OS_TASK_STORAGE};
 use crate::heap::stack_allocator::{dealloc_stack, stk_from_ptr};
 use crate::task_log;
-use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 use crate::ucosii::{OSIntNesting, OSRunning, OS_ERR_STATE};
 const DEFAULT_REVOKE_STACK_SIZE: usize = 128;
 
@@ -41,7 +40,7 @@ pub extern "aapcs" fn SyncOSTaskCreate<F, R>(
     task: F,
     p_arg: *mut c_void,
     _ptos: *mut OS_STK,
-    prio: INT8U,
+    prio: u8,
 ) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
@@ -69,7 +68,7 @@ where
 }
 
 /// Create a task in uC/OS-II kernel. This func is used by async Rust
-pub fn AsyncOSTaskCreate<F, FutFn>(task: FutFn, p_arg: *mut c_void, _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub fn AsyncOSTaskCreate<F, FutFn>(task: FutFn, p_arg: *mut c_void, _ptos: *mut OS_STK, prio: u8) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
     F: Future + 'static,
@@ -94,7 +93,7 @@ where
 //     fun_ptr:  extern "aapcs" fn(*mut c_void) -> c_void,
 //     p_arg: *mut c_void,
 //     ptos: *mut OS_STK,
-//     prio: INT8U,
+//     prio: u8,
 // ) -> OS_ERR_STATE {
 //     unsafe {
 //         asm!(
@@ -120,14 +119,14 @@ pub extern "aapcs" fn OSTaskCreate(
     fun_ptr: extern "aapcs" fn(*mut c_void),
     p_arg: *mut c_void,
     ptos: *mut OS_STK,
-    prio: INT8U,
+    prio: u8,
 ) -> OS_ERR_STATE {
     task_log!(trace, "OSTaskCreate");
     let fun_ptr = move |p_arg| fun_ptr(p_arg);
     SyncOSTaskCreate(fun_ptr, p_arg, ptos, prio)
 }
 
-fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) -> OS_ERR_STATE {
+fn init_task<F: Future + 'static>(prio: u8, future_func: impl FnOnce() -> F) -> OS_ERR_STATE {
     // Make sure we don't create the task from within an ISR
     if OSIntNesting.load(Acquire) > 0 {
         return OS_ERR_STATE::OS_ERR_TASK_CREATE_ISR;

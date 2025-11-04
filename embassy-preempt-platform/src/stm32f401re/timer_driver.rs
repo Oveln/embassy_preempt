@@ -8,7 +8,7 @@ use stm32_metapac::timer::{TimGp16, vals};
 use stm32_metapac::rcc::vals::{Pllm, Plln, Pllp, Pllq, Pllsrc, Hpre, Ppre, Sw};
 use stm32_metapac::flash::vals::Latency;
 
-use crate::{AlarmHandle, AlarmState, TimerDriver, BOOLEAN, INT64U};
+use crate::{AlarmHandle, AlarmState, TimerDriver};
 
 /// Timer driver implementation for STM32F401RE
 pub struct Stm32f401reTimerDriver {
@@ -161,7 +161,7 @@ impl Stm32f401reTimerDriver {
 }
 
 impl TimerDriver for Stm32f401reTimerDriver {
-    fn now(&self) -> INT64U {
+    fn now(&self) -> u64 {
         let period = self.period.load(Ordering::Relaxed);
         core::sync::atomic::compiler_fence(Ordering::Acquire);
         let counter = unsafe { self.timer.cnt().read().cnt() };
@@ -189,10 +189,10 @@ impl TimerDriver for Stm32f401reTimerDriver {
         })
     }
 
-    fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> BOOLEAN {
+    fn set_alarm(&self, alarm: AlarmHandle, timestamp: u64) -> bool {
         let n = alarm.id() as usize;
-        // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
-        if timestamp == INT64U::MAX {
+        // by noah：check the timestamp. if timestamp is u64::MAX, there is no need to set the alarm
+        if timestamp == u64::MAX {
             // return true to indicate that there is no need to set the alarm, poll can execute directly
             // before return, unset the ccie bit
             critical_section::with(|cs| {
@@ -204,7 +204,7 @@ impl TimerDriver for Stm32f401reTimerDriver {
         }
         let result = critical_section::with(|cs| {
             let alarm_ref = self.get_alarm(cs, alarm);
-            // by noah：for timestamp is INT64U, so I just copy it here
+            // by noah：for timestamp is u64, so I just copy it here
             // when the timestamp is less than the alarm's timestamp, the alarm will be set.
             // if the timestamp is large than the allarm's timestamp, the alarm will not be set.
             // because the allarm's timestamp has been set in the last call of set_alarm
@@ -252,8 +252,8 @@ impl TimerDriver for Stm32f401reTimerDriver {
 }
 
 // Calculate current time based on period and counter
-fn calc_now(period: u32, counter: u16) -> INT64U {
-    ((period as INT64U) << 15) + ((counter as u32 ^ ((period & 1) << 15)) as u64)
+fn calc_now(period: u32, counter: u16) -> u64 {
+    ((period as u64) << 15) + ((counter as u32 ^ ((period & 1) << 15)) as u64)
 }
 
 // RCC initialization for STM32F401RE

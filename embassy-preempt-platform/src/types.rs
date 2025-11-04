@@ -3,20 +3,14 @@
 use core::cell::Cell;
 use core::sync::atomic::{AtomicU32, AtomicU8};
 
-// Common types used across platforms
+// Platform-specific types that should remain as aliases
 pub type OS_STK = usize;
 pub type OS_CPU_SR = u32;
-pub type INT8U = u8;
-pub type INT16U = u16;
-pub type INT32U = u32;
-pub type INT64U = u64;
-pub type USIZE = usize;
-pub type BOOLEAN = bool;
 
 /// Handle to an alarm
 #[derive(Clone, Copy)]
 pub struct AlarmHandle {
-    id: INT8U,
+    id: u8,
 }
 
 impl AlarmHandle {
@@ -34,7 +28,7 @@ impl AlarmHandle {
 /// Structure to hold alarm state
 pub struct AlarmState {
     /// Timestamp at which to fire alarm
-    pub timestamp: Cell<INT64U>,
+    pub timestamp: Cell<u64>,
     /// Callback function for the alarm
     pub callback: Cell<*const ()>,
     /// Context for the callback
@@ -46,7 +40,7 @@ unsafe impl Send for AlarmState {}
 impl AlarmState {
     pub const fn new() -> Self {
         Self {
-            timestamp: Cell::new(INT64U::MAX),
+            timestamp: Cell::new(u64::MAX),
             callback: Cell::new(core::ptr::null()),
             ctx: Cell::new(core::ptr::null_mut()),
         }

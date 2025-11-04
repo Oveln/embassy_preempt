@@ -9,7 +9,7 @@ use core::{mem, ptr};
 
 use critical_section::{CriticalSection, Mutex};
 use crate::port::*;
-use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE, BOOLEAN};
+use embassy_preempt_platform::OS_STK;
 use stm32_metapac::flash::vals::Latency;
 use stm32_metapac::rcc::vals::*;
 use stm32_metapac::timer::{regs, vals};
@@ -18,7 +18,6 @@ use cortex_m::peripheral::NVIC;
 
 use embassy_preempt_platform::{APB_HZ, TICK_HZ};
 use crate::executor::waker;
-// use crate::port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, USIZE};
 
 // 导入日志宏
 use crate::timer_log;
@@ -30,7 +29,7 @@ use crate::timer_log;
     feature = "time_driver_tim21",
     feature = "time_driver_tim22"
 ))]
-const ALARM_COUNT: USIZE = 1;
+const ALARM_COUNT: usize = 1;
 #[cfg(not(any(
     feature = "time_driver_tim9",
     feature = "time_driver_tim12",
@@ -38,7 +37,7 @@ const ALARM_COUNT: USIZE = 1;
     feature = "time_driver_tim21",
     feature = "time_driver_tim22"
 )))]
-const ALARM_COUNT: USIZE = 3;
+const ALARM_COUNT: usize = 3;
 // define the Alarm Interrupt
 #[cfg(feature = "time_driver_tim3")]
 #[no_mangle]
@@ -57,7 +56,7 @@ const DISABLE: bool = false;
 const ENABLE: bool = true;
 
 struct AlarmState {
-    timestamp: Cell<INT64U>,
+    timestamp: Cell<u64>,
     // This is really a Option<(fn(*mut ()), *mut ())>
     // but fn pointers aren't allowed in const yet
     callback: Cell<*const ()>,
@@ -66,7 +65,7 @@ struct AlarmState {
 #[derive(Clone, Copy)]
 /// Handle to an alarm.
 pub struct AlarmHandle {
-    id: INT8U,
+    id: u8,
 }
 
 pub(crate) struct RtcDriver {
@@ -91,7 +90,7 @@ pub trait Driver: Send + Sync + 'static {
     ///   10_000 years from now.). This means if your hardware only has 16bit/32bit timers
     ///   you MUST extend them to 64-bit, for example by counting overflows in software,
     ///   or chaining multiple timers together.
-    fn now(&self) -> INT64U;
+    fn now(&self) -> u64;
 
     /// Try allocating an alarm handle. Returns None if no alarms left.
     /// Initially the alarm has no callback set, and a null `ctx` pointer.
@@ -119,7 +118,7 @@ pub trait Driver: Send + Sync + 'static {
     /// When callback is called, it is guaranteed that now() will return a value greater or equal than timestamp.
     ///
     /// Only one alarm can be active at a time for each AlarmHandle. This overwrites any previously-set alarm if any.
-    fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> BOOLEAN;
+    fn set_alarm(&self, alarm: AlarmHandle, timestamp: u64) -> bool;
 }
 
 /*
@@ -133,7 +132,7 @@ unsafe impl Send for AlarmState {}
 impl AlarmState {
     const fn new() -> Self {
         Self {
-            timestamp: Cell::new(INT64U::MAX),
+            timestamp: Cell::new(u64::MAX),
             callback: Cell::new(ptr::null()),
             ctx: Cell::new(ptr::null_mut()),
         }
@@ -170,15 +169,15 @@ impl RtcDriver {
         TIMER.cnt().write(|w| w.set_cnt(0));
 
         // calculate the psc
-        let psc = (APB_HZ / TICK_HZ) as INT32U - 1;
-        let psc: INT16U = match psc.try_into() {
+        let psc = (APB_HZ / TICK_HZ) as u32 - 1;
+        let psc: u16 = match psc.try_into() {
             Err(_) => panic!("psc division overflow: {}", psc),
             Ok(n) => n,
         };
         // set the psc
         TIMER.psc().write_value(psc);
-        // set the auto reload value(Timer 3 is INT16U)
-        TIMER.arr().write(|w| w.set_arr(INT16U::MAX));
+        // set the auto reload value(Timer 3 is u16)
+        TIMER.arr().write(|w| w.set_arr(u16::MAX));
 
         // Set URS, generate update and clear URS
         // by noah： when set ug bit, a update event will be generated immediately.
@@ -324,12 +323,12 @@ impl Driver for RtcDriver {
         })
     }
 
-    fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> bool {
+    fn set_alarm(&self, alarm: AlarmHandle, timestamp: u64) -> bool {
         timer_log!(trace, "set_alarm");
         timer_log!(trace, "set the alarm at {}", timestamp);
         let n = alarm.id() as usize;
-        // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
-        if timestamp == INT64U::MAX {
+        // by noah：check the timestamp. if timestamp is u64::MAX, there is no need to set the alarm
+        if timestamp == u64::MAX {
             // return true to indicate that there is no need to set the alarm, poll can execute directly
             // before return, unset the ccie bit
             critical_section::with(|cs| {
@@ -341,7 +340,7 @@ impl Driver for RtcDriver {
         }
         critical_section::with(|cs| {
             let alarm = self.get_alarm(cs, alarm);
-            // by noah：for timestamp is INT64U, so I just copy it here
+            // by noah：for timestamp is u64, so I just copy it here
             // when the timestamp is less than the alarm's timestamp, the alarm will be set.
             // if the timestamp is large than the allarm's timestamp, the alarm will not be set.
             // because the allarm's timestamp has been set in the last call of set_alarm
@@ -474,8 +473,8 @@ fn enable_Timer() {
 }
 
 // by noah: here the period is shifted 15 bit because period will be increased when the counter is overflowed or half-overflowed
-fn calc_now(period: INT32U, counter: INT16U) -> INT64U {
-    ((period as INT64U) << 15) + ((counter as u32 ^ ((period & 1) << 15)) as u64)
+fn calc_now(period: u32, counter: u16) -> u64 {
+    ((period as u64) << 15) + ((counter as u32 ^ ((period & 1) << 15)) as u64)
 }
 
 #[no_mangle]

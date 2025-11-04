@@ -18,7 +18,7 @@ pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
 
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
-use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, PLATFORM, Platform, USIZE};
+use embassy_preempt_platform::{PLATFORM, Platform, OS_STK};
 use crate::sync::UPSafeCell;
 static STACK_ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 lazy_static::lazy_static! {
