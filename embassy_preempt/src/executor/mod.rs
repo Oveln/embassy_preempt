@@ -23,13 +23,14 @@ use time_driver::{AlarmHandle, Driver, RTC_DRIVER};
 pub use self::waker::task_from_waker;
 use crate::app::led::{stack_pin_high, stack_pin_low};
 use crate::arena::ARENA;
-use crate::cfg::*;
+use embassy_preempt_platform::{OS_ARENA_SIZE, OS_LOWEST_PRIO, OS_TASK_REG_TBL_SIZE, PLATFORM, Platform};
 use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
 // use crate::os_sem::SemHandle;
 #[cfg(feature = "delay_idle")]
 use crate::os_time::blockdelay::delay;
 // use spawner::SpawnToken;
 use crate::port::*;
+use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 use crate::ucosii::*;
 use crate::util::{SyncUnsafeCell, UninitCell};
 
@@ -166,16 +167,13 @@ pub struct AvailableTask<F: Future + 'static> {
 impl OS_TCB {
     // can only be called if the task owns the stack
     fn restore_context_from_stk(&mut self) {
-        extern "Rust" {
-            fn restore_thread_task();
-        }
         if self.OSTCBStkPtr.is_none() {
             return;
         }
         // let stk = self.OSTCBStkPtr.as_mut().unwrap().STK_REF.as_ptr();
         // in restore_task it will set PROGRAM_STACK a new stk
         // revoke the stk
-        critical_section::with(|_| unsafe { restore_thread_task() });
+        critical_section::with(|_| PLATFORM.restore_thread_task() );
     }
     /// get the stk ptr of tcb, and set the tcb's stk ptr to None
     pub fn take_stk(&mut self) -> OS_STK_REF {
@@ -555,10 +553,6 @@ impl SyncExecutor {
     /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
     /// when this function return, the caller interrupt will also return and the pendsv will run.
     pub(crate) unsafe fn interrupt_poll(&'static self) {
-        extern "Rust" {
-            fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
-            fn restore_thread_task();
-        }
         // test: print the ready queue
         critical_section::with(|_| {
             scheduler_log!(info, "in interrupt_poll");
@@ -603,17 +597,15 @@ impl SyncExecutor {
                 mem_log!(info, "the alloc task's stk is {:?}", stk.STK_REF);
             }
             // then we need to mock the stack for the task(the stk will change during the mock)
-            stk.STK_REF = OSTaskStkInit(stk.STK_REF);
+            stk.STK_REF = PLATFORM.init_task_stack(stk.STK_REF);
 
             task.OSTCBStkPtr = Some(stk);
         }
         // restore the task from stk
         critical_section::with(|_| {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
-                unsafe {
-                    task_log!(trace, "restore the task/thread");
-                    restore_thread_task()
-                };
+                task_log!(trace, "restore the task/thread");
+                PLATFORM.restore_thread_task();
             }
         });
     }

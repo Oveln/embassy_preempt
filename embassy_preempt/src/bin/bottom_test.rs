@@ -10,10 +10,11 @@ use embassy_preempt::os_core::{OSInit, OSStart};
 use embassy_preempt::os_task::AsyncOSTaskCreate;
 // use embassy_preempt::os_time::timer::Timer;
 use embassy_preempt::port::bottom_driver::Bottom::bottom;
+use embassy_preempt_platform::Platform;
 // use embassy_preempt::{self as _};
-
 #[cortex_m_rt::entry]
 fn test_hardware() -> ! {
+    embassy_preempt::PLATFORM.init_platform();
     // os初始化
     OSInit();
     // init the led

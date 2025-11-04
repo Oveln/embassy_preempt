@@ -1,10 +1,10 @@
 [package]
 name = "embassy-preempt-logs"
-version.workspace = true
-authors.workspace = true
-edition.workspace = true
-repository.workspace = true
-license.workspace = true
+version = "0.1.0"
+authors = ["oveln"]
+edition = "2024"
+repository = "https://github.com/Oveln/embassy_preempt"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 defmt-rtt = { version = "1.1.0", optional = true }

@@ -8,10 +8,8 @@
 #![feature(slice_ptr_get)]
 #![feature(sync_unsafe_cell)]
 #![feature(alloc_error_handler)]
-#![feature(const_mut_refs)]
 #![feature(never_type)]
 #![warn(missing_docs)]
-#![feature(naked_functions)]
 // by noah：generate the ucosii static lib
 #![crate_type = "staticlib"]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
@@ -23,6 +21,10 @@
 */
 /// Centralized logging module
 pub use embassy_preempt_logs::{mem_log, os_log, scheduler_log, task_log, timer_log};
+
+/// Platform-specific imports
+#[cfg(feature = "stm32f401re")]
+pub use embassy_preempt_platform::stm32f401re::PLATFORM;
 
 extern crate alloc;
 /// the mod of uC/OS-II kernel
@@ -42,7 +44,7 @@ pub mod os_q;
 /// the stk allocator
 pub mod arena;
 /// need to import port here
-pub mod cfg;
+// pub mod cfg; // Moved to platform-specific crates
 /// the async scheduler(executor) of rust uC
 pub mod executor;
 /// the mod of semaphore of uC/OS-II kernel

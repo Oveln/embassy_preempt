@@ -7,16 +7,18 @@ use core::cell::Cell;
 use core::sync::atomic::{compiler_fence, AtomicU32, AtomicU8, Ordering};
 use core::{mem, ptr};
 
-use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
+use crate::port::*;
+use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE, BOOLEAN};
 use stm32_metapac::flash::vals::Latency;
 use stm32_metapac::rcc::vals::*;
 use stm32_metapac::timer::{regs, vals};
 use stm32_metapac::{Interrupt, FLASH, RCC};
+use cortex_m::peripheral::NVIC;
 
-use crate::cfg::{APB_HZ, TICK_HZ};
+use embassy_preempt_platform::{APB_HZ, TICK_HZ};
 use crate::executor::waker;
-use crate::port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE};
+// use crate::port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, USIZE};
 
 // 导入日志宏
 use crate::timer_log;

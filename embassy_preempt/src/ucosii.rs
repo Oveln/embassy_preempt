@@ -34,9 +34,10 @@ use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU8};
 use critical_section::Mutex;
 use lazy_static::lazy_static;
 
-use crate::cfg::*;
+use embassy_preempt_platform::{OS_LOWEST_PRIO, OS_TASK_REG_TBL_SIZE, OS_MAX_MEM_PART, OS_ARENA_SIZE, TICK_HZ, APB_HZ};
 use crate::executor::OS_TCB_REF;
 use crate::port::*;
+use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 
 /*
 *********************************************************************************************************

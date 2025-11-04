@@ -46,6 +46,7 @@ use crate::os_task::SyncOSTaskCreate;
 use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
+use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, PLATFORM, Platform, USIZE};
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
 use crate::ucosii::OSTaskRegNextAvailID;
 use crate::ucosii::{
@@ -157,7 +158,7 @@ pub fn OSEventNameSet() {}
 /// prior to creating any uC/OS-II object and, prior to calling OSStart().
 #[no_mangle]
 pub extern "C" fn OSInit() {
-    os_log!(trace, "OSInit");
+    // os_log!(trace, "OSInit");
     OSInitHookBegin(); /* Call port specific initialization code   */
 
     // by noah: this func is no need to be called because we give the static var init val
@@ -193,7 +194,7 @@ pub extern "C" fn OSInit() {
     OSDebugInit();
 
     // by noah: init the core peripheral
-    init_core_peripherals();
+    PLATFORM.init_core_peripherals();
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */
     // by liam: we need to init the stack allocator
@@ -201,7 +202,7 @@ pub extern "C" fn OSInit() {
     // by noah：we need to init the Timer as the time driver
     OSTimerInit();
     // by noah: *TEST*
-    OS_InitEventList();
+    // OS_InitEventList();
 }
 
 /*
@@ -328,19 +329,18 @@ pub fn OSSchedUnlock() {}
 pub extern "C" fn OSStart() -> ! {
     use crate::heap::stack_allocator::INTERRUPT_STACK;
 
-    extern "Rust" {
-        fn set_int_change_2_psp(int_ptr: *mut u8);
-    }
     os_log!(trace, "OSStart");
     // set OSRunning
     OSRunning.store(true, Ordering::Release);
     // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
     // to change the stack pointer to program pointer and use psp
     let int_stk = INTERRUPT_STACK.exclusive_access();
-    let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
+    let int_ptr = int_stk.STK_REF.as_ptr() as *mut u32;
     drop(int_stk);
+    os_log!(trace, "int stack ptr at {}", int_ptr);
     unsafe {
-        set_int_change_2_psp(int_ptr);
+        os_log!(trace, "set int stack ptr to {}", int_ptr);
+        PLATFORM.set_int_change_2_psp(int_ptr);
         // find the highest priority task in the ready queue
         critical_section::with(|_| GlobalSyncExecutor.as_ref().unwrap().set_highrdy());
         GlobalSyncExecutor.as_ref().unwrap().poll();
@@ -623,9 +623,7 @@ fn OS_InitTaskIdle() {
             task_log!(trace, "task idle");
             #[cfg(log_enabled)]
             crate::os_time::blockdelay::delay(1);
-            unsafe {
-                run_idle();
-            }
+            PLATFORM.run_idle();
         }
     };
     os_log!(trace, "create idle task");

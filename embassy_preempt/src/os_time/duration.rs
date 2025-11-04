@@ -1,6 +1,6 @@
 use core::ops::Add;
 
-use crate::cfg::TICK_HZ;
+use embassy_preempt_platform::TICK_HZ;
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "log-timer", derive(defmt::Format))]

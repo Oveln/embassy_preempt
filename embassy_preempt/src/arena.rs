@@ -20,7 +20,7 @@ use core::ptr::null_mut;
 
 use critical_section::{CriticalSection, Mutex};
 
-use crate::cfg::OS_ARENA_SIZE;
+use embassy_preempt_platform::OS_ARENA_SIZE;
 
 // 导入日志宏
 use crate::mem_log;

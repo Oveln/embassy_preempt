@@ -1,6 +1,7 @@
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
-use crate::port::INT64U;
+use crate::port::*;
+use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 
 // 导入日志宏
 use crate::timer_log;

@@ -15,9 +15,10 @@ pub const STACK_START: *mut u8 = 0x20000000 as *mut u8;
 pub const STACK_SIZE: usize = 20 * 1024; // 40 KiB
 pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 512 B also ok
 pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
+
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
-use crate::port::OS_STK;
+use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, PLATFORM, Platform, USIZE};
 use crate::sync::UPSafeCell;
 static STACK_ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 lazy_static::lazy_static! {
@@ -37,20 +38,17 @@ pub fn init_stack_allocator() {
     // then we init the program stack
     let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
-    let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
+    let stk_ptr = stk.STK_REF.as_ptr() as *mut u32;
     PROGRAM_STACK.set(stk);
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
-    extern "Rust" {
-        fn set_program_sp(sp: *mut u8);
-    }
-    unsafe {
-        set_program_sp(stk_ptr);
-    }
+    PLATFORM.set_program_sp(stk_ptr);
     // we also need to allocate a stack for interrupt
     let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
-    INTERRUPT_STACK.set(stk);
+    INTERRUPT_STACK.set(stk.clone());
+    mem_log!(trace, "interrupt stack at {}", stk.STK_REF.as_ptr());
+    mem_log!(trace, "init_stack_allocator done");
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {

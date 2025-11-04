@@ -17,11 +17,11 @@ use core::ffi::c_void;
 use core::future::Future;
 use core::sync::atomic::Ordering::Acquire;
 
-use crate::cfg::OS_LOWEST_PRIO;
+use embassy_preempt_platform::OS_LOWEST_PRIO;
 use crate::executor::{GlobalSyncExecutor, OS_TASK_STORAGE};
 use crate::heap::stack_allocator::{dealloc_stack, stk_from_ptr};
 use crate::task_log;
-use crate::port::{INT8U, OS_STK};
+use embassy_preempt_platform::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
 use crate::ucosii::{OSIntNesting, OSRunning, OS_ERR_STATE};
 const DEFAULT_REVOKE_STACK_SIZE: usize = 128;
 

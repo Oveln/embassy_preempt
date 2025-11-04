@@ -1,8 +1,7 @@
 #![allow(non_camel_case_types)]
-use cortex_m::peripheral::scb::SystemHandler;
-#[allow(unused_imports)]
-use cortex_m::peripheral::{NVIC, SCB};
-use stm32_metapac::timer::TimGp16;
+
+use embassy_preempt_platform::{PLATFORM, Platform};
+pub use embassy_preempt_platform::{BOOLEAN, INT8U, INT16U, INT32U, INT64U, OS_STK, OS_CPU_SR, USIZE};
 
 /*
 **************************************************************************************************************************************
@@ -14,34 +13,10 @@ use stm32_metapac::timer::TimGp16;
 pub const ENABLE: bool = true;
 /// DISABLE
 pub const DISENABLE: bool = false;
-/// Unsigned  8 bit quantity
-pub type BOOLEAN = bool;
-/// Unsigned  8 bit quantity
-pub type INT8U = u8;
-/// Signed    8 bit quantity
-pub type INT8S = i8;
-/// Unsigned 16 bit quantity
-pub type INT16U = u16;
-/// Signed   16 bit quantity
-pub type INT16S = i16;
-/// Unsigned 32 bit quantity
-pub type INT32U = u32;
-/// Signed   32 bit quantity
-pub type INT32S = i32;
-/// Single precision floating point
-pub type FP32 = f32;
-/// Double precision floating point
-pub type FP64 = f64;
-/// the ptr size. define this to use raw ptr
-pub type PTR = *mut ();
-/// the usize type used in array
-pub type USIZE = usize;
-/// the u64 type
-pub type INT64U = u64;
-/// Each stack entry is 32-bit wide
-pub type OS_STK = usize;
-/// Define size of CPU status register (PSR = 32 bits)
-pub type OS_CPU_SR = u32;
+// /// Each stack entry is 32-bit wide
+// pub type OS_STK = usize;
+// /// Define size of CPU status register (PSR = 32 bits)
+// pub type OS_CPU_SR = u32;
 /// the timer used as the time Driver
 #[cfg(feature = "time_driver_tim1")]
 const TIMER: TimGp16 = stm32_metapac::TIM1;
@@ -74,6 +49,8 @@ const TIMER: TimGp16 = stm32_metapac::TIM23;
 #[cfg(feature = "time_driver_tim24")]
 const TIMER: TimGp16 = stm32_metapac::TIM24;
 
+/// the ptr size. define this to use raw ptr
+pub type PTR = *mut ();
 ///the language items
 pub mod lang_items;
 pub mod os_cpu;
@@ -87,9 +64,9 @@ pub mod bottom_driver;
 *                                                               critical section
 ********************************************************************************************************************************************
 */
-use cortex_m::register::primask;
-use cortex_m::{interrupt, Peripherals};
 use critical_section::{set_impl, Impl, RawRestoreState};
+#[cfg(feature = "time_driver_tim3")]
+use stm32_metapac::timer::TimGp16;
 
 use crate::os_log;
 
@@ -98,16 +75,14 @@ set_impl!(SingleCoreCriticalSection);
 
 unsafe impl Impl for SingleCoreCriticalSection {
     unsafe fn acquire() -> RawRestoreState {
-        let was_active = primask::read().is_active();
-        interrupt::disable();
-        was_active
+        // Using the platform abstraction for critical section operations
+        PLATFORM.enter_critical_section();
+        true // Placeholder value - platform specific
     }
 
     unsafe fn release(was_active: RawRestoreState) {
-        // Only re-enable interrupts if they were enabled before the critical section.
-        if was_active {
-            interrupt::enable()
-        }
+        // Using the platform abstraction for critical section operations
+        PLATFORM.exit_critical_section();
     }
 }
 
@@ -119,52 +94,6 @@ unsafe impl Impl for SingleCoreCriticalSection {
 
 /// by noah: init the core peripherals. For the task() just can be called **once**, we should init the core peripherals together
 pub fn init_core_peripherals() {
-    let mut p = Peripherals::take().unwrap();
-    // set the NVIC
-    unsafe {
-        // Configure AIRCR for 2-bit preempt, 2-bit subpriority (group 2)
-        let aircr = p.SCB.aircr.read();
-        let new_aircr = (0x05FA << 16) | (aircr & !(0b1111 << 8)) | (0b101 << 8);
-        p.SCB.aircr.write(new_aircr);
-
-        let prio = |preempt: u8| -> u8 { (preempt & 0b11) << 6 }; // sub=0 assumed
-                                                                  // infer that the group is 2-2
-                                                                  // set the TIM3 prio as 3
-        os_log!(
-            trace,
-            "before set TIM3 prio {}",
-            NVIC::get_priority(stm32_metapac::Interrupt::TIM3)
-        );
-        p.NVIC.set_priority(stm32_metapac::Interrupt::TIM3, prio(3));
-
-        os_log!(
-            trace,
-            "after set TIM3 prio {}",
-            NVIC::get_priority(stm32_metapac::Interrupt::TIM3)
-        );
-
-        os_log!(
-            trace,
-            "before set EXTI15_10 prio {}",
-            NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10)
-        );
-        // set the EXTI13 prio as 1
-        p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, prio(1));
-        os_log!(
-            trace,
-            "after set EXTI15_10 prio {}",
-            NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10)
-        );
-        os_log!(
-            trace,
-            "before set PendSV prio {}",
-            SCB::get_priority(SystemHandler::PendSV)
-        );
-        p.SCB.set_priority(SystemHandler::PendSV, 0xf << 4);
-        os_log!(
-            trace,
-            "after set PendSV prio {}",
-            SCB::get_priority(SystemHandler::PendSV)
-        );
-    }
+    // Use the platform abstraction to initialize core peripherals
+    PLATFORM.init_core_peripherals();
 }

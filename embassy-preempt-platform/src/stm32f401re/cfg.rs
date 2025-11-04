@@ -1,9 +1,9 @@
-use crate::port::*;
-use crate::ucosii::OS_PRIO;
+use crate::{INT8U, INT16U, INT32U, INT64U, OS_STK, USIZE};
+
 // TODO: Make all the config to be feature!!!
 
 /// the const val define the lowest prio
-pub const OS_LOWEST_PRIO: OS_PRIO = 63;
+pub const OS_LOWEST_PRIO: u8 = 63;
 /// Size of task variables array (#of INT32U entries)
 pub const OS_TASK_REG_TBL_SIZE: USIZE = 1;
 /// Max. number of memory partitions
@@ -17,6 +17,7 @@ pub const OS_ARENA_SIZE: USIZE = 10240;
 /// one tick is 10us
 pub const TICK_HZ: INT64U = 100_000;
 /// input frequency of the Timer, you should config it yourself(set the Hardware)
+/// STM32F401RE APB1 frequency: 84MHz
 pub const APB_HZ: INT64U = 84000000;
 /// the block delay of idle task in poll
 #[cfg(feature = "delay_idle")]

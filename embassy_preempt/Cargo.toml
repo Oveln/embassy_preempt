@@ -105,6 +105,7 @@ opt-level = 3     # Optimization level for release builds
 # Default features enabled when no specific features are selected
 [features]
 default = [
+    "stm32f401re",
     "GPIOC",
     "rt",
     "use_spin",
@@ -203,7 +204,7 @@ time_driver_tim23 = []
 time_driver_tim24 = []
 
 # STM32F401RE specific features
-stm32f401re = ["stm32-metapac/stm32f401re"]
+stm32f401re = ["stm32-metapac/stm32f401re", "embassy-preempt-platform/stm32f401re"]
 
 # Enable `stm32-metapac`'s `rt` feature (runtime support)
 rt = ["stm32-metapac/rt"]
