@@ -5,7 +5,8 @@
 resolver = "3"
 members = [
     "embassy_preempt",
-    "modules/embassy-preempt-log"
+    "modules/embassy-preempt-log",
+    "platform"
 ]
 
 [workspace.package]

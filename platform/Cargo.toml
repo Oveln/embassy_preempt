@@ -1,0 +1,32 @@
+[package]
+name = "embassy-preempt-platform"
+version = "0.1.0"
+edition = "2021"
+authors = ["oveln"]
+description = "Platform abstraction layer for embassy_preempt RTOS"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "embassy_preempt_platform"
+path = "src/lib.rs"
+crate-type = ["rlib"]  # Rust库类型
+
+[dependencies]
+defmt = { version = "1.0.1"}
+embassy-preempt-log ={ path = "../modules/embassy-preempt-log" }
+
+cortex-m = { version = "0.7", optional = true }
+cortex-m-rt = { version = "0.7", optional = true }
+critical-section = { version = "1.1", features = ["restore-state-bool"] }
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", optional = true, features = ["metadata"] }
+
+[features]
+default = ["cortex-m", "stm32f401re"]
+
+# Platform implementations
+cortex-m = ["dep:cortex-m"]
+stm32f401re = ["dep:stm32-metapac", "cortex-m", "stm32-metapac/stm32f401re"]
+riscv = []  # Placeholder for future RISC-V support
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
