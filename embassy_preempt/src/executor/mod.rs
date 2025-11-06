@@ -295,7 +295,7 @@ impl SyncExecutor {
     /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
     /// when this function return, the caller interrupt will also return and the pendsv will run.
     pub(crate) unsafe fn interrupt_poll(&'static self) {
-        extern "Rust" {
+        unsafe extern "Rust" {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
             fn restore_thread_task();
         }

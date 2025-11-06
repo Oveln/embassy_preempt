@@ -120,7 +120,7 @@ pub struct AvailableTask<F: Future + 'static> {
 impl OS_TCB {
     // can only be called if the task owns the stack
     pub(crate) fn restore_context_from_stk(&mut self) {
-        extern "Rust" {
+        unsafe extern "Rust" {
             fn restore_thread_task();
         }
         if self.OSTCBStkPtr.is_none() {

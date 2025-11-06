@@ -51,7 +51,7 @@ pub fn OS_InitStackAllocator() {
     PROGRAM_STACK.set(stk);
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
-    extern "Rust" {
+    unsafe extern "Rust" {
         fn set_program_sp(sp: *mut u8);
     }
     unsafe {

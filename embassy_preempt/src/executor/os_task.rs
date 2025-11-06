@@ -98,7 +98,7 @@ where
 }
 
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 /// helper func
 pub extern "aapcs" fn OSTaskCreate(
     fun_ptr: extern "aapcs" fn(*mut c_void),

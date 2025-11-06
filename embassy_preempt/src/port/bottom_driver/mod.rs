@@ -58,7 +58,7 @@ pub(crate) static BOT_DRIVER: BotDriver = BotDriver {
     }),
 };
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[cfg(feature = "GPIOC")]
 /// EXTI15_10 interrupt handler
 pub extern "C" fn EXTI15_10() {
@@ -73,7 +73,7 @@ pub extern "C" fn EXTI15_10() {
 
 /// EXTI15_10 interrupt handler
 #[cfg(feature = "GPIOA")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn EXTI0() {
     os_log!(info, "EXTI0");
     BOT_DRIVER.on_interrupt();

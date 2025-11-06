@@ -20,7 +20,7 @@ pub fn OSInitHookBegin() {}
 
 const NVIC_INT_CTRL: u32 = 0xE000ED04;
 const NVIC_PENDSVSET: u32 = 0x10000000;
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[inline]
 /// the function to start the first task
 pub extern "Rust" fn restore_thread_task() {
@@ -133,7 +133,7 @@ fn PendSV() {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 /// the function when there is no task to run
 pub extern "Rust" fn run_idle() {
     os_log!(trace, "run_idle");
@@ -173,7 +173,7 @@ struct UcStk {
 }
 const CONTEXT_STACK_SIZE: usize = 17;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[inline]
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
@@ -219,7 +219,7 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
     NonNull::new(ptos as *mut OS_STK).unwrap()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[inline]
 /// the function to set the program stack
 pub extern "Rust" fn set_program_sp(sp: *mut u8) {
@@ -235,7 +235,7 @@ pub extern "Rust" fn set_program_sp(sp: *mut u8) {
     //     )
     // }
 }
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[inline]
 /// the function to set the interrupt stack and change the control register to use the psp
 pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8) {

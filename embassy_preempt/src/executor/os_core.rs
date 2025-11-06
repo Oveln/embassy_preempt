@@ -162,7 +162,7 @@ pub fn OSEventNameSet() {}
 */
 /// This function is used to initialize the internals of uC/OS-II and MUST be called
 /// prior to creating any uC/OS-II object and, prior to calling OSStart().
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn OSInit() {
     os_log!(trace, "OSInit");
     OSInitHookBegin(); /* Call port specific initialization code   */
@@ -389,11 +389,11 @@ pub fn OSSchedUnlock() {
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
 // #[cfg(not(feature = "test"))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn OSStart() -> ! {
     use crate::executor::mem::heap::stack_allocator::INTERRUPT_STACK;
 
-    extern "Rust" {
+    unsafe extern "Rust" {
         fn set_int_change_2_psp(int_ptr: *mut u8);
     }
     os_log!(trace, "OSStart");
@@ -678,7 +678,7 @@ fn OS_InitRdyList() {
 */
 // must use this function
 fn OS_InitTaskIdle() {
-    extern "Rust" {
+    unsafe extern "Rust" {
         #[allow(unused)]
         fn run_idle();
     }

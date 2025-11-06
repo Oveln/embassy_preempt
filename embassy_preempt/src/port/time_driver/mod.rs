@@ -40,7 +40,7 @@ const ALARM_COUNT: USIZE = 1;
 const ALARM_COUNT: USIZE = 3;
 // define the Alarm Interrupt
 #[cfg(feature = "time_driver_tim3")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 /// TIM3 interrupt handler
 pub extern "C" fn TIM3() {
     interrupt_pin_high();
@@ -548,7 +548,7 @@ fn calc_now(period: INT32U, counter: INT16U) -> INT64U {
     ((period as INT64U) << 15) + ((counter as u32 ^ ((period & 1) << 15)) as u64)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 /// Schedule the given waker to be woken at `at`.
 pub fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker) {
     timer_log!(trace, "_embassy_time_schedule_wake");

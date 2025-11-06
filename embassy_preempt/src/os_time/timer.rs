@@ -16,7 +16,7 @@ pub struct Timer {
     yielded_once: bool,
 }
 
-extern "Rust" {
+unsafe extern "Rust" {
     fn _embassy_time_schedule_wake(at: u64, waker: &Waker);
 }
 
