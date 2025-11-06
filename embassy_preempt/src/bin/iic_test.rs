@@ -10,7 +10,7 @@ use embassy_preempt::executor::SyncOSTaskCreate;
 use embassy_preempt::executor::{OSInit, OSStart};
 use embassy_preempt::os_time::OSTimeDly;
 use embassy_preempt::pac::{gpio, GPIOA, GPIOC, RCC};
-use embassy_preempt::task_log;
+use embassy_preempt_log::task_log;
 
 #[cortex_m_rt::entry]
 fn iic_test() -> ! {

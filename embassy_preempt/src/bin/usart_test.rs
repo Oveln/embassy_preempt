@@ -8,7 +8,7 @@ use core::ffi::c_void;
 use embassy_preempt::executor::{OSInit, OSStart, SyncOSTaskCreate};
 use embassy_preempt::os_time::OSTimeDly;
 use embassy_preempt::pac::{usart, gpio, GPIOA, RCC, USART1};
-use embassy_preempt::{os_log, task_log};
+use embassy_preempt_log::{os_log, task_log};
 
 #[cortex_m_rt::entry]
 fn usart_test() -> ! {

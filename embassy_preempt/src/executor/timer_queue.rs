@@ -4,8 +4,6 @@
 
 use super::OS_TCB_REF;
 
-// Import logging macros
-use crate::timer_log;
 use crate::executor::cell::SyncUnsafeCell;
 
 pub(crate) struct TimerQueue {

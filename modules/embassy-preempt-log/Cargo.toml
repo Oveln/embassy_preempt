@@ -1,0 +1,33 @@
+[package]
+name = "embassy-preempt-log"
+version = "0.1.0"
+authors = ["oveln"]
+edition = "2024"
+repository = "https://github.com/Oveln/embassy_preempt"
+license = "MIT OR Apache-2.0"
+description = "Logging macros for Embassy Preempt RTOS"
+readme = "README.md"
+
+[lib]
+crate-type = ["rlib"]
+
+# ==================================================================
+# DEPENDENCIES
+# ==================================================================
+[dependencies]
+# Logging and debugging dependencies (optional)
+defmt = { version = "1.0.1", optional = true }
+defmt-rtt = { version = "1.1.0", optional = true }
+panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
+
+# ==================================================================
+# FEATURE FLAGS
+# ==================================================================
+[features]
+default = []
+log-base = ["dep:defmt", "dep:panic-probe", "dep:defmt-rtt"]
+log-os = ["log-base"]
+log-task = ["log-base"]
+log-mem = ["log-base"]
+log-timer = ["log-base"]
+log-scheduler = ["log-base"]

@@ -20,7 +20,6 @@ use core::ptr::NonNull;
 // use core::task::{Context, Poll};
 
 // Import logging macros when logging is enabled
-use crate::{task_log, scheduler_log};
 use core::sync::atomic::Ordering;
 use lazy_static::lazy_static;
 use state::State;

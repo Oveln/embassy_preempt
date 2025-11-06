@@ -1,9 +1,6 @@
 #![allow(non_camel_case_types)]
-use cortex_m::peripheral::{scb::SystemHandler, SCB};
+use cortex_m::peripheral::{scb::SystemHandler};
 use stm32_metapac::timer::TimGp16;
-
-// Import logging macros
-use crate::os_log;
 // 
 
 /*
@@ -121,7 +118,6 @@ unsafe impl Impl for SingleCoreCriticalSection {
 
 /// by noah: init the core peripherals. For the task() just can be called **once**, we should init the core peripherals together
 pub fn init_core_peripherals() {
-    use cortex_m::peripheral::NVIC;
     let mut p = Peripherals::take().unwrap();
     // set the NVIC
     unsafe{
@@ -133,7 +129,7 @@ pub fn init_core_peripherals() {
         // infer that the group is 2-2
         // set the TIM3 prio as 3
         
-        os_log!(info, "the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+        os_log!(info, "the prio of TIM3 is {}",cortex_m::peripheral::NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
 
         #[cfg(feature = "time_driver_tim1")]{
             p.NVIC.set_priority(stm32_metapac::Interrupt::TIM1_CC, 32);
@@ -169,15 +165,15 @@ pub fn init_core_peripherals() {
         
 
         
-        os_log!(info, "the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+        os_log!(info, "the prio of TIM3 is {}",cortex_m::peripheral::NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
 
-        os_log!(info, "the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
+        os_log!(info, "the prio of EXTI15_10 is {}",cortex_m::peripheral::NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
         // set the EXTI13 prio as 1
         p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, 16);
-        os_log!(info, "the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
-        os_log!(info, "the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
+        os_log!(info, "the prio of EXTI15_10 is {}",cortex_m::peripheral::NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
+        os_log!(info, "the prio of PendSV is {}",cortex_m::peripheral::SCB::get_priority(SystemHandler::PendSV));
         p.SCB.set_priority(SystemHandler::PendSV, 0xf<<4);
-        os_log!(info, "the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
+        os_log!(info, "the prio of PendSV is {}",cortex_m::peripheral::SCB::get_priority(SystemHandler::PendSV));
     }
 }
 

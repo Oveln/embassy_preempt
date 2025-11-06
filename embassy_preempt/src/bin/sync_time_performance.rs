@@ -12,7 +12,7 @@ use embassy_preempt::os_time::OSTimeDly;
 use embassy_preempt::pac::{gpio, GPIOA, RCC};
 use embassy_preempt::port::bottom_driver::OSWaitBot;
 
-use embassy_preempt::task_log;
+use embassy_preempt_log::task_log;
 
 const BLOCK_TIME: usize = 2;
 const ONE_MS:u64 = 100;

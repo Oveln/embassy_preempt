@@ -4,12 +4,12 @@
 use core::ffi::c_void;
 
 // extern crate embassy_preempt;
-use embassy_preempt::task_log;
 use embassy_preempt::app::led::{LED_Init, LED_OFF, LED_ON};
 use embassy_preempt::executor::{OSInit, OSStart};
 use embassy_preempt::executor::AsyncOSTaskCreate;
 // use embassy_preempt::os_time::timer::Timer;
 use embassy_preempt::port::bottom_driver::Bottom::bottom;
+use embassy_preempt_log::task_log;
 // use embassy_preempt::{self as _};
 
 #[cortex_m_rt::entry]

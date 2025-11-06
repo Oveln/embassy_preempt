@@ -19,8 +19,6 @@ use crate::executor::waker;
 use crate::port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE};
 use crate::app::led::{interrupt_pin_high, interrupt_pin_low};
 
-// Import logging macros
-use crate::{os_log, timer_log};
 
 #[cfg(any(
     feature = "time_driver_tim9",

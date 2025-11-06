@@ -37,8 +37,6 @@ use core::sync::atomic::Ordering;
 
 use bottom_driver::BOT_DRIVER;
 
-// Import logging macros when logging is enabled
-use crate::{task_log, os_log};
 // use critical_section::Mutex;
 // use core::cell::RefCell;
 use os_cpu::*;

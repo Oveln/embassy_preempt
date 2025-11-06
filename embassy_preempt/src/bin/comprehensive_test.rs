@@ -4,7 +4,7 @@
 
 use core::ffi::c_void;
 
-use embassy_preempt::task_log;
+use embassy_preempt_log::task_log;
 use embassy_preempt::app::led::LED_Init;
 // <- derive attribute
 use embassy_preempt::executor::{OSInit, OSStart};

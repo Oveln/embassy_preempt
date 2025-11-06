@@ -1,5 +1,3 @@
-// Import logging macros
-use crate::timer_log;
 use core::sync::atomic::Ordering;
 
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};

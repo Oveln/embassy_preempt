@@ -7,7 +7,6 @@ use core::ptr::NonNull;
 use cortex_m::register::control::{self, Spsel};
 use cortex_m::register::{msp, psp};
 use cortex_m_rt::exception;
-use crate::{os_log, scheduler_log};
 
 use super::OS_STK;
 use crate::app::led::{stack_pin_high, stack_pin_low};
@@ -141,7 +140,7 @@ pub extern "Rust" fn run_idle() {
 
     // After WFE, probe-rs reports that the RTT read pointer has been modified.
     // Therefore, when logging is enabled, avoid WFE in idle to prevent interference.
-    #[cfg(not(log_enabled))]
+    #[cfg(not(feature = "log-base"))]
     unsafe {
         asm!("wfe");
     }

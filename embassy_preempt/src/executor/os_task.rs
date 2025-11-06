@@ -13,7 +13,6 @@
 */
 
 use alloc::string::ToString;
-use crate::task_log;
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::future::Future;

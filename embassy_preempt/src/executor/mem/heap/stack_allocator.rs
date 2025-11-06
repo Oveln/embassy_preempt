@@ -7,9 +7,6 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
-// Import logging macros
-use crate::task_log; 
-
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;

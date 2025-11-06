@@ -63,7 +63,7 @@ macro_rules! generate_tasks_async {
         $(
             async fn $fn_name(_args: *mut core::ffi::c_void) {
                 loop {
-                    use embassy_preempt::task_log;
+                    use embassy_preempt_log::task_log;
                     task_log!(info, "---{} begin---", stringify!($fn_name));
 
                     embassy_preempt::os_time::timer::Timer::after_ticks($first_delay).await;

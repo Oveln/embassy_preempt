@@ -42,7 +42,7 @@ pub mod atomic_macros;
 
 /// Logging macros for the RTOS
 #[macro_use]
-pub mod log;
+extern crate embassy_preempt_log;
 
 // This must go last, so that it sees all the impl_foo! macros defined earlier.
 // pub(crate) mod _generated {

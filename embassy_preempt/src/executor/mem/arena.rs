@@ -22,7 +22,6 @@ use crate::cfg::OS_ARENA_SIZE;
 
 // Import logging macros when logging is enabled
 use critical_section::{CriticalSection, Mutex};
-use crate::{mem_log, task_log};
 
 /*
 ********************************************************************************************************************************************

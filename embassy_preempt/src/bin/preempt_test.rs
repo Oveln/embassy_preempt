@@ -4,7 +4,7 @@
 
 use core::ffi::c_void;
 
-use embassy_preempt::task_log;
+use embassy_preempt_log::task_log;
 // <- derive attribute
 use embassy_preempt::executor::{OSInit, OSStart};
 use embassy_preempt::executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
