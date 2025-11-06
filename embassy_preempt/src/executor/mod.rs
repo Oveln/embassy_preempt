@@ -146,7 +146,7 @@ impl SyncExecutor {
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio as usize]);
     }}
     pub(crate) fn find_highrdy_prio(&self) -> OS_PRIO {
-        task_log!(trace, "find_highrdy_prio");
+        scheduler_log!(trace, "find_highrdy_prio");
         let tmp = self.OSRdyGrp.get_unmut();
         if *tmp == 0 {
             return OS_TASK_IDLE_PRIO;
@@ -157,7 +157,7 @@ impl SyncExecutor {
         prio as OS_PRIO
     }
     pub unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
-        task_log!(trace, "set_task_unready");
+        scheduler_log!(trace, "set_task_unready");
         // added by liam: we have to make this process in critical section
         // because the bitmap is shared by all the tasks
         critical_section::with(|_| {
@@ -229,8 +229,7 @@ impl SyncExecutor {
 
 impl SyncExecutor {
     fn alarm_callback(ctx: *mut ()) {
-        task_log!(trace, "alarm_callback");
-              task_log!(info, "alarm_callback task");
+        scheduler_log!(trace, "alarm_callback");
         let this: &Self = unsafe { &*(ctx as *const Self) };
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
@@ -303,11 +302,11 @@ impl SyncExecutor {
 
         task_log!(trace, "interrupt_poll");
         if *self.OSPrioCur.get_unmut() != OS_TASK_IDLE_PRIO {
-            self.OSTCBCur.get().is_in_thread_poll.set(false);
+            self.OSTCBCur.get().needs_stack_save.set(true);
             // If the current task will be deleted, 
-            // setting 'is_in_thread_poll' to 'true' will destroy the stack in PenSV
+            // setting 'needs_stack_save' to 'false' will destroy the stack in PenSV
             if self.os_prio_tbl.get_unmut()[*self.OSPrioCur.get_unmut() as usize].ptr.is_none() {
-                self.OSTCBCur.get().is_in_thread_poll.set(true);
+                self.OSTCBCur.get().needs_stack_save.set(false);
             }
         }
         let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
@@ -416,7 +415,7 @@ impl SyncExecutor {
             // by yck: but the following part will not be executed, because OS_POLL_FN will execute task's 'poll', 
             // which in turn will go to the task body, and will not return here
             critical_section::with(|_| {
-                task.is_in_thread_poll.set(true);
+                task.needs_stack_save.set(false);
                 self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
                 self.set_task_unready(task);
                 // set the task's stack to None

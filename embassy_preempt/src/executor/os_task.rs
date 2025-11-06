@@ -311,8 +311,8 @@ pub fn OSTaskDel(prio: INT8U) -> OS_ERR_STATE {
         if OSRunning.load(Ordering::Acquire) {
             // if prio == executor.OSTCBCur.get_unmut().OSTCBPrio {
             if prio == *executor.OSPrioCur.get_unmut() {
-                // deleting the task itself sets 'is_in_thread_poll' to 'true' will destroy the stack in PenSV
-                unsafe { ptcb.is_in_thread_poll.set(true); }
+                // deleting the task itself sets 'needs_stack_save' to 'false' will destroy the stack in PenSV
+                unsafe { ptcb.needs_stack_save.set(false); }
             } else {
                 // drop the stack directly when deleting other tasks
                 dealloc_stack(&mut ptcb.take_stk());

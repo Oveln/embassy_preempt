@@ -73,7 +73,9 @@ pub struct OS_TCB {
     pub(crate) OSTCBRegTbl: [INT32U; OS_TASK_REG_TBL_SIZE],
 
     pub(crate) expires_at: SyncUnsafeCell<u64>,     /* Time when the task should be woken up */
-    pub(crate) is_in_thread_poll: SyncUnsafeCell<bool>,     /* Marking whether a task is a thread or a concatenation */
+
+    /// Whether the task's stack should be preserved on deletion
+    pub(crate) needs_stack_save: SyncUnsafeCell<bool>,
 }
 
 #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
@@ -206,7 +208,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
                 #[cfg(feature = "OS_TASK_NAME_EN")]
                 OSTCBTaskName: String::new(),
                 expires_at: SyncUnsafeCell::new(u64::MAX),
-                is_in_thread_poll: SyncUnsafeCell::new(true),
+                needs_stack_save: SyncUnsafeCell::new(false),
             },
             future: UninitCell::uninit(),
         }

@@ -92,7 +92,7 @@ fn PendSV() {
     let tcb_cur = global_executor.OSTCBCur.get_mut();
 
     // see if it is a thread
-    if !*tcb_cur.is_in_thread_poll.get_unmut() {
+    if *tcb_cur.needs_stack_save.get_unmut() {
         let old_stk_ptr: *mut usize;
         unsafe {
             asm!(
@@ -110,7 +110,7 @@ fn PendSV() {
     }
     unsafe {
         global_executor.set_cur_highrdy();
-        tcb_cur.is_in_thread_poll.set(true);
+        tcb_cur.needs_stack_save.set(false);
     }
     let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
     stack_pin_low();
