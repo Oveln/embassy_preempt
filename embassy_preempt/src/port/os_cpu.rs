@@ -4,8 +4,7 @@ use core::arch::asm;
 use core::mem;
 use core::ptr::NonNull;
 
-use cortex_m::register::control::{self, Spsel};
-use cortex_m::register::{msp, psp};
+use cortex_m::register::psp;
 use cortex_m_rt::exception;
 
 use super::OS_STK;
@@ -232,31 +231,21 @@ pub extern "Rust" fn set_program_sp(sp: *mut u8) {
     // }
 }
 #[unsafe(no_mangle)]
+#[inline(never)]
 /// the function to set the interrupt stack and change the control register to use the psp
+/// Safety: the function will break the stack context
 pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8) {
-    scheduler_log!(trace, "set_int_change_2_psp");
     unsafe {
-        #[allow(deprecated)]
-        msp::write(int_ptr as u32);
+        asm!(
+            // fisrt change the MSP
+           "MSR msp, r1",
+            // then change the control register to use the psp
+            "MRS r0, control",
+            "ORR r0, r0, #2",
+            "MSR control, r0",
+            "BX lr",
+            in("r1") int_ptr,
+            options(nostack, preserves_flags),
+        )
     }
-    let mut control = control::read();
-    control.set_spsel(Spsel::Psp);
-    unsafe {
-        control::write(control);
-    }
-    // unsafe {
-    //     asm!(
-    //         // fisrt change the MSP
-    //        "MSR msp, r1",
-    //         // then change the control register to use the psp
-    //         "MRS r0, control",
-    //         "ORR r0, r0, #2",
-    //         "MSR control, r0",
-    //         // make sure the function will be inlined as we don't use lr to return
-    //         // // then we need to return to the caller, this time we explicitly use the lr
-    //         // "BX lr",
-    //         in("r1") int_ptr,
-    //         options(nostack, preserves_flags),
-    //     )
-    // }
 }
