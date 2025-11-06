@@ -1,18 +1,5 @@
 //! the allocator of TCB only will be used by executor
 
-/*
-****************************************************************************************************************************************
-*                                                      the stack  of uC/OS-II
-*                                                        code by liam and noah
-****************************************************************************************************************************************
-*/
-
-/*
-********************************************************************************************************************************************
-*                                                               import mod
-********************************************************************************************************************************************
-*/
-
 use core::alloc::Layout;
 use core::cell::{Cell, UnsafeCell};
 use core::mem::MaybeUninit;
@@ -23,14 +10,6 @@ use crate::cfg::OS_ARENA_SIZE;
 // Import logging macros when logging is enabled
 use critical_section::{CriticalSection, Mutex};
 
-/*
-********************************************************************************************************************************************
-*                                                              stack allocator
-*                                      The stack allocator of uC/OS-II. There are two main functions of it
-*                                      1. alloc the stack memory for the task(TCB) list.
-*                                      2. alloc the stack when a future is interrupted without await.
-********************************************************************************************************************************************
-*/
 /// Every TCB(here, we store TaskStorage) will be stored here.
 pub static ARENA: Arena<{ OS_ARENA_SIZE }> = Arena::new();
 
@@ -39,11 +18,6 @@ pub struct Arena<const N: usize> {
     buf: UnsafeCell<MaybeUninit<[u8; N]>>,
     ptr: Mutex<Cell<*mut u8>>,
 }
-/*
-********************************************************************************************************************************************
-*                                                         implements of stack allocator
-********************************************************************************************************************************************
-*/
 
 unsafe impl<const N: usize> Sync for Arena<N> {}
 unsafe impl<const N: usize> Send for Arena<N> {}
