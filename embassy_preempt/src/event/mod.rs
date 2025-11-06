@@ -109,11 +109,11 @@ impl OS_EVENT {
 #[allow(unused)]
 impl OS_EVENT_REF {
     /// The pointer must have been obtained with OS_EVENT
-    pub(crate) unsafe fn from_ptr(ptr: *const OS_EVENT) -> Self {
+    pub(crate) unsafe fn from_ptr(ptr: *const OS_EVENT) -> Self { unsafe {
         Self {
             ptr: Some(NonNull::new_unchecked(ptr as *mut OS_EVENT)),
         }
-    }
+    }}
     pub(crate) fn header(self) -> &'static OS_EVENT {
         unsafe { self.ptr.unwrap().as_ref() }
     }
@@ -175,7 +175,7 @@ impl EventPool {
         }
     }
     /// init the event table
-    pub unsafe fn init(&self) {
+    pub unsafe fn init(&self) { unsafe {
         critical_section::with(|cs| {
             for i in 0..OS_MAX_EVENTS {
                 if self.OSEventTbl.get_mut()[i].ptr.is_none() {
@@ -196,7 +196,7 @@ impl EventPool {
         pevent1.OSEventPtr.set(None);
 
         self.OSEventFreeList.set(Some(self.OSEventTbl.get_mut()[0]));
-    }
+    }}
     /// alloc a new event from the event pool
     pub fn alloc(&self) -> Option<OS_EVENT_REF> {
         critical_section::with(|cs| {

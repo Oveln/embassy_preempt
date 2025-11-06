@@ -324,7 +324,7 @@ pub fn OSWaitBot(){
 }
 
 // sync bottom waiter
-pub(crate) unsafe fn bottom_waiter() {
+pub(crate) unsafe fn bottom_waiter() { unsafe {
     // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
@@ -343,4 +343,4 @@ pub(crate) unsafe fn bottom_waiter() {
         GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
         os_log!(trace, "end the delay");
     }
-}
+}}

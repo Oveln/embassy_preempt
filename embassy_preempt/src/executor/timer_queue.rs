@@ -23,7 +23,7 @@ impl TimerQueue {
 
     /// Insert a task into the timer queue.(sorted by `expires_at`,the header is the nearest task)
     /// return the next expiration time.
-    pub(crate) unsafe fn update(&self, p: OS_TCB_REF) -> u64 {
+    pub(crate) unsafe fn update(&self, p: OS_TCB_REF) -> u64 { unsafe {
         timer_log!(trace, "in timer update");
         let p_expires_at = &p.expires_at;
         // by noah：this indicate that the time queue is not updated or the time queue is null
@@ -55,7 +55,7 @@ impl TimerQueue {
         // 
         // task_log!(trace, "exit timer update");
         return *self.head.get_unmut().as_ref().unwrap().expires_at.get_unmut();
-    }
+    }}
 
     /// get the arrival time of the earliest arriving task
     pub(crate) unsafe fn next_expiration(&self) -> u64 {
@@ -68,7 +68,7 @@ impl TimerQueue {
     }
     
     /// wake up all tasks whose delay time has arrived
-    pub(crate) unsafe fn dequeue_expired(&self, now: u64, on_task: impl Fn(OS_TCB_REF)) {
+    pub(crate) unsafe fn dequeue_expired(&self, now: u64, on_task: impl Fn(OS_TCB_REF)) { unsafe {
         timer_log!(trace, "dequeue expired");
         let mut cur = self.head.get();
         while let Some(cur_ref) = cur {
@@ -94,10 +94,10 @@ impl TimerQueue {
             cur_ref.OSTimerPrev.set(None);
             cur = next;
         }
-    }
+    }}
 
     /// remove a task from the timer queue
-    pub(crate) unsafe fn remove(&self, p: OS_TCB_REF) {
+    pub(crate) unsafe fn remove(&self, p: OS_TCB_REF) { unsafe {
         if self.head.get().is_none() {
             return;
         }
@@ -131,5 +131,5 @@ impl TimerQueue {
         if let Some(next_ref) = next {
             next_ref.OSTimerPrev.set(prev);
         }
-    }
+    }}
 }

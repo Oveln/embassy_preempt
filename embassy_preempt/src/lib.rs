@@ -8,10 +8,8 @@
 #![feature(slice_ptr_get)]
 #![feature(sync_unsafe_cell)]
 #![feature(alloc_error_handler)]
-#![feature(const_mut_refs)]
 #![feature(never_type)]
 #![warn(missing_docs)]
-#![feature(naked_functions)]
 // by noah：generate the ucosii static lib
 #![crate_type = "staticlib"]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides

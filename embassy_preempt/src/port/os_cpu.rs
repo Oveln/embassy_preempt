@@ -21,7 +21,6 @@ pub fn OSInitHookBegin() {}
 const NVIC_INT_CTRL: u32 = 0xE000ED04;
 const NVIC_PENDSVSET: u32 = 0x10000000;
 #[unsafe(no_mangle)]
-#[inline]
 /// the function to start the first task
 pub extern "Rust" fn restore_thread_task() {
     os_log!(trace, "restore_thread_task");
@@ -174,7 +173,6 @@ struct UcStk {
 const CONTEXT_STACK_SIZE: usize = 17;
 
 #[unsafe(no_mangle)]
-#[inline]
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
 pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> {
@@ -220,7 +218,6 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
 }
 
 #[unsafe(no_mangle)]
-#[inline]
 /// the function to set the program stack
 pub extern "Rust" fn set_program_sp(sp: *mut u8) {
     os_log!(trace, "set_program_sp");
@@ -236,7 +233,6 @@ pub extern "Rust" fn set_program_sp(sp: *mut u8) {
     // }
 }
 #[unsafe(no_mangle)]
-#[inline]
 /// the function to set the interrupt stack and change the control register to use the psp
 pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8) {
     scheduler_log!(trace, "set_int_change_2_psp");

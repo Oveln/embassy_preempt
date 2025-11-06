@@ -292,7 +292,7 @@ impl HoleList {
     /// This function is unsafe because it creates a hole at the given `hole_addr`.
     /// This can cause undefined behavior if this address is invalid or if memory from the
     /// `[hole_addr, hole_addr+size)` range is used somewhere else.
-    pub unsafe fn new(hole_addr: *mut u8, hole_size: usize) -> HoleList {
+    pub unsafe fn new(hole_addr: *mut u8, hole_size: usize) -> HoleList { unsafe {
         assert_eq!(size_of::<Hole>(), Self::min_size());
         assert!(hole_size >= size_of::<Hole>());
 
@@ -321,7 +321,7 @@ impl HoleList {
             top: aligned_hole_addr.wrapping_add(aligned_hole_size),
             pending_extend: (requested_hole_size - aligned_hole_size) as u8,
         }
-    }
+    }}
 
     /// Aligns the given layout for use with `HoleList`.
     ///
@@ -403,7 +403,7 @@ impl HoleList {
             .map(|hole| (hole.as_ptr() as *mut u8 as *const u8, unsafe { hole.as_ref().size }))
     }
 
-    pub(crate) unsafe fn extend(&mut self, by: usize) {
+    pub(crate) unsafe fn extend(&mut self, by: usize) { unsafe {
         assert!(!self.top.is_null(), "tried to extend an empty heap");
 
         let top = self.top;
@@ -439,15 +439,15 @@ impl HoleList {
 
         // save extra bytes given to extend that weren't aligned to the hole size
         self.pending_extend = (extend_by - new_hole_size) as u8;
-    }
+    }}
 }
 
-unsafe fn make_hole(addr: *mut u8, size: usize) -> NonNull<Hole> {
+unsafe fn make_hole(addr: *mut u8, size: usize) -> NonNull<Hole> { unsafe {
     let hole_addr = addr.cast::<Hole>();
     debug_assert_eq!(addr as usize % align_of::<Hole>(), 0, "Hole address not aligned!",);
     hole_addr.write(Hole { size, next: None });
     NonNull::new_unchecked(hole_addr)
-}
+}}
 
 impl Cursor {
     fn try_insert_back(self, node: NonNull<Hole>, bottom: *mut u8) -> Result<Self, Self> {

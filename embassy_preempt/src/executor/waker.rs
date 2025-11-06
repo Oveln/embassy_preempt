@@ -10,17 +10,17 @@ unsafe fn clone(p: *const ()) -> RawWaker {
     RawWaker::new(p, &VTABLE)
 }
 
-unsafe fn wake(p: *const ()) {
+unsafe fn wake(p: *const ()) { unsafe {
     wake_task(OS_TCB_REF::from_ptr(p as *const OS_TCB))
-}
+}}
 
 unsafe fn drop(_: *const ()) {
     // nop
 }
 
-pub(crate) unsafe fn from_task(p: OS_TCB_REF) -> Waker {
+pub(crate) unsafe fn from_task(p: OS_TCB_REF) -> Waker { unsafe {
     Waker::from_raw(RawWaker::new(p.as_ptr() as _, &VTABLE))
-}
+}}
 
 /// Get a task pointer from a waker.
 ///

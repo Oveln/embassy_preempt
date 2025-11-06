@@ -10,23 +10,23 @@ impl<T> UninitCell<T> {
         Self(MaybeUninit::uninit())
     }
 
-    pub unsafe fn as_mut_ptr(&self) -> *mut T {
+    pub unsafe fn as_mut_ptr(&self) -> *mut T { unsafe {
         (*self.0.as_ptr()).get()
-    }
+    }}
 
     #[allow(clippy::mut_from_ref)]
-    pub unsafe fn as_mut(&self) -> &mut T {
+    pub unsafe fn as_mut(&self) -> &mut T { unsafe {
         &mut *self.as_mut_ptr()
-    }
+    }}
 
     #[inline(never)]
-    pub unsafe fn write_in_place(&self, func: impl FnOnce() -> T) {
+    pub unsafe fn write_in_place(&self, func: impl FnOnce() -> T) { unsafe {
         ptr::write(self.as_mut_ptr(), func())
-    }
+    }}
 
-    pub unsafe fn drop_in_place(&self) {
+    pub unsafe fn drop_in_place(&self) { unsafe {
         ptr::drop_in_place(self.as_mut_ptr())
-    }
+    }}
 }
 
 unsafe impl<T> Sync for UninitCell<T> {}
@@ -65,16 +65,16 @@ impl<T> SyncUnsafeCell<T> {
         }
     }
 
-    pub unsafe fn set(&self, value: T) {
+    pub unsafe fn set(&self, value: T) { unsafe {
         *self.value.get() = value;
-    }
+    }}
 
     pub unsafe fn get(&self) -> T
     where
         T: Copy,
-    {
+    { unsafe {
         *self.value.get()
-    }
+    }}
     pub fn get_mut(&self) -> &mut T {
         unsafe { &mut *self.value.get() }
     }
@@ -82,7 +82,7 @@ impl<T> SyncUnsafeCell<T> {
         unsafe { &*self.value.get() }
     }
     /// set and return the old value
-    pub unsafe fn swap(&self, value: T) -> T {
+    pub unsafe fn swap(&self, value: T) -> T { unsafe {
         core::mem::replace(&mut *self.value.get(), value)
-    }
+    }}
 }

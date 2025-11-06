@@ -290,7 +290,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     }
 
     /// the poll function will be called uniquely once by the executor
-    unsafe fn poll(p: OS_TCB_REF) {
+    unsafe fn poll(p: OS_TCB_REF) { unsafe {
         let this = &*(p.as_ptr() as *const OS_TASK_STORAGE<F>);
 
         let future = Pin::new_unchecked(this.future.as_mut());
@@ -312,7 +312,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // the compiler is emitting a virtual call for waker drop, but we know
         // it's a noop for our waker.
         mem::forget(waker);
-    }
+    }}
 
     /// this func will be called to create a new task(TCB)
     // refer to the get of TaskPoolRef in embassy
@@ -359,11 +359,11 @@ impl DerefMut for OS_TCB_REF {
 
 impl OS_TCB_REF {
     /// Safety: The pointer must have been obtained with `Task::as_ptr`
-    pub(crate) unsafe fn from_ptr(ptr: *const OS_TCB) -> Self {
+    pub(crate) unsafe fn from_ptr(ptr: *const OS_TCB) -> Self { unsafe {
         Self {
             ptr: Some(NonNull::new_unchecked(ptr as *mut OS_TCB)),
         }
-    }
+    }}
 
     pub(crate) fn header(self) -> &'static OS_TCB {
         unsafe { self.ptr.unwrap().as_ref() }

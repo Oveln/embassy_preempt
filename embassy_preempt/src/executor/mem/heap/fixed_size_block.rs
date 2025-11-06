@@ -43,9 +43,9 @@ impl FixedSizeBlockAllocator {
     /// This function is unsafe because the caller must guarantee that the given
     /// heap bounds are valid and that the heap is unused. This method must be
     /// called only once.
-    pub unsafe fn init(&mut self, heap_start: *mut u8, heap_size: usize) {
+    pub unsafe fn init(&mut self, heap_start: *mut u8, heap_size: usize) { unsafe {
         self.fallback_allocator.init(heap_start, heap_size);
-    }
+    }}
 
     /// Allocates using the fallback allocator.
     fn fallback_alloc(&mut self, layout: Layout) -> *mut u8 {
@@ -83,7 +83,7 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
         }
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) { unsafe {
         let mut allocator = self.lock();
         match list_index(&layout) {
             Some(index) => {
@@ -103,5 +103,5 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
                 allocator.fallback_allocator.deallocate(ptr, layout);
             }
         }
-    }
+    }}
 }

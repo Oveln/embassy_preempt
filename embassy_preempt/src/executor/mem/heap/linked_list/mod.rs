@@ -60,10 +60,10 @@ impl Heap {
     /// is invalid.
     ///
     /// The provided memory range must be valid for the `'static` lifetime.
-    pub unsafe fn init(&mut self, heap_bottom: *mut u8, heap_size: usize) {
+    pub unsafe fn init(&mut self, heap_bottom: *mut u8, heap_size: usize) { unsafe {
         self.used = 0;
         self.holes = HoleList::new(heap_bottom, heap_size);
-    }
+    }}
 
     /// Initialize an empty heap with provided memory.
     ///
@@ -123,12 +123,12 @@ impl Heap {
     /// is invalid.
     ///
     /// The provided memory range must be valid for the `'static` lifetime.
-    pub unsafe fn new(heap_bottom: *mut u8, heap_size: usize) -> Heap {
+    pub unsafe fn new(heap_bottom: *mut u8, heap_size: usize) -> Heap { unsafe {
         Heap {
             used: 0,
             holes: HoleList::new(heap_bottom, heap_size),
         }
-    }
+    }}
 
     /// Creates a new heap from a slice of raw memory.
     ///
@@ -173,9 +173,9 @@ impl Heap {
     ///
     /// `ptr` must be a pointer returned by a call to the [`allocate_first_fit`] function with
     /// identical layout. Undefined behavior may occur for invalid arguments.
-    pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: Layout) {
+    pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: Layout) { unsafe {
         self.used -= self.holes.deallocate(ptr, layout).size();
-    }
+    }}
 
     /// Returns the bottom address of the heap.
     ///
@@ -231,9 +231,9 @@ impl Heap {
     /// Even if this operation doesn't increase the [usable size][`Self::size`]
     /// by exactly `by` bytes, those bytes are still owned by the Heap for
     /// later use.
-    pub unsafe fn extend(&mut self, by: usize) {
+    pub unsafe fn extend(&mut self, by: usize) { unsafe {
         self.holes.extend(by);
-    }
+    }}
 }
 
 #[cfg(feature = "use_spin")]
@@ -263,12 +263,12 @@ impl LockedHeap {
     /// is invalid.
     ///
     /// The provided memory range must be valid for the `'static` lifetime.
-    pub unsafe fn new(heap_bottom: *mut u8, heap_size: usize) -> LockedHeap {
+    pub unsafe fn new(heap_bottom: *mut u8, heap_size: usize) -> LockedHeap { unsafe {
         LockedHeap(Spinlock::new(Heap {
             used: 0,
             holes: HoleList::new(heap_bottom, heap_size),
         }))
-    }
+    }}
 }
 
 #[cfg(feature = "use_spin")]
@@ -290,9 +290,9 @@ unsafe impl GlobalAlloc for LockedHeap {
             .map_or(core::ptr::null_mut(), |allocation| allocation.as_ptr())
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) { unsafe {
         self.0.lock().deallocate(NonNull::new_unchecked(ptr), layout)
-    }
+    }}
 }
 
 /// Align downwards. Returns the greatest x with alignment `align`

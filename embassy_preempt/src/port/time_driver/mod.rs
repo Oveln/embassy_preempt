@@ -339,7 +339,7 @@ impl Driver for RtcDriver {
         calc_now(period, counter)
     }
 
-    unsafe fn allocate_alarm(&self) -> Option<AlarmHandle> {
+    unsafe fn allocate_alarm(&self) -> Option<AlarmHandle> { unsafe {
         critical_section::with(|_| {
             let id = self.alarm_count.load(Ordering::Relaxed);
             if id < ALARM_COUNT as u8 {
@@ -349,7 +349,7 @@ impl Driver for RtcDriver {
                 None
             }
         })
-    }
+    }}
 
     fn set_alarm_callback(&self, alarm: AlarmHandle, callback: fn(*mut ()), ctx: *mut ()) {
         critical_section::with(|cs| {

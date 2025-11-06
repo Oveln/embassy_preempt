@@ -105,12 +105,12 @@ unsafe impl Impl for SingleCoreCriticalSection {
         was_active
     }
 
-    unsafe fn release(was_active: RawRestoreState) {
+    unsafe fn release(was_active: RawRestoreState) { unsafe {
         // Only re-enable interrupts if they were enabled before the critical section.
         if was_active {
             interrupt::enable()
         }
-    }
+    }}
 }
 
 /*

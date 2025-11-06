@@ -23,7 +23,7 @@ pub fn OSTimerInit() {
 }
 
 /// delay async task 'n' ticks
-pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
+pub(crate) unsafe fn delay_tick(_ticks: INT64U) { unsafe {
     // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
@@ -56,7 +56,7 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
                 .timer_queue
                 .dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
             // then we need to set a new alarm according to the next expiration time
-            next_expire = unsafe { executor.timer_queue.next_expiration() };
+            next_expire = executor.timer_queue.next_expiration();
             timer_log!(trace, "in delay_tick the next expire is {:?}", next_expire);
             // by noah：we also need to updater the set_time of the timer_queue
             executor.timer_queue.set_time.set(next_expire);
@@ -71,7 +71,7 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
         GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
         timer_log!(trace, "end the delay");
     }
-}
+}}
 
 
 /// we have to make this delay acting like preemptive delay

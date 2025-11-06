@@ -104,11 +104,11 @@ impl SyncExecutor {
     }
     
     /// set the current to be highrdy
-    pub(crate) unsafe fn set_cur_highrdy(&self) {
+    pub(crate) unsafe fn set_cur_highrdy(&self) { unsafe {
         scheduler_log!(trace, "set_cur_highrdy");
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
-    }
+    }}
 
     /// Enqueue a task in the task queue
     #[inline(always)]
@@ -125,7 +125,7 @@ impl SyncExecutor {
         tmp[prio] = task;
     }
 
-    pub(crate) unsafe fn set_highrdy(&self) {
+    pub(crate) unsafe fn set_highrdy(&self) { unsafe {
         task_log!(trace, "set_highrdy");
         let tmp = self.OSRdyGrp.get_unmut();
         // if there is no task in the ready queue, return None also set the current running task to the lowest priority
@@ -141,12 +141,12 @@ impl SyncExecutor {
         // set the current running task
         self.OSPrioHighRdy.set(prio as OS_PRIO);
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio]);
-    }
-    pub(crate) unsafe fn set_highrdy_with_prio(&self, prio: OS_PRIO) {
+    }}
+    pub(crate) unsafe fn set_highrdy_with_prio(&self, prio: OS_PRIO) { unsafe {
         // set the current running task
         self.OSPrioHighRdy.set(prio as OS_PRIO);
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio as usize]);
-    }
+    }}
     pub(crate) fn find_highrdy_prio(&self) -> OS_PRIO {
         task_log!(trace, "find_highrdy_prio");
         let tmp = self.OSRdyGrp.get_unmut();
@@ -294,7 +294,7 @@ impl SyncExecutor {
 
     /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
     /// when this function return, the caller interrupt will also return and the pendsv will run.
-    pub(crate) unsafe fn interrupt_poll(&'static self) {
+    pub(crate) unsafe fn interrupt_poll(&'static self) { unsafe {
         unsafe extern "Rust" {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
             fn restore_thread_task();
@@ -370,17 +370,15 @@ impl SyncExecutor {
         // restore the task from stk
         critical_section::with(|_| {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
-                unsafe {
-                    // //[cfg(feature = "defmt")]
-                            task_log!(info, "restore the task/thread");
-                    restore_thread_task()
-                };
+                // //[cfg(feature = "defmt")]
+                        task_log!(info, "restore the task/thread");
+                restore_thread_task();
             }
         });
-    }
+    }}
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
-    pub(crate) unsafe fn poll(&'static self) -> ! {
+    pub(crate) unsafe fn poll(&'static self) -> ! { unsafe {
         // //[cfg(feature = "defmt")]
         task_log!(trace, "poll");
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
@@ -427,9 +425,9 @@ impl SyncExecutor {
             // execute the task depending on if it has stack
             self.single_poll(task);
         }
-    }
+    }}
 
-    pub unsafe fn single_poll(&'static self,mut task: OS_TCB_REF) {
+    pub unsafe fn single_poll(&'static self,mut task: OS_TCB_REF) { unsafe {
         task_log!(trace, "single_poll");
         task.OS_POLL_FN.get().unwrap_unchecked()(task);
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
@@ -458,11 +456,9 @@ impl SyncExecutor {
                         // (just like the operation in alarm_callback)
                         self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
                         // then we need to set a new alarm according to the next expiration time
-                        next_expire = unsafe { self.timer_queue.next_expiration() };
+                        next_expire = self.timer_queue.next_expiration();
                         // by noah：we also need to updater the set_time of the timer_queue
-                        unsafe {
-                            self.timer_queue.set_time.set(next_expire);
-                        }
+                        self.timer_queue.set_time.set(next_expire);
                     }
                 }
                 // by noah：maybe we can set the task unready, and call dequeue when set_alarm return false
@@ -470,7 +466,7 @@ impl SyncExecutor {
                 // adapt the method above
                 self.set_highrdy()
             });
-    }
+    }}
     
 }
 
