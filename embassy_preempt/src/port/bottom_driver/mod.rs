@@ -50,7 +50,7 @@ pub struct BotDriver {
     bottoms: Mutex<BottomState>,
 }
 
-pub(crate) static BOT_DRIVER: BotDriver = BotDriver {
+pub static BOT_DRIVER: BotDriver = BotDriver {
     bottoms: Mutex::new(BottomState {
         task: SyncUnsafeCell::new(None),
         callback: Cell::new(core::ptr::null()),
@@ -84,7 +84,8 @@ unsafe impl Sync for BotDriver {}
 
 // use PC13 as the source of EXIT13
 impl BotDriver {
-    pub(crate) fn init(&'static self) {
+    /// Init
+    pub fn init(&'static self) {
         os_log!(trace, "init of BotDriver");
         // gpio config
         bottom_init();

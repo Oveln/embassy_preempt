@@ -55,9 +55,9 @@ pub const OS_N_SYS_TASKS: USIZE = 0;
 // by noah：maybe because the lazy_static, the const val can be calculate when it is used for the first time
 // maybe use a static val is a good choice.
 #[allow(unused)]
-pub(crate) const OS_TASK_STAT_PRIO: OS_PRIO = OS_LOWEST_PRIO - 1; /* Statistic task priority                     */
+pub const OS_TASK_STAT_PRIO: OS_PRIO = OS_LOWEST_PRIO - 1; /* Statistic task priority                     */
 #[allow(unused)]
-pub(crate) const OS_TASK_IDLE_PRIO: OS_PRIO = OS_LOWEST_PRIO; /* IDLE      task priority                     */
+pub const OS_TASK_IDLE_PRIO: OS_PRIO = OS_LOWEST_PRIO; /* IDLE      task priority                     */
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
 /// Size of event table                         

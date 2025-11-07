@@ -7,6 +7,7 @@ members = [
     "embassy_preempt",
     "modules/embassy-preempt-log",
     "modules/embassy-preempt-structs",
+    "modules/embassy-preempt-executor",
     "platform"
 ]
 

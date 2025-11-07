@@ -70,7 +70,7 @@ pub struct AlarmHandle {
     id: INT8U,
 }
 
-pub(crate) struct RtcDriver {
+pub struct RtcDriver {
     /// Number of 2^15 periods elapsed since boot.
     period: AtomicU32,
     alarm_count: AtomicU8,
@@ -432,7 +432,7 @@ impl Driver for RtcDriver {
 const ALARM_STATE_NEW: AlarmState = AlarmState::new();
 
 /// the global RTC driver
-pub(crate) static RTC_DRIVER: RtcDriver = RtcDriver {
+pub static RTC_DRIVER: RtcDriver = RtcDriver {
     period: AtomicU32::new(0),
     alarm_count: AtomicU8::new(0),
     alarms: Mutex::new([ALARM_STATE_NEW; ALARM_COUNT]),
