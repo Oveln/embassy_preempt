@@ -1,0 +1,17 @@
+[package]
+name = "embassy-preempt-structs"
+version = "0.1.0"
+authors = ["oveln"]
+edition = "2024"
+repository = "https://github.com/Oveln/embassy_preempt"
+license = "MIT OR Apache-2.0"
+description = "Data structures for Embassy Preempt RTOS"
+readme = "README.md"
+
+[lib]
+crate-type = ["rlib"]
+
+# ==================================================================
+# DEPENDENCIES
+# ==================================================================
+[dependencies]
