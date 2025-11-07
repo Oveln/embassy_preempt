@@ -18,6 +18,7 @@ pub mod os_task;
 pub mod os_core;
 pub mod mem;
 pub mod os_time;
+pub mod os_cpu;
 
 #[macro_use]
 extern crate embassy_preempt_log;
@@ -34,7 +35,7 @@ use core::ptr::NonNull;
 use core::sync::atomic::Ordering;
 use lazy_static::lazy_static;
 use state::State;
-use embassy_preempt::port::time_driver::{AlarmHandle, Driver, RTC_DRIVER};
+use embassy_preempt_port::time_driver::{AlarmHandle, Driver, RTC_DRIVER};
 use task::{OS_TCB, OS_TCB_REF};
 pub use os_task::*;
 pub use os_core::*;
@@ -74,11 +75,11 @@ pub struct SyncExecutor {
     // the prio tbl stores a relation between the prio and the task_ref
     os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
     // indicate the current running task
-    pub(crate) OSPrioCur: SyncUnsafeCell<OS_PRIO>,
+    pub OSPrioCur: SyncUnsafeCell<OS_PRIO>,
     pub OSTCBCur: SyncUnsafeCell<OS_TCB_REF>,
     // highest priority task in the ready queue
-    pub(crate) OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
-    pub(crate) OSTCBHighRdy: SyncUnsafeCell<OS_TCB_REF>,
+    pub OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
+    pub OSTCBHighRdy: SyncUnsafeCell<OS_TCB_REF>,
     // by liam: add a bitmap to record the status of the task
     #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
     OSRdyGrp: SyncUnsafeCell<u8>,
@@ -113,7 +114,7 @@ impl SyncExecutor {
 
     #[allow(dead_code)]
     /// set the current to be highrdy
-    pub(crate) unsafe fn set_cur_highrdy(&self) { unsafe {
+    pub unsafe fn set_cur_highrdy(&self) { unsafe {
         scheduler_log!(trace, "set_cur_highrdy");
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
@@ -134,7 +135,7 @@ impl SyncExecutor {
         tmp[prio] = task;
     }
 
-    pub(crate) unsafe fn set_highrdy(&self) { unsafe {
+    pub unsafe fn set_highrdy(&self) { unsafe {
         task_log!(trace, "set_highrdy");
         let tmp = self.OSRdyGrp.get_unmut();
         // if there is no task in the ready queue, return None also set the current running task to the lowest priority
@@ -299,7 +300,7 @@ impl SyncExecutor {
 
     /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
     /// when this function return, the caller interrupt will also return and the pendsv will run.
-    pub(crate) unsafe fn interrupt_poll(&'static self) { unsafe {
+    pub unsafe fn interrupt_poll(&'static self) { unsafe {
         unsafe extern "Rust" {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
             fn restore_thread_task();
@@ -375,7 +376,7 @@ impl SyncExecutor {
     }}
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
-    pub(crate) unsafe fn poll(&'static self) -> ! { unsafe {
+    pub unsafe fn poll(&'static self) -> ! { unsafe {
         task_log!(trace, "poll");
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop

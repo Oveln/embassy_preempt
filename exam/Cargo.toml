@@ -1,24 +1,29 @@
 [package]
 name = "exam"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+
+[workspace]
 
 
 [dependencies]
 cortex-m = { version = "0.7"}
 cortex-m-rt = { version = "0.7", features = ["device"]}
-defmt = { version = "0.3.0", optional = true}
-defmt-rtt = { version = "0.4", optional = true}
-panic-probe = { version = "0.3", features = ["print-defmt"], optional = true}
+defmt = { version = "1.0.1", optional = true}
+defmt-rtt = { version = "1.1.0", optional = true}
+panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true}
 
 critical-section = { version = "1.1", features=["restore-state-bool"]}
 
-executor = { path = "../modules/executor" , features = ["stm32f401re","memory-x"] }
+embassy-preempt-executor = { path = "../modules/embassy-preempt-executor" }
 # executor = { path = "../modules/executor" , features = ["stm32f401re","memory-x","alarm_test"] }
-app = { path = "../modules/app" }
+embassy-preempt-app = { path = "../modules/embassy-preempt-app", features = ["stm32f401re"] }
 
 # executor = { workspace = true, optional = true, features = ["stm32f401re","defmt"] }
 # app = { workspace = true, optional = true}
+
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata", "stm32f401re", "rt"]}
+
 
 
 # cargo build/run
@@ -40,4 +45,4 @@ lto = true      # 启用链接时优化
 [features]
 alarm_test = ["dep:defmt","panic-probe","defmt-rtt"]
 defmt = ["dep:defmt","panic-probe","defmt-rtt"]
-memory-x = ["executor/memory-x"]     # If you have not added memory.x, you need to activate the feature
+# memory-x = ["executor/memory-x"]     # If you have not added memory.x, you need to activate the feature

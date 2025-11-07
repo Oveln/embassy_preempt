@@ -1,0 +1,65 @@
+[package]
+name = "embassy-preempt-port"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+cortex-m = { version = "0.7" }
+
+critical-section = { version = "1.1", features = ["restore-state-bool"] }
+
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata"]}
+
+# Embassy Preempt Log
+embassy-preempt-log = { path = "../embassy-preempt-log"}
+defmt = { version = "1.0.1", optional = true }
+panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
+
+# embassy-preempt-executor = { path = "../embassy-preempt-executor" }
+
+# Embassy Preempt CFG
+embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
+
+# Embassy Preempt App
+embassy-preempt-app = { path = "../embassy-preempt-app" }
+
+# Embassy Preempt struct
+embassy-preempt-structs = { path = "../embassy-preempt-structs" }
+
+cortex-m-semihosting = { version = "0.5", optional = true }
+
+[features]
+default = ["time_driver_tim3", "GPIOC","logs"]
+
+time_driver_tim1 = []
+time_driver_tim2 = []
+time_driver_tim3 = []
+time_driver_tim4 = []
+time_driver_tim5 = []
+time_driver_tim8 = []
+time_driver_tim9 = []
+time_driver_tim12 = []
+time_driver_tim15 = []
+time_driver_tim20 = []
+time_driver_tim21 = []
+time_driver_tim22 = []
+time_driver_tim23 = []
+time_driver_tim24 = []
+
+GPIOA = []
+GPIOC = []
+
+logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
+log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe"]
+log-os = ["log-base", "embassy-preempt-log/log-os"]
+log-task = ["log-base", "embassy-preempt-log/log-task"]
+log-mem = ["log-base", "embassy-preempt-log/log-mem"]
+log-timer = ["log-base", "embassy-preempt-log/log-timer"]
+log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler"]
+semihosting = ["dep:cortex-m-semihosting"]
+
+
+low-power = []
+
+OS_TASK_PROFILE_EN = []

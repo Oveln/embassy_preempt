@@ -17,7 +17,7 @@ pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 512 B also ok
 pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
-use embassy_preempt::port::OS_STK;
+use embassy_preempt_port::OS_STK;
 use embassy_preempt_structs::cell::UPSafeCell;
 static STACK_ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 lazy_static::lazy_static! {

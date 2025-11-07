@@ -13,7 +13,7 @@ use super::GlobalSyncExecutor;
 
 use crate::mem::arena::ARENA;
 use crate::mem::heap::OS_STK_REF;
-use embassy_preempt::port::{INT8U, INT16U, INT32U, PTR};
+use embassy_preempt_port::{INT8U, INT16U, INT32U, PTR};
 use embassy_preempt_cfg::ucosii::OS_ERR_STATE;
 use embassy_preempt_cfg::OS_TASK_REG_TBL_SIZE;
 use embassy_preempt_structs::cell::{SyncUnsafeCell, UninitCell};
@@ -75,7 +75,7 @@ pub struct OS_TCB {
     pub expires_at: SyncUnsafeCell<u64>,     /* Time when the task should be woken up */
 
     /// Whether the task's stack should be preserved on deletion
-    pub(crate) needs_stack_save: SyncUnsafeCell<bool>,
+    pub needs_stack_save: SyncUnsafeCell<bool>,
 }
 
 #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
@@ -366,7 +366,7 @@ impl OS_TCB_REF {
         }
     }}
 
-    pub(crate) fn header(self) -> &'static OS_TCB {
+    pub fn header(self) -> &'static OS_TCB {
         unsafe { self.ptr.unwrap().as_ref() }
     }
 

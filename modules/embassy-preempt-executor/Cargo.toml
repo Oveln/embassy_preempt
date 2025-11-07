@@ -17,6 +17,8 @@ crate-type = ["rlib"]
 [dependencies]
 cortex-m = { version = "0.7" }
 cortex-m-rt = { version = "0.7", features = ["device"] }
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata", "stm32f401re"]}
+
 critical-section = { version = "1.1", features = ["restore-state-bool"] }
 
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
@@ -35,10 +37,10 @@ embassy-preempt-structs = { path = "../embassy-preempt-structs" }
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 
 # Embassy Preempt App
-embassy-preempt-app = { path = "../embassy-preempt-app" }
+embassy-preempt-app = { path = "../embassy-preempt-app", features = ["stm32f401re"] }
 
 # 暂时
-embassy_preempt = { path = "../../embassy_preempt"}
+embassy-preempt-port = { path = "../embassy-preempt-port" }
 
 [dependencies.spinning_top]
 version = "0.3.0"
@@ -57,12 +59,12 @@ default = [
 ]
 
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
-log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe","embassy_preempt/log-base"]
-log-os = ["log-base", "embassy-preempt-log/log-os","embassy_preempt/log-os"]
-log-task = ["log-base", "embassy-preempt-log/log-task","embassy_preempt/log-task"]
-log-mem = ["log-base", "embassy-preempt-log/log-mem","embassy_preempt/log-mem"]
-log-timer = ["log-base", "embassy-preempt-log/log-timer","embassy_preempt/log-timer"]
-log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler","embassy_preempt/log-scheduler"]
+log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe"]
+log-os = ["log-base", "embassy-preempt-log/log-os"]
+log-task = ["log-base", "embassy-preempt-log/log-task"]
+log-mem = ["log-base", "embassy-preempt-log/log-mem"]
+log-timer = ["log-base", "embassy-preempt-log/log-timer"]
+log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler"]
 
 cortex_m = []
 delay_idle = []

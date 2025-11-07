@@ -5,10 +5,10 @@
 // FFI接口
 use core::ffi::c_void;
 
-use executor::SyncOSTaskCreate;
-use executor::os_core::{OSInit, OSStart};
-use executor::os_time::OSTimeDly;
-use executor::pac::{usart, gpio, GPIOA, RCC, USART1};
+use embassy_preempt_executor::SyncOSTaskCreate;
+use embassy_preempt_executor::os_core::{OSInit, OSStart};
+use embassy_preempt_executor::os_time::OSTimeDly;
+use stm32_metapac::{usart, gpio, GPIOA, RCC, USART1};
 
 
 #[cfg(feature = "defmt")]

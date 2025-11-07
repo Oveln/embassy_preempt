@@ -6,10 +6,10 @@
 use core::ffi::c_void;
 use core::arch::asm;
 
-use executor::{SyncOSTaskCreate, AsyncOSTaskCreate};
-use executor::os_core::{OSInit, OSStart};
-use executor::os_time::OSTimeDly;
-use executor::pac::{gpio, GPIOA, RCC};
+use embassy_preempt_executor::{SyncOSTaskCreate, AsyncOSTaskCreate};
+use embassy_preempt_executor::os_core::{OSInit, OSStart};
+use embassy_preempt_executor::os_time::OSTimeDly;
+use stm32_metapac::{gpio, GPIOA, RCC};
 // use app::led::Pin_Init;
 
 #[cfg(feature = "defmt")]

@@ -35,11 +35,11 @@
 use core::ffi::c_void;
 use core::sync::atomic::Ordering;
 
-use embassy_preempt::port::bottom_driver::BOT_DRIVER;
+// use embassy_preempt_port::bottom_driver::BOT_DRIVER;
 
 // use critical_section::Mutex;
 // use core::cell::RefCell;
-use embassy_preempt::port::os_cpu::*;
+use crate::os_cpu::*;
 
 use crate::mem::heap::{Init_Heap, OS_InitStackAllocator};
 use crate::GlobalSyncExecutor;
@@ -47,7 +47,7 @@ use crate::SyncOSTaskCreate;
 use crate::os_time::blockdelay;
 use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
-use embassy_preempt::port::*;
+use embassy_preempt_port::*;
 #[cfg(feature = "OS_TASK_NAME_EN")]
 use crate::executor::OSTaskNameSet;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
@@ -580,7 +580,7 @@ pub fn OS_EventWaitListInit() {}
 #[allow(unused)]
 fn OS_InitEventList() {
     // by noah: *TEST*, init the bototm driver
-    BOT_DRIVER.init();
+    // BOT_DRIVER.init();
 }
 
 /*
@@ -843,8 +843,8 @@ fn OS_SchedNew() {}
 */
 
 /// This function is called by other uC/OS-II services to determine the size of an ASCII string (excluding the NUL character)
-pub fn OS_StrLen(_psrc: &str) -> INT8U {
-    return _psrc.len() as INT8U;
+pub fn OS_StrLen(_psrc: &str) -> u8 {
+    return _psrc.len() as u8;
 }
 
 /*

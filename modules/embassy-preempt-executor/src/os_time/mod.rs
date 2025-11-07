@@ -1,8 +1,8 @@
 use core::sync::atomic::Ordering;
 
 use crate::{wake_task_no_pend, GlobalSyncExecutor};
-use embassy_preempt::port::time_driver::{Driver, RTC_DRIVER};
-use embassy_preempt::port::{INT8U, INT64U, USIZE};
+use embassy_preempt_port::time_driver::{Driver, RTC_DRIVER};
+use embassy_preempt_port::{INT8U, INT64U, USIZE};
 use embassy_preempt_cfg::OS_LOWEST_PRIO;
 use embassy_preempt_cfg::ucosii::{OSRunning, OSIntNesting, OSLockNesting, OS_ERR_STATE};
 /// the mod of blockdelay of uC/OS-II kernel
@@ -202,3 +202,14 @@ pub fn OSTimeGet() -> INT64U {
     RTC_DRIVER.now() 
 }
 
+#[unsafe(no_mangle)]
+/// Schedule the given waker to be woken at `at`.
+pub fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker) {
+    timer_log!(trace, "_embassy_time_schedule_wake");
+    let task = crate::waker::task_from_waker(waker);
+    let task = task.header();
+    unsafe {
+        let expires_at = task.expires_at.get();
+        task.expires_at.set(expires_at.min(at));
+    }
+}
