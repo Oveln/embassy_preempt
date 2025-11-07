@@ -34,6 +34,9 @@ embassy-preempt-structs = { path = "../embassy-preempt-structs" }
 # Embassy Preempt CFG
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 
+# Embassy Preempt App
+embassy-preempt-app = { path = "../embassy-preempt-app" }
+
 # 暂时
 embassy_preempt = { path = "../../embassy_preempt"}
 
@@ -86,7 +89,7 @@ OS_TASK_NAME_EN = []
 OS_SAFETY_CRITICAL = []
 OS_ARG_CHK_EN = []      ## Enable (1) or Disable (0) argument checking
 OS_MAX_QS = []
-OS_TASK_REG_TBL_SIZE = []
+OS_TASK_REG_TBL_SIZE = ["embassy-preempt-cfg/OS_TASK_REG_TBL_SIZE"]
 OS_TASK_STAT_STK_CHK_EN = []
 OS_MAX_MEM_PART=[]
 OS_FLAG_EN=[]
@@ -94,7 +97,7 @@ OS_MAX_FLAGS=[]
 OS_TMR_EN=[]
 OS_CPU_HOOKS_EN=[]
 OS_DEBUG_EN=[]
-OS_TIME_GET_SET_EN=[]
+OS_TIME_GET_SET_EN=["embassy-preempt-cfg/OS_TIME_GET_SET_EN"]
 OS_SAFETY_CRITICAL_IEC61508=[]
 OS_STACK_LESS_THAN_64=[]
 OS_STACK_LESS_THAN_256=[]

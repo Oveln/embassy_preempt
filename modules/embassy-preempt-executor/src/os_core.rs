@@ -51,8 +51,8 @@ use embassy_preempt::port::*;
 #[cfg(feature = "OS_TASK_NAME_EN")]
 use crate::executor::OSTaskNameSet;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
-use embassy_preempt::cfg::ucosii::OSTaskRegNextAvailID;
-use embassy_preempt::cfg::ucosii::{
+use embassy_preempt_cfg::ucosii::OSTaskRegNextAvailID;
+use embassy_preempt_cfg::ucosii::{
     OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSRunning, OSTaskCtr, OSTime, OS_TASK_IDLE_PRIO,
 };
 

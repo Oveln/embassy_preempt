@@ -39,7 +39,7 @@ pub use os_task::*;
 pub use os_core::*;
 
 pub use self::waker::task_from_waker;
-use embassy_preempt::app::led::{stack_pin_high, stack_pin_low};
+use embassy_preempt_app::led::{stack_pin_high, stack_pin_low};
 // use arena::ARENA;
 use embassy_preempt_cfg::*;
 use crate::mem::heap::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
