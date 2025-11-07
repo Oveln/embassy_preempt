@@ -17,6 +17,7 @@ pub mod task;
 pub mod os_task;
 pub mod os_core;
 pub mod mem;
+pub mod os_time;
 
 #[macro_use]
 extern crate embassy_preempt_log;

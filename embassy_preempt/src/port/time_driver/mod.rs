@@ -158,7 +158,7 @@ impl AlarmHandle {
 }
 
 impl RtcDriver {
-    pub(crate) fn init(&'static self) {
+    pub fn init(&'static self) {
         
         os_log!(trace, "init of RtcDriver");
         // rcc config（need to configure RCC according to your own chip）
