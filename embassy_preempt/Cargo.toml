@@ -3,12 +3,14 @@
 # ==================================================================
 [package]
 name = "embassy_preempt"
-version.workspace = true
-authors.workspace = true
-edition.workspace = true
-repository.workspace = true
-license.workspace = true
+version = "0.1.0"
+authors = ["oveln"]
+edition = "2024"
+repository = "https://github.com/Oveln/embassy_preempt"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
+
+[workspace]
 
 # ==================================================================
 # LIBRARY CONFIGURATION
@@ -62,6 +64,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
 # Default features enabled when no specific features are selected
 [features]
 default = [
+    "logs",
     "stm32f401re",
     "GPIOC",
     "rt",
