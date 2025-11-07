@@ -4,7 +4,7 @@
 ********************************************************************************************************************************************
 */
 
-use embassy_preempt::alloc::alloc::{GlobalAlloc, Layout};
+use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
 
@@ -18,7 +18,7 @@ pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
 use embassy_preempt::port::OS_STK;
-use embassy_preempt::executor::cell::UPSafeCell;
+use embassy_preempt_structs::cell::UPSafeCell;
 static STACK_ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 lazy_static::lazy_static! {
     pub static ref PROGRAM_STACK: UPSafeCell<OS_STK_REF> = unsafe {

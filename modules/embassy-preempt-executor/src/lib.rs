@@ -46,7 +46,7 @@ use embassy_preempt_cfg::*;
 use crate::mem::heap::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
 
 #[cfg(feature = "delay_idle")]
-use embassy_preempt::os_time::blockdelay::delay;
+use crate::os_time::blockdelay::delay;
 // use crate::ucosii::*;
 use embassy_preempt_cfg::ucosii::*;
 use embassy_preempt_structs::cell::SyncUnsafeCell;

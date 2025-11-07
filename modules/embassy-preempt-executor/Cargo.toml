@@ -41,7 +41,7 @@ embassy-preempt-app = { path = "../embassy-preempt-app" }
 embassy_preempt = { path = "../../embassy_preempt"}
 
 [dependencies.spinning_top]
-version = "0.2.5"
+version = "0.3.0"
 optional = true
 
 [features]

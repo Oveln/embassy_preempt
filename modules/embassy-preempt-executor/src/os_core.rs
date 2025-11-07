@@ -44,8 +44,8 @@ use embassy_preempt::port::os_cpu::*;
 use crate::mem::heap::{Init_Heap, OS_InitStackAllocator};
 use crate::GlobalSyncExecutor;
 use crate::SyncOSTaskCreate;
-use embassy_preempt::os_time::blockdelay;
-use embassy_preempt::os_time::OSTimerInit;
+use crate::os_time::blockdelay;
+use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use embassy_preempt::port::*;
 #[cfg(feature = "OS_TASK_NAME_EN")]
