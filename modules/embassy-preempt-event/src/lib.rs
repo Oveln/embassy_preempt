@@ -25,11 +25,11 @@ use core::ops::{Deref, DerefMut};
 use lazy_static::lazy_static;
 use critical_section::{self, CriticalSection};
 
-use cfg::{INT16U, OS_MAX_EVENTS, OS_LOWEST_PRIO};
-use cfg::ucosii::{OS_PRIO, OS_EVENT_TBL_SIZE};
-use cell::SyncUnsafeCell;
-use executor::{GlobalSyncExecutor, OSUnMapTbl};
-use executor::{task::OS_TCB_REF, mem::arena::ARENA};
+use embassy_preempt_cfg::{INT16U, OS_MAX_EVENTS, OS_LOWEST_PRIO};
+use embassy_preempt_cfg::ucosii::{OS_PRIO, OS_EVENT_TBL_SIZE};
+use embassy_preempt_structs::cell::SyncUnsafeCell;
+use embassy_preempt_executor::{GlobalSyncExecutor, OSUnMapTbl};
+use embassy_preempt_executor::{task::OS_TCB_REF, mem::arena::ARENA};
 
 
 /*
@@ -110,7 +110,7 @@ impl OS_EVENT_REF {
     /// The pointer must have been obtained with OS_EVENT
     pub(crate) unsafe fn from_ptr(ptr: *const OS_EVENT) -> Self {
         Self {
-            ptr: Some(NonNull::new_unchecked(ptr as *mut OS_EVENT)),
+            ptr: Some(unsafe { NonNull::new_unchecked(ptr as *mut OS_EVENT) }),
         }
     }
     pub(crate) fn header(self) -> &'static OS_EVENT {
@@ -188,13 +188,13 @@ impl EventPool {
             pevent1 = self.OSEventTbl.get_mut()[i];
             pevent2 = self.OSEventTbl.get_mut()[i+1];
             pevent1.OSEventType = OS_EVENT_TYPE::UNUSED;
-            pevent1.OSEventPtr.set(Some(pevent2));   
+            unsafe { pevent1.OSEventPtr.set(Some(pevent2)); }
         }
         pevent1 = self.OSEventTbl.get_mut()[OS_MAX_EVENTS-1];
         pevent1.OSEventType = OS_EVENT_TYPE::UNUSED;
-        pevent1.OSEventPtr.set(None);
+        unsafe { pevent1.OSEventPtr.set(None); }
 
-        self.OSEventFreeList.set(Some(self.OSEventTbl.get_mut()[0]));
+        unsafe { self.OSEventFreeList.set(Some(self.OSEventTbl.get_mut()[0])); }
     }
     /// alloc a new event from the event pool
     pub fn alloc(&self) -> Option<OS_EVENT_REF> {
@@ -304,8 +304,6 @@ pub fn OS_EventTaskRemove(ptcb: OS_TCB_REF, mut pevent: OS_EVENT_REF) {
     if pevent.OSEventTbl[y as usize] == 0 {
         pevent.OSEventGrp &= !ptcb.OSTCBY;
     }
-    unsafe {
-        #[cfg(feature = "OS_EVENT_EN")]
-        ptcb.OSTCBEventPtr.set(None);
-    }
+    #[cfg(feature = "OS_EVENT_EN")]
+    unsafe { ptcb.OSTCBEventPtr.set(None); }
 }

@@ -1,9 +1,9 @@
 use core::sync::atomic::Ordering;
 
-use cfg::ucosii::{OSIntNesting, OS_ERR_STATE, OS_DEL_NO_PEND, OS_DEL_ALWAYS};
-use cfg::{INT8U, INT16U, BOOLEAN};
-use executor::GlobalSyncExecutor;
-use executor::os_time::OSTimeDly;
+use embassy_preempt_cfg::ucosii::{OSIntNesting, OS_ERR_STATE, OS_DEL_NO_PEND, OS_DEL_ALWAYS};
+use embassy_preempt_cfg::{INT8U, INT16U, BOOLEAN};
+use embassy_preempt_executor::GlobalSyncExecutor;
+use embassy_preempt_executor::os_time::OSTimeDly;
 use crate::{GlobalEventPool, OS_EVENT_REF, OS_EVENT_TYPE};
 use crate::{OS_EventTaskWait, OS_EventTaskRdy};
 

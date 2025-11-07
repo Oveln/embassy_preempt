@@ -1,0 +1,22 @@
+[package]
+name = "embassy-preempt-event"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+critical-section = { version = "1.1", features=["restore-state-bool"]}
+lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
+
+embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
+embassy-preempt-structs = { path = "../embassy-preempt-structs" }
+embassy-preempt-executor = { path = "../embassy-preempt-executor" }
+
+[features]
+OS_EVENT_NAME_EN = []
+OS_ARG_CHK_EN = []
+OS_Q_ACCEPT_EN = []
+OS_Q_DEL_EN = []
+OS_Q_FLUSH_EN = []
+OS_Q_POST_EN = []
+OS_Q_POST_FRONT_EN = []
+OS_EVENT_EN = []

@@ -47,8 +47,8 @@ pub struct OS_TCB {
     
     pub(crate) OSTCBPrio: INT8U, /* Task priority (0 == highest)                            */
 
-    pub(crate) OSTCBX: INT8U,    /* Bit position in group  corresponding to task priority   */
-    pub(crate) OSTCBY: INT8U,    /* Index into ready table corresponding to task priority   */
+    pub OSTCBX: INT8U,    /* Bit position in group  corresponding to task priority   */
+    pub OSTCBY: INT8U,    /* Index into ready table corresponding to task priority   */
     pub(crate) OSTCBBitX: INT8U, /* Bit mask to access bit position in ready table          */
     pub(crate) OSTCBBitY: INT8U, /* Bit mask to access bit position in ready group          */
 
@@ -72,7 +72,7 @@ pub struct OS_TCB {
     #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
     pub(crate) OSTCBRegTbl: [INT32U; OS_TASK_REG_TBL_SIZE],
 
-    pub(crate) expires_at: SyncUnsafeCell<u64>,     /* Time when the task should be woken up */
+    pub expires_at: SyncUnsafeCell<u64>,     /* Time when the task should be woken up */
 
     /// Whether the task's stack should be preserved on deletion
     pub(crate) needs_stack_save: SyncUnsafeCell<bool>,

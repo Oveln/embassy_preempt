@@ -59,7 +59,7 @@ use embassy_preempt_structs::cell::SyncUnsafeCell;
 // create a global executor
 lazy_static! {
 /// the global executor will be initialized at os init
-    pub(crate) static ref GlobalSyncExecutor: Option<SyncExecutor> = Some(SyncExecutor::new());
+    pub static ref GlobalSyncExecutor: Option<SyncExecutor> = Some(SyncExecutor::new());
 }
 /*
 ****************************************************************************************************************************************
@@ -69,13 +69,13 @@ lazy_static! {
 
 
 /// The executor for the uC/OS-II RTOS.
-pub(crate) struct SyncExecutor {
+pub struct SyncExecutor {
     // run_queue: RunQueue,
     // the prio tbl stores a relation between the prio and the task_ref
     os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
     // indicate the current running task
     pub(crate) OSPrioCur: SyncUnsafeCell<OS_PRIO>,
-    pub(crate) OSTCBCur: SyncUnsafeCell<OS_TCB_REF>,
+    pub OSTCBCur: SyncUnsafeCell<OS_TCB_REF>,
     // highest priority task in the ready queue
     pub(crate) OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
     pub(crate) OSTCBHighRdy: SyncUnsafeCell<OS_TCB_REF>,
@@ -261,7 +261,7 @@ impl SyncExecutor {
         unsafe { this.IntCtxSW() };
     }
     // as an interface to join the scheduler logic
-    pub(crate) unsafe fn IntCtxSW(&'static self) {
+    pub unsafe fn IntCtxSW(&'static self) {
               task_log!(info, "IntCtxSW");
         stack_pin_high();
         // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
