@@ -14,8 +14,8 @@ use super::GlobalSyncExecutor;
 use crate::mem::arena::ARENA;
 use crate::mem::heap::OS_STK_REF;
 use embassy_preempt::port::{INT8U, INT16U, INT32U, PTR};
-use embassy_preempt::cfg::ucosii::OS_ERR_STATE;
-use embassy_preempt::cfg::OS_TASK_REG_TBL_SIZE;
+use embassy_preempt_cfg::ucosii::OS_ERR_STATE;
+use embassy_preempt_cfg::OS_TASK_REG_TBL_SIZE;
 use embassy_preempt::executor::cell::{SyncUnsafeCell, UninitCell};
 #[cfg(feature = "OS_EVENT_EN")]
 use crate::event::OS_EVENT_REF;

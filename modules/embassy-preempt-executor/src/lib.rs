@@ -41,14 +41,13 @@ pub use os_core::*;
 pub use self::waker::task_from_waker;
 use embassy_preempt::app::led::{stack_pin_high, stack_pin_low};
 // use arena::ARENA;
-use embassy_preempt::cfg::*;
+use embassy_preempt_cfg::*;
 use crate::mem::heap::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
 
 #[cfg(feature = "delay_idle")]
 use embassy_preempt::os_time::blockdelay::delay;
-use embassy_preempt::port::*;
 // use crate::ucosii::*;
-use embassy_preempt::cfg::ucosii::*;
+use embassy_preempt_cfg::ucosii::*;
 use embassy_preempt_structs::cell::SyncUnsafeCell;
 
 /*
@@ -182,23 +181,23 @@ impl SyncExecutor {
         });
     }
     // check if an prio is exiting
-    pub extern "aapcs" fn prio_exist(&self, prio: INT8U) -> bool {
+    pub extern "aapcs" fn prio_exist(&self, prio: u8) -> bool {
         let prio_tbl: &[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_unmut();
-        prio_tbl[prio as USIZE].ptr.is_some()
+        prio_tbl[prio as usize].ptr.is_some()
     }
     // to take up space in the bitmap
-    pub extern "aapcs" fn reserve_bit(&self, prio: INT8U) {
+    pub extern "aapcs" fn reserve_bit(&self, prio: u8) {
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
-        prio_tbl[prio as USIZE].ptr = Some(NonNull::dangling());
+        prio_tbl[prio as usize].ptr = Some(NonNull::dangling());
     }
-    pub extern "aapcs" fn clear_bit(&self, prio: INT8U) {
+    pub extern "aapcs" fn clear_bit(&self, prio: u8) {
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
-        prio_tbl[prio as USIZE].ptr = None;
+        prio_tbl[prio as usize].ptr = None;
     }
 
     // by noah:TEST print the ready queue

@@ -10,7 +10,7 @@ pub mod ucosii;
 mod tick;
 
 use ucosii::OS_PRIO;
-use cell::UPSafeCell;
+use embassy_preempt_structs::cell::UPSafeCell;
 // TODO: Make all the config to be feature!!!
 
 /// the const val define the lowest prio

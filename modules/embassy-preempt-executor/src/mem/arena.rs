@@ -5,7 +5,7 @@ use core::cell::{Cell, UnsafeCell};
 use core::mem::MaybeUninit;
 use core::ptr::null_mut;
 
-use embassy_preempt::cfg::OS_ARENA_SIZE;
+use embassy_preempt_cfg::OS_ARENA_SIZE;
 
 // Import logging macros when logging is enabled
 use critical_section::{CriticalSection, Mutex};

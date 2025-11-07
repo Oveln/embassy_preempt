@@ -21,10 +21,10 @@ use core::sync::atomic::Ordering;
 
 use super::{GlobalSyncExecutor, OS_TCB_REF, task::OS_TASK_STORAGE};
 
-use embassy_preempt::cfg::{OS_LOWEST_PRIO, OS_TASK_REG_TBL_SIZE};
+use embassy_preempt_cfg::{OS_LOWEST_PRIO, OS_TASK_REG_TBL_SIZE};
 use crate::mem::heap::{dealloc_stack, stk_from_ptr};
 use embassy_preempt::port::{INT8U, USIZE, OS_STK};
-use embassy_preempt::cfg::ucosii::{OS_PRIO_SELF, OS_TASK_IDLE_PRIO, OSRunning, OSIntNesting, OSTaskCtr, OS_ERR_STATE};
+use embassy_preempt_cfg::ucosii::{OS_PRIO_SELF, OS_TASK_IDLE_PRIO, OSRunning, OSIntNesting, OSTaskCtr, OS_ERR_STATE};
 
 const DEFAULT_REVOKE_STACK_SIZE: usize = 128;
 
