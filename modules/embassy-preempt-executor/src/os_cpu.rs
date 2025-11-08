@@ -34,6 +34,7 @@ pub extern "Rust" fn restore_thread_task() {
 // the pendsv handler used to switch the task
 #[exception]
 fn PendSV() {
+    const EXC_RETURN_TO_PSP: u32 = 0xFFFFFFFD;
     stack_pin_high();
     // first close the interrupt
     unsafe {
@@ -65,8 +66,9 @@ fn PendSV() {
                 // reset the msp
                 "MSR     MSP, R1",
                 "CPSIE   I",
-                "BX      LR",
+                "BX      R2",
                 in("r1") msp_stk,
+                in("r2") EXC_RETURN_TO_PSP,
                 options(nostack, preserves_flags),
             )
         }
@@ -122,9 +124,10 @@ fn PendSV() {
             // reset the msp
             "MSR     MSP, R1",
             "CPSIE   I",
-            "BX      LR",
+            "BX      R2",
             in("r0") program_stk_ptr,
             in("r1") msp_stk,
+            in("r2") EXC_RETURN_TO_PSP,
             options(nostack, preserves_flags),
         )
     }
