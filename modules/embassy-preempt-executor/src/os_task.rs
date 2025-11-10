@@ -323,7 +323,7 @@ pub fn OSTaskDel(prio: INT8U) -> OS_ERR_STATE {
         unsafe { executor.timer_queue.remove(ptcb); }
         #[cfg(feature = "OS_TASK_NAME_EN")]
         {
-            ptcb.OSTCBTaskName = "?";
+            ptcb.OSTCBTaskName = "?".to_string();
         }
         return OS_ERR_STATE::OS_ERR_NONE;
     });
@@ -359,7 +359,6 @@ pub fn OSTaskNameSet(prio: INT8U, pname: &str) -> OS_ERR_STATE {
         let executor = GlobalSyncExecutor.as_ref().unwrap();   
         if executor.prio_exist(prio) {
             executor.set_name(prio, pname.to_string());
-
             OS_ERR_STATE::OS_ERR_NONE
         } else {
             OS_ERR_STATE::OS_ERR_TASK_NOT_EXIST

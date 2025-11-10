@@ -22,7 +22,6 @@ pub mod os_cpu;
 
 #[macro_use]
 extern crate embassy_preempt_log;
-// use alloc::string::String;
 use core::alloc::Layout;
 // use core::future::Future;
 // use core::mem;
@@ -221,7 +220,7 @@ impl SyncExecutor {
     
     #[cfg(feature = "OS_TASK_NAME_EN")]
     /// set task's name
-    pub fn set_name(&self, prio: INT8U, name: String) {
+    pub fn set_name(&self, prio: INT8U, name: alloc::string::String) {
         let prio_tbl = self.os_prio_tbl.get_mut();
         prio_tbl[prio as usize].OSTCBTaskName = name;
     }

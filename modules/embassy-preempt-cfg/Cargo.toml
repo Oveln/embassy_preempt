@@ -8,6 +8,10 @@ lazy_static = { version = "1.5.0", features = ["spin_no_std"]}
 embassy-preempt-structs = { path = "../embassy-preempt-structs" }
 
 [features]
+default = [
+    # "OS_EVENT_NAME_EN",
+    "delay_idle",
+]
 # lib.rs
 delay_idle = []
 # ucosii.rs

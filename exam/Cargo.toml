@@ -15,7 +15,7 @@ panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true}
 
 critical-section = { version = "1.1", features=["restore-state-bool"]}
 
-embassy-preempt-executor = { path = "../modules/embassy-preempt-executor" }
+embassy-preempt-executor = { path = "../modules/embassy-preempt-executor", features = ["logs"]}
 # executor = { path = "../modules/executor" , features = ["stm32f401re","memory-x","alarm_test"] }
 embassy-preempt-app = { path = "../modules/embassy-preempt-app", features = ["stm32f401re"] }
 
@@ -29,10 +29,10 @@ stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", ta
 # cargo build/run
 [profile.dev]
 codegen-units = 1           # 控制代码生成单元的数量
-debug = 0
+debug = 2
 debug-assertions = true     # 启用调试断言
 incremental = false         # 禁用增量编译
-opt-level = 2 
+opt-level = 0
 overflow-checks = true      # 启用整数溢出检查
 
 # cargo build --release

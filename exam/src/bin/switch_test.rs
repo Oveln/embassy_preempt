@@ -19,8 +19,8 @@ use defmt::info;
 
 #[cortex_m_rt::entry]
 fn usart_test() -> ! {
-    #[cfg(feature = "alarm_test")]
-    info!("OS Start");
+    // #[cfg(feature = "alarm_test")]
+    // info!("OS Start");
 
     led_init();
     // Pin_Init();
@@ -30,10 +30,10 @@ fn usart_test() -> ! {
     OSInit();
     
     AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 10);
-    // AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 11);
-    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 12);
-    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 13);
-    AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 14);
+    AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 11);
+    // AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 12);
+    // AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 13);
+    // AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 14);
 
     OSStart();
 }

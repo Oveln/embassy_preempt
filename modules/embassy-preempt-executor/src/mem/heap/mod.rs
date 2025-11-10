@@ -20,9 +20,11 @@ pub const HEAP_SIZE: usize = 10 * 1024; // 100 KiB
 static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 #[allow(unused)]
 pub fn Init_Heap() {
+    mem_log!(trace, "Init_Heap: start={:x}, size={}", HEAP_START, HEAP_SIZE);
     unsafe {
         ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
     }
+    mem_log!(trace, "Init_Heap: completed");
 }
 
 /// A wrapper around spin::Mutex to permit trait implementations.

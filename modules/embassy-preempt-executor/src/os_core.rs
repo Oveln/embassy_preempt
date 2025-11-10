@@ -49,7 +49,7 @@ use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use embassy_preempt_port::*;
 #[cfg(feature = "OS_TASK_NAME_EN")]
-use crate::executor::OSTaskNameSet;
+use crate::OSTaskNameSet;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
 use embassy_preempt_cfg::ucosii::OSTaskRegNextAvailID;
 use embassy_preempt_cfg::ucosii::{
@@ -197,14 +197,15 @@ pub extern "C" fn OSInit() {
     #[cfg(feature = "OS_DEBUG_EN")]
     OSDebugInit();
 
+    // first of all, initilize the moudles about memery alloc
+    // init the heap to use String and Vec - must be before task creation!
+    Init_Heap();
+    OS_InitStackAllocator();
+
     // by noah: init the core peripheral
     init_core_peripherals();
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */
-    // by liam: we need to init the stack allocator
-    OS_InitStackAllocator();
-    // init the heap to use String and Vec
-    Init_Heap();
     // by noah：we need to init the Timer as the time driver
     OSTimerInit();
     // by noah: *TEST*
@@ -697,7 +698,8 @@ fn OS_InitTaskIdle() {
     SyncOSTaskCreate(idle_fn, 0 as *mut c_void, 0 as *mut usize, OS_TASK_IDLE_PRIO);
     #[cfg(feature = "OS_TASK_NAME_EN")]
     {
-        OSTaskNameSet(OS_TASK_IDLE_PRIO, "embassy-preempt Idle Task");
+        // TODO: Fix task name setting - causing heap corruption
+        // OSTaskNameSet(OS_TASK_IDLE_PRIO, "embassy-preempt Idle Task");
     }
 
 }

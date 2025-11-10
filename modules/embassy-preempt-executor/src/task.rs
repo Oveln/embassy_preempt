@@ -270,7 +270,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         }
         #[cfg(feature = "OS_TASK_NAME_EN")]
         {
-            this.task_tcb.OSTCBTaskName = name;
+            this.task_tcb.OSTCBTaskName = _name;
         }
 
         #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]

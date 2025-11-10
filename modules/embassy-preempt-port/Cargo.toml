@@ -30,7 +30,7 @@ embassy-preempt-structs = { path = "../embassy-preempt-structs" }
 cortex-m-semihosting = { version = "0.5", optional = true }
 
 [features]
-default = ["time_driver_tim3", "GPIOC","logs"]
+default = ["time_driver_tim3", "GPIOC"]
 
 time_driver_tim1 = []
 time_driver_tim2 = []

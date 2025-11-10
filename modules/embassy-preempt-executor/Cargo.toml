@@ -48,7 +48,6 @@ optional = true
 
 [features]
 default = [
-    "logs",
     "cortex_m",
     "OS_PRIO_LESS_THAN_64",
     "OS_MEM_EN",
@@ -56,15 +55,16 @@ default = [
     "OS_TIME_GET_SET_EN",
     "OS_TASK_CREATE_EXT_EN",
     "OS_TASK_REG_TBL_SIZE",
+    "OS_TASK_NAME_EN"
 ]
 
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe"]
-log-os = ["log-base", "embassy-preempt-log/log-os"]
-log-task = ["log-base", "embassy-preempt-log/log-task"]
-log-mem = ["log-base", "embassy-preempt-log/log-mem"]
-log-timer = ["log-base", "embassy-preempt-log/log-timer"]
-log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler"]
+log-os = ["log-base", "embassy-preempt-log/log-os", "embassy-preempt-port/log-os"]
+log-task = ["log-base", "embassy-preempt-log/log-task", "embassy-preempt-port/log-task"]
+log-mem = ["log-base", "embassy-preempt-log/log-mem", "embassy-preempt-port/log-mem"]
+log-timer = ["log-base", "embassy-preempt-log/log-timer", "embassy-preempt-port/log-timer"]
+log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler", "embassy-preempt-port/log-scheduler"]
 
 cortex_m = []
 delay_idle = []
