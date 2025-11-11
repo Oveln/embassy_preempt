@@ -11,14 +11,14 @@
   "rust-analyzer.showUnlinkedFileNotification": false,
   "rust-analyzer.linkedProjects": [
     "Cargo.toml",
-    "exam/Cargo.toml",
+    "example/Cargo.toml",
     "modules/embassy-preempt-log/Cargo.toml",
     "modules/embassy-preempt-structs/Cargo.toml",
     "modules/embassy-preempt-executor/Cargo.toml",
     "modules/embassy-preempt-cfg/Cargo.toml",
     "modules/embassy-preempt-event/Cargo.toml",
     "modules/embassy-preempt-port/Cargo.toml",
-    "platform/Cargo.toml"
+    "modules/embassy-preempt-platform/Cargo.toml"
   ],
   "rust-analyzer.cargo.features": [
     "stm32f401re"

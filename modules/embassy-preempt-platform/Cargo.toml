@@ -13,7 +13,7 @@ crate-type = ["rlib"]  # Rust库类型
 
 [dependencies]
 defmt = { version = "1.0.1"}
-embassy-preempt-log ={ path = "../modules/embassy-preempt-log" }
+embassy-preempt-log ={ path = "../embassy-preempt-log" }
 
 cortex-m = { version = "0.7", optional = true }
 cortex-m-rt = { version = "0.7", optional = true }

@@ -10,7 +10,7 @@ members = [
     "modules/embassy-preempt-cfg",
     "modules/embassy-preempt-event",
     "modules/embassy-preempt-port", # 这个库是暂时的
-    "platform"
+    "modules/embassy-preempt-platform"
 ]
 
 [workspace.package]

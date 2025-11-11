@@ -29,3 +29,5 @@ pub use platform::*;
 pub mod stm32f401re;
 #[cfg(feature = "stm32f401re")]
 pub use stm32f401re::PLATFORM as PLATFORM;
+#[cfg(feature = "stm32f401re")]
+pub use stm32_metapac as pac;
