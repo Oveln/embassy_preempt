@@ -15,10 +15,11 @@ panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true}
 
 critical-section = { version = "1.1", features=["restore-state-bool"]}
 
-embassy-preempt-executor = { path = "../modules/embassy-preempt-executor", features = ["logs"]}
+embassy-preempt-executor = { path = "../modules/embassy-preempt-executor"}
 # executor = { path = "../modules/executor" , features = ["stm32f401re","memory-x","alarm_test"] }
 embassy-preempt-app = { path = "../modules/embassy-preempt-app", features = ["stm32f401re"] }
-
+embassy-preempt-log = { path = "../modules/embassy-preempt-log"}
+embassy-preempt-platform = { path = "../modules/embassy-preempt-platform" }
 # executor = { workspace = true, optional = true, features = ["stm32f401re","defmt"] }
 # app = { workspace = true, optional = true}
 
@@ -32,7 +33,7 @@ codegen-units = 1           # 控制代码生成单元的数量
 debug = 2
 debug-assertions = true     # 启用调试断言
 incremental = false         # 禁用增量编译
-opt-level = 0
+opt-level = 1
 overflow-checks = true      # 启用整数溢出检查
 
 # cargo build --release
@@ -43,6 +44,12 @@ opt-level = 3
 lto = true      # 启用链接时优化
 
 [features]
-alarm_test = ["dep:defmt","panic-probe","defmt-rtt"]
-defmt = ["dep:defmt","panic-probe","defmt-rtt"]
 # memory-x = ["executor/memory-x"]     # If you have not added memory.x, you need to activate the feature
+default = ["logs"]
+logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
+log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe", "embassy-preempt-executor/log-base"]
+log-os = ["log-base", "embassy-preempt-log/log-os", "embassy-preempt-executor/log-os"]
+log-task = ["log-base", "embassy-preempt-log/log-task", "embassy-preempt-executor/log-task"]
+log-mem = ["log-base", "embassy-preempt-log/log-mem", "embassy-preempt-executor/log-mem"]
+log-timer = ["log-base", "embassy-preempt-log/log-timer", "embassy-preempt-executor/log-timer"]
+log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler", "embassy-preempt-executor/log-scheduler"]

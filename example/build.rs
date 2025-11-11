@@ -60,7 +60,7 @@ fn main() {
 
     // println!("cargo:rustc-link-arg=-")
     // 编译选项的可选："-C", "link-arg=-Tdefmt.x", 开了defmt或者alarm_test的时候才会加入
-    if env::var("CARGO_FEATURE_DEFMT").is_ok() || env::var("CARGO_FEATURE_ALARM_TEST").is_ok() {
+    if env::var("CARGO_FEATURE_LOG_BASE").is_ok(){
         println!("cargo:rustc-link-arg=-Tdefmt.x");
     }
 
