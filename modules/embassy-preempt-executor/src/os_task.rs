@@ -14,6 +14,7 @@
 
 pub extern crate alloc;
 use alloc::string::ToString;
+use embassy_preempt_platform::{OsStk, PLATFORM};
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::future::Future;
@@ -21,9 +22,8 @@ use core::sync::atomic::Ordering;
 
 use super::{GlobalSyncExecutor, OS_TCB_REF, task::OS_TASK_STORAGE};
 
-use embassy_preempt_cfg::{OS_LOWEST_PRIO, OS_TASK_REG_TBL_SIZE};
+use embassy_preempt_cfg::{OS_LOWEST_PRIO, OS_TASK_REG_TBL_SIZE, ucosii::OS_PRIO};
 use embassy_preempt_mem::heap::{dealloc_stack, stk_from_ptr};
-use embassy_preempt_port::{INT8U, USIZE, OS_STK};
 use embassy_preempt_cfg::ucosii::{OS_PRIO_SELF, OS_TASK_IDLE_PRIO, OSRunning, OSIntNesting, OSTaskCtr, OS_ERR_STATE};
 
 const DEFAULT_REVOKE_STACK_SIZE: usize = 128;
@@ -44,15 +44,14 @@ impl ReturnUnitOrNeverReturn for () {}
 pub extern "aapcs" fn SyncOSTaskCreate<F, R>(
     task: F,
     p_arg: *mut c_void,
-    _ptos: *mut OS_STK,
-    prio: INT8U,
+    _ptos: *mut OsStk,
+    prio: OS_PRIO,
 ) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
     F: FnOnce(*mut c_void) -> R + 'static,
     R: ReturnUnitOrNeverReturn,
 {
-    
     task_log!(trace, "SyncOSTaskCreate");
     // check the priority
     if prio > OS_LOWEST_PRIO as u8 {
@@ -77,7 +76,7 @@ where
 }
 
 /// Create a task in uC/OS-II kernel. This func is used by async Rust
-pub fn AsyncOSTaskCreate<F, FutFn>(task: FutFn, p_arg: *mut c_void, _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub fn AsyncOSTaskCreate<F, FutFn>(task: FutFn, p_arg: *mut c_void, _ptos: *mut OsStk, prio: OS_PRIO) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
     F: Future + 'static,
@@ -103,8 +102,8 @@ where
 pub extern "aapcs" fn OSTaskCreate(
     fun_ptr: extern "aapcs" fn(*mut c_void),
     p_arg: *mut c_void,
-    ptos: *mut OS_STK,
-    prio: INT8U,
+    ptos: *mut OsStk,
+    prio: OS_PRIO,
 ) -> OS_ERR_STATE {
     
     task_log!(trace, "OSTaskCreate");
@@ -112,7 +111,7 @@ pub extern "aapcs" fn OSTaskCreate(
     SyncOSTaskCreate(fun_ptr, p_arg, ptos, prio)
 }
 
-fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) -> OS_ERR_STATE {
+fn init_task<F: Future + 'static>(prio: OS_PRIO, future_func: impl FnOnce() -> F) -> OS_ERR_STATE {
     // Make sure we don't create the task from within an ISR
     if OSIntNesting.load(Ordering::Acquire) > 0 {
         return OS_ERR_STATE::OS_ERR_TASK_CREATE_ISR;
@@ -162,7 +161,7 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
 // #[cfg(feature = "OS_TASK_CHANGE_PRIO_EN")]
 /// This function allows you to change the priority of a task dynamically.  
 /// Note that the new priority MUST be available.
-pub fn OSTaskChangePrio(old_prio: INT8U, new_prio:INT8U) -> OS_ERR_STATE {
+pub fn OSTaskChangePrio(old_prio: OS_PRIO, new_prio:OS_PRIO) -> OS_ERR_STATE {
       task_log!(trace, "OSTaskChangePrio");
     let mut old_prio = old_prio;
     let executor = GlobalSyncExecutor.as_ref().unwrap();
@@ -182,7 +181,7 @@ pub fn OSTaskChangePrio(old_prio: INT8U, new_prio:INT8U) -> OS_ERR_STATE {
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = executor.os_prio_tbl.get_mut();
         // check if the new prio is exist
-        if prio_tbl[new_prio as USIZE].ptr.is_some() {
+        if prio_tbl[new_prio as usize].ptr.is_some() {
             return OS_ERR_STATE::OS_ERR_PRIO_EXIST;
         }
         // the OSPrioCur is only valid after os has started
@@ -193,10 +192,10 @@ pub fn OSTaskChangePrio(old_prio: INT8U, new_prio:INT8U) -> OS_ERR_STATE {
             }
         }
         // Does task to change exist?
-        if !prio_tbl[old_prio as USIZE].ptr.is_some() {
+        if !prio_tbl[old_prio as usize].ptr.is_some() {
             return OS_ERR_STATE::OS_ERR_PRIO;
         }
-        let mut _ptcb = prio_tbl[old_prio as USIZE];
+        let mut _ptcb = prio_tbl[old_prio as usize];
 
         if OSRunning.load(Ordering::Acquire) {
             // if current task change prio itself, must set OSPrioCur to new prio
@@ -212,8 +211,8 @@ pub fn OSTaskChangePrio(old_prio: INT8U, new_prio:INT8U) -> OS_ERR_STATE {
         let bitx_new = 1 << x_new;
         // remove the old priority from the priority table 
         // and place it in the new priority in the priority table
-        prio_tbl[old_prio as USIZE].ptr = None;
-        prio_tbl[new_prio as USIZE] = _ptcb;
+        prio_tbl[old_prio as usize].ptr = None;
+        prio_tbl[new_prio as usize] = _ptcb;
 
         let y_old = _ptcb.OSTCBY;
         let bity_old = _ptcb.OSTCBBitY;
@@ -222,14 +221,14 @@ pub fn OSTaskChangePrio(old_prio: INT8U, new_prio:INT8U) -> OS_ERR_STATE {
         let os_rdy_tbl = executor.OSRdyTbl.get_mut();
         let os_rdy_grp = executor.OSRdyGrp.get_mut();
         // remove the old priority from the ready queue
-        if os_rdy_tbl[y_old as USIZE] & bitx_old != 0 {
-            os_rdy_tbl[y_old as USIZE] &= !bitx_old;
-            if os_rdy_tbl[y_old as USIZE] == 0 {
+        if os_rdy_tbl[y_old as usize] & bitx_old != 0 {
+            os_rdy_tbl[y_old as usize] &= !bitx_old;
+            if os_rdy_tbl[y_old as usize] == 0 {
                 *os_rdy_grp &= !bity_old;
             }
             // add new priority to the ready queue
             *os_rdy_grp |= bity_new;
-            os_rdy_tbl[y_new as USIZE] |= bitx_new;
+            os_rdy_tbl[y_new as usize] |= bitx_new;
         }
         // update the tcb's priority to the new priority
         _ptcb.OSTCBPrio = new_prio;
@@ -251,7 +250,7 @@ pub fn OSTaskChangePrio(old_prio: INT8U, new_prio:INT8U) -> OS_ERR_STATE {
 
 // #[cfg(feature = "OS_TASK_DEL_EN")]
 /// this function allows you to delete a task 
-pub fn OSTaskDel(prio: INT8U) -> OS_ERR_STATE {
+pub fn OSTaskDel(prio: OS_PRIO) -> OS_ERR_STATE {
     task_log!(trace, "OSTaskDel");
     
     let mut prio = prio;
@@ -282,7 +281,7 @@ pub fn OSTaskDel(prio: INT8U) -> OS_ERR_STATE {
             // Set priority to delete to current
             prio = *executor.OSPrioCur.get_unmut();
         }
-        let mut ptcb = prio_tbl[prio as USIZE];
+        let mut ptcb = prio_tbl[prio as usize];
         // the task does not exist
         if ptcb.ptr.is_none() {
             return OS_ERR_STATE::OS_ERR_TASK_NOT_EXIST;
@@ -290,8 +289,8 @@ pub fn OSTaskDel(prio: INT8U) -> OS_ERR_STATE {
         let os_rdy_tbl = executor.OSRdyTbl.get_mut();
         let os_rdy_grp = executor.OSRdyGrp.get_mut();
         // remove task from the ready queue
-        os_rdy_tbl[ptcb.OSTCBY as USIZE] &= !ptcb.OSTCBBitX;
-        if os_rdy_tbl[ptcb.OSTCBY as USIZE] == 0 {
+        os_rdy_tbl[ptcb.OSTCBY as usize] &= !ptcb.OSTCBBitX;
+        if os_rdy_tbl[ptcb.OSTCBY as usize] == 0 {
             *os_rdy_grp &= !ptcb.OSTCBBitY;
         }
         // clearing the expiration time of tasks
@@ -307,7 +306,7 @@ pub fn OSTaskDel(prio: INT8U) -> OS_ERR_STATE {
         ptcb.OSTCBStat.despawn();
 
         // remove task from the priority table
-        prio_tbl[prio as USIZE].ptr = None;
+        prio_tbl[prio as usize].ptr = None;
         // destroy stack only when os is running
         if OSRunning.load(Ordering::Acquire) {
             // if prio == executor.OSTCBCur.get_unmut().OSTCBPrio {
@@ -339,7 +338,7 @@ pub fn OSTaskDel(prio: INT8U) -> OS_ERR_STATE {
 
 #[cfg(feature = "OS_TASK_NAME_EN")]
 /// This function is used to set the name of a task.
-pub fn OSTaskNameSet(prio: INT8U, pname: &str) -> OS_ERR_STATE {
+pub fn OSTaskNameSet(prio: OS_PRIO, pname: &str) -> OS_ERR_STATE {
     // argument checking
     #[cfg(feature = "OS_ARG_CHK_EN")]
     {

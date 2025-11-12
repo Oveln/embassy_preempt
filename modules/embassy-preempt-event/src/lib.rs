@@ -25,7 +25,7 @@ use core::ops::{Deref, DerefMut};
 use lazy_static::lazy_static;
 use critical_section::{self, CriticalSection};
 
-use embassy_preempt_cfg::{INT16U, OS_MAX_EVENTS, OS_LOWEST_PRIO};
+use embassy_preempt_cfg::{OS_MAX_EVENTS, OS_LOWEST_PRIO};
 use embassy_preempt_cfg::ucosii::{OS_PRIO, OS_EVENT_TBL_SIZE};
 use embassy_preempt_structs::cell::SyncUnsafeCell;
 use embassy_preempt_executor::{GlobalSyncExecutor, OSUnMapTbl};
@@ -47,7 +47,7 @@ use embassy_preempt_mem::arena::ARENA;
 pub struct OS_EVENT {
     pub OSEventType: OS_EVENT_TYPE,         /* Type of event control block (see OS_EVENT_TYPE_xxxx)    */
     pub OSEventPtr: SyncUnsafeCell<Option<OS_EVENT_REF>>, /* Pointer to message or queue structure                   */
-    pub OSEventCnt: INT16U,         /* Semaphore Count (not used if other EVENT type)          */
+    pub OSEventCnt: u16,         /* Semaphore Count (not used if other EVENT type)          */
     pub OSEventGrp: OS_PRIO,        /* Group corresponding to tasks waiting for event to occur */
     pub OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE as usize], /* List of tasks waiting for event to occur                */
     #[cfg(feature = "OS_EVENT_NAME_EN")]

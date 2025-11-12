@@ -5,6 +5,7 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
+use embassy_preempt_platform::OsStk;
 use core::ptr::NonNull;
 
 
@@ -17,7 +18,7 @@ pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 512 B also ok
 pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
-use embassy_preempt_port::OS_STK;
+
 use embassy_preempt_structs::cell::UPSafeCell;
 static STACK_ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 lazy_static::lazy_static! {
@@ -92,7 +93,7 @@ pub struct OS_STK_REF {
     /// field is in the asm code, so we use NonNull to ensure the safety
     /// and use #[allow(dead_code)]
     #[allow(dead_code)]
-    pub STK_REF: NonNull<OS_STK>,
+    pub STK_REF: NonNull<OsStk>,
     /// the ref of this dynamic stk's src heap
     pub HEAP_REF: NonNull<u8>,
     /// the layout(size) of the stk
@@ -143,7 +144,7 @@ impl OS_STK_REF {
 
 pub fn stk_from_ptr(heap_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
     OS_STK_REF {
-        STK_REF: NonNull::new(unsafe { heap_ptr.offset(layout.size() as isize) as *mut OS_STK }).unwrap(),
+        STK_REF: NonNull::new(unsafe { heap_ptr.offset(layout.size() as isize) as *mut OsStk }).unwrap(),
         HEAP_REF: NonNull::new(heap_ptr).unwrap(),
         layout,
     }

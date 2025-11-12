@@ -48,8 +48,6 @@ use crate::GlobalSyncExecutor;
 use crate::SyncOSTaskCreate;
 use crate::os_time::blockdelay;
 use crate::os_time::OSTimerInit;
-// use crate::os_q::OS_QInit;
-use embassy_preempt_port::*;
 #[cfg(feature = "OS_TASK_NAME_EN")]
 use crate::OSTaskNameSet;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
@@ -69,7 +67,7 @@ use embassy_preempt_cfg::ucosii::{
 
 #[allow(unused)]
 /// Index into table is bit pattern to resolve highest priority
-pub const OSUnMapTbl: [INT8U; 256] = [
+pub const OSUnMapTbl: [u8; 256] = [
     0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x00 to 0x0F                   */
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x10 to 0x1F                   */
     5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x20 to 0x2F                   */
@@ -205,7 +203,7 @@ pub extern "C" fn OSInit() {
     OS_InitStackAllocator();
 
     // by noah: init the core peripheral
-    init_core_peripherals();
+    PLATFORM.init_core_peripherals();
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */
     // by noah：we need to init the Timer as the time driver
@@ -454,7 +452,7 @@ pub extern "C" fn OSStart() -> ! {
 /// This function is used to return the version number of uC/OS-II.
 /// The returned value corresponds to uC/OS-II's version number multiplied by 10000.
 /// In other words, version 2.01.00 would be returned as 20100.
-pub fn OSVersion() -> INT16U {
+pub fn OSVersion() -> u16 {
     return 0;
 }
 

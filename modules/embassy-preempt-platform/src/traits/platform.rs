@@ -24,7 +24,7 @@ pub trait Platform {
     fn run_idle(&'static self);
 
     /// Enter critical section
-    fn enter_critical_section(&'static self);
+    fn enter_critical_section(&'static self) -> bool;
 
     /// Exit critical section
     fn exit_critical_section(&'static self);

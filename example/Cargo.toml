@@ -17,7 +17,7 @@ critical-section = { version = "1.1", features=["restore-state-bool"]}
 
 embassy-preempt-executor = { path = "../modules/embassy-preempt-executor"}
 # executor = { path = "../modules/executor" , features = ["stm32f401re","memory-x","alarm_test"] }
-embassy-preempt-driver = { path = "../modules/embassy-preempt-driver", features = ["stm32f401re"] }
+embassy-preempt-driver = { path = "../modules/embassy-preempt-driver" }
 embassy-preempt-log = { path = "../modules/embassy-preempt-log"}
 embassy-preempt-platform = { path = "../modules/embassy-preempt-platform" }
 # executor = { workspace = true, optional = true, features = ["stm32f401re","defmt"] }

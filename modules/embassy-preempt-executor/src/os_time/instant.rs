@@ -1,7 +1,8 @@
 use core::ops::Add;
 
 use super::duration::Duration;
-use embassy_preempt_port::time_driver::{Driver, RTC_DRIVER};
+use embassy_preempt_platform::{timer_driver::RTC_DRIVER, traits::timer::Driver};
+
 
 #[allow(unused)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]

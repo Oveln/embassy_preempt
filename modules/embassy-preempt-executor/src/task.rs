@@ -13,8 +13,7 @@ use super::GlobalSyncExecutor;
 
 use embassy_preempt_mem::arena::ARENA;
 use embassy_preempt_mem::heap::OS_STK_REF;
-use embassy_preempt_port::{INT8U, INT16U, INT32U, PTR};
-use embassy_preempt_cfg::ucosii::OS_ERR_STATE;
+use embassy_preempt_cfg::ucosii::{OS_ERR_STATE, OS_PRIO};
 use embassy_preempt_cfg::OS_TASK_REG_TBL_SIZE;
 use embassy_preempt_structs::cell::{SyncUnsafeCell, UninitCell};
 #[cfg(feature = "OS_EVENT_EN")]
@@ -42,15 +41,15 @@ pub struct OS_TCB {
     #[cfg(any(all(feature = "OS_Q_EN", feature = "OS_MAX_QS"), feature = "OS_MBOX_EN"))]
     pub(crate) OSTCBMsg: PTR, /* Message received from OSMboxPost() or OSQPost()         */
 
-    pub(crate) OSTCBDly: INT32U, /* Nbr ticks to delay task or, timeout waiting for event   */
+    pub(crate) OSTCBDly: u32, /* Nbr ticks to delay task or, timeout waiting for event   */
     pub(crate) OSTCBStat: State, /* Task      status                                        */
     
-    pub(crate) OSTCBPrio: INT8U, /* Task priority (0 == highest)                            */
+    pub(crate) OSTCBPrio: OS_PRIO, /* Task priority (0 == highest)                            */
 
-    pub OSTCBX: INT8U,    /* Bit position in group  corresponding to task priority   */
-    pub OSTCBY: INT8U,    /* Index into ready table corresponding to task priority   */
-    pub(crate) OSTCBBitX: INT8U, /* Bit mask to access bit position in ready table          */
-    pub(crate) OSTCBBitY: INT8U, /* Bit mask to access bit position in ready group          */
+    pub OSTCBX: OS_PRIO,    /* Bit position in group  corresponding to task priority   */
+    pub OSTCBY: OS_PRIO,    /* Index into ready table corresponding to task priority   */
+    pub(crate) OSTCBBitX: OS_PRIO, /* Bit mask to access bit position in ready table          */
+    pub(crate) OSTCBBitY: OS_PRIO, /* Bit mask to access bit position in ready group          */
 
     #[cfg(feature = "OS_TASK_DEL_EN")]
     OSTCBDelReq: INT8U, /* Indicates whether a task needs to delete itself         */
@@ -70,7 +69,7 @@ pub struct OS_TCB {
     pub(crate) OSTCBTaskName: String,
     
     #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
-    pub(crate) OSTCBRegTbl: [INT32U; OS_TASK_REG_TBL_SIZE],
+    pub(crate) OSTCBRegTbl: [usize; OS_TASK_REG_TBL_SIZE],
 
     pub expires_at: SyncUnsafeCell<u64>,     /* Time when the task should be woken up */
 
@@ -81,11 +80,11 @@ pub struct OS_TCB {
 #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
 #[allow(unused)]
 pub(crate) struct OS_TCB_EXT {
-    OSTCBExtPtr: PTR,                   /* Pointer to user definable data for TCB extension        */
+    OSTCBExtPtr: *mut (),                   /* Pointer to user definable data for TCB extension        */
     OSTCBStkBottom: Option<OS_STK_REF>, /* Pointer to bottom of stack                              */
-    OSTCBStkSize: INT32U,               /* Size of task stack (in number of stack elements)        */
-    OSTCBOpt: INT16U,                   /* Task options as passed by OSTaskCreateExt()             */
-    OSTCBId: INT16U,                    /* Task ID (0..65535)                                      */
+    OSTCBStkSize: usize,               /* Size of task stack (in number of stack elements)        */
+    OSTCBOpt: u16,                   /* Task options as passed by OSTaskCreateExt()             */
+    OSTCBId: u16,                    /* Task ID (0..65535)                                      */
 }
 
 /// the storage of the task. It contains the task's TCB and the future
@@ -148,7 +147,7 @@ impl OS_TCB {
 
 #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
 impl OS_TCB_EXT {
-    fn init(&mut self, pext: *mut (), opt: INT16U, id: INT16U) {
+    fn init(&mut self, pext: *mut (), opt: u16, id: u16) {
         self.OSTCBExtPtr = pext;
         // info about stack is no need to be init here
         // self.OSTCBStkBottom=None;
@@ -168,7 +167,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
                 OSTCBStkPtr: None,
                 #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
                 OSTCBExtInfo: OS_TCB_EXT {
-                    OSTCBExtPtr: 0 as PTR,
+                    OSTCBExtPtr: 0 as *mut (),
                     OSTCBStkBottom: None,
                     OSTCBStkSize: 0,
                     OSTCBOpt: 0,
@@ -219,10 +218,10 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     //  this func will be called by OS_TASK_CTREATE
     //  just like OSTCBInit in uC/OS, but we don't need the stack ptr
     pub fn init(
-        prio: INT8U,
-        id: INT16U,
+        prio: OS_PRIO,
+        id: u16,
         pext: *mut (),
-        opt: INT16U,
+        opt: u16,
         _name: String,
         future_func: impl FnOnce() -> F,
     ) -> OS_ERR_STATE {

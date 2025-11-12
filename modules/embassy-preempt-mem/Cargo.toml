@@ -36,8 +36,11 @@ embassy-preempt-structs = { path = "../embassy-preempt-structs" }
 # Embassy Preempt CFG
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 
-# Embassy Preempt Port
-embassy-preempt-port = { path = "../embassy-preempt-port" }
+# Embassy Preempt Platform - 平台抽象层（包含timer驱动）
+embassy-preempt-platform = { path = "../embassy-preempt-platform", features = [
+    "stm32f401re",
+    "time_driver_tim3",
+] }
 
 [dependencies.spinning_top]
 version = "0.3.0"

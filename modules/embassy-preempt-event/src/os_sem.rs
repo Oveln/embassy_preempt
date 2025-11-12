@@ -1,14 +1,13 @@
 use core::sync::atomic::Ordering;
 
 use embassy_preempt_cfg::ucosii::{OSIntNesting, OS_ERR_STATE, OS_DEL_NO_PEND, OS_DEL_ALWAYS};
-use embassy_preempt_cfg::{INT8U, INT16U, BOOLEAN};
 use embassy_preempt_executor::GlobalSyncExecutor;
 use embassy_preempt_executor::os_time::OSTimeDly;
 use crate::{GlobalEventPool, OS_EVENT_REF, OS_EVENT_TYPE};
 use crate::{OS_EventTaskWait, OS_EventTaskRdy};
 
 /// creates a semaphore
-pub fn OSSemCreate(cnt: INT16U) -> Option<OS_EVENT_REF> {
+pub fn OSSemCreate(cnt: u16) -> Option<OS_EVENT_REF> {
     // See if called from ISR
     if OSIntNesting.load(Ordering::Acquire) > 0 {
         return None;
@@ -34,7 +33,7 @@ pub fn OSSemCreate(cnt: INT16U) -> Option<OS_EVENT_REF> {
 
 // #[cfg(feature = "OS_SEM_ACCEPT_EN")]
 /// checks the semaphore to see if a resource is available or, if an event occurred
-pub fn OSSemAccept(mut pevent: OS_EVENT_REF) -> INT16U {
+pub fn OSSemAccept(mut pevent: OS_EVENT_REF) -> u16 {
     // validate event block type
     if pevent.OSEventType != OS_EVENT_TYPE::SEM {
         return 0;
@@ -53,7 +52,7 @@ pub fn OSSemAccept(mut pevent: OS_EVENT_REF) -> INT16U {
 
 // #[cfg(feature = "OS_SEM_DEL_EN")]
 /// deletes a semaphore and readies all tasks pending on the semaphore
-pub fn OSSemDel(mut pevent: OS_EVENT_REF, opt: INT8U) -> (OS_ERR_STATE, OS_EVENT_REF) {
+pub fn OSSemDel(mut pevent: OS_EVENT_REF, opt: u8) -> (OS_ERR_STATE, OS_EVENT_REF) {
     let mut pevent_return: OS_EVENT_REF = OS_EVENT_REF::default();
     #[cfg(feature = "OS_ARG_CHK_EN")]
     {
@@ -70,7 +69,7 @@ pub fn OSSemDel(mut pevent: OS_EVENT_REF, opt: INT8U) -> (OS_ERR_STATE, OS_EVENT
     if OSIntNesting.load(Ordering::Acquire) > 0 {
         return (OS_ERR_STATE::OS_ERR_DEL_ISR, pevent);
     }
-    let mut tasks_waiting: BOOLEAN = false;
+    let mut tasks_waiting: bool = false;
     let result = critical_section::with(|_| {
         // See if any tasks waiting on semaphore
         if pevent.OSEventGrp != 0 {
@@ -120,7 +119,7 @@ pub fn OSSemDel(mut pevent: OS_EVENT_REF, opt: INT8U) -> (OS_ERR_STATE, OS_EVENT
 }
 
 /// waits for a semaphore
-pub fn OSSemPend(mut pevent: OS_EVENT_REF, timeout: INT16U) -> OS_ERR_STATE {
+pub fn OSSemPend(mut pevent: OS_EVENT_REF, timeout: u16) -> OS_ERR_STATE {
     #[cfg(feature = "OS_ARG_CHK_EN")]
     {
         // validate 'pevent'

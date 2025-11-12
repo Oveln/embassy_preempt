@@ -5,9 +5,10 @@ use cortex_m::asm::delay;
 use cortex_m::interrupt;
 use cortex_m::peripheral::{Peripherals, SCB};
 use cortex_m::peripheral::scb::SystemHandler;
+use cortex_m::register::primask;
 
-use crate::Platform;
 use crate::stm32f401re::ucstk::CONTEXT_STACK_SIZE;
+use crate::traits::Platform;
 
 pub struct STM32F401RE {}
 
@@ -137,8 +138,10 @@ impl Platform for STM32F401RE {
         delay(500);
     }
 
-    fn enter_critical_section(&'static self) {
+    fn enter_critical_section(&'static self) -> bool {
+        let was_active = primask::read().is_active();
         interrupt::disable();
+        was_active
     }
 
     fn exit_critical_section(&'static self) {

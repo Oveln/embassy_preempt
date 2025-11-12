@@ -6,9 +6,8 @@ use core::ptr::NonNull;
 
 use cortex_m::register::psp;
 use cortex_m_rt::exception;
-use embassy_preempt_platform::{PLATFORM, Platform};
+use embassy_preempt_platform::{OsStk, PLATFORM, Platform};
 
-use super::OS_STK;
 use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
 use crate::GlobalSyncExecutor;
 use embassy_preempt_mem::heap::{INTERRUPT_STACK, PROGRAM_STACK};
@@ -95,7 +94,7 @@ fn PendSV() {
                 options(nostack, preserves_flags),
             )
         }
-        old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
+        old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OsStk).unwrap();
         tcb_cur.set_stk(old_stk);
     } else if old_stk.HEAP_REF != stk_heap_ref {
         drop(old_stk);
@@ -134,7 +133,7 @@ pub extern "Rust" fn run_idle() {
 #[unsafe(no_mangle)]
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
-pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> {
+pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
     scheduler_log!(trace, "OSTaskStkInit");
     let executor_function: fn() = || unsafe {
         scheduler_log!(info, "entering the executor function");

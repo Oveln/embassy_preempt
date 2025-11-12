@@ -1,10 +1,10 @@
 use core::sync::atomic::Ordering;
 
 use crate::{wake_task_no_pend, GlobalSyncExecutor};
-use embassy_preempt_port::time_driver::{Driver, RTC_DRIVER};
-use embassy_preempt_port::{INT8U, INT64U, USIZE};
+use embassy_preempt_platform::timer_driver::RTC_DRIVER;
+use embassy_preempt_platform::traits::timer::Driver;
 use embassy_preempt_cfg::OS_LOWEST_PRIO;
-use embassy_preempt_cfg::ucosii::{OSRunning, OSIntNesting, OSLockNesting, OS_ERR_STATE};
+use embassy_preempt_cfg::ucosii::{OS_ERR_STATE, OS_PRIO, OSIntNesting, OSLockNesting, OSRunning};
 /// the mod of blockdelay of uC/OS-II kernel
 pub mod blockdelay;
 /// the mod of duration of uC/OS-II kernel
@@ -21,7 +21,7 @@ pub fn OSTimerInit() {
 }
 
 /// delay async task 'n' ticks
-pub(crate) unsafe fn delay_tick(_ticks: INT64U) { unsafe {
+pub(crate) unsafe fn delay_tick(_ticks: u64) { unsafe {
     // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
@@ -73,7 +73,7 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) { unsafe {
 
 
 /// we have to make this delay acting like preemptive delay
-pub fn OSTimeDly(_ticks: INT64U) {
+pub fn OSTimeDly(_ticks: u64) {
     timer_log!(trace, "OSTimeDly");
     // See if trying to call from an ISR  
     if OSIntNesting.load(Ordering::Acquire) > 0 {
@@ -157,7 +157,7 @@ pub fn OSTimeDlyHMSM(hours: INT8U, minutes: INT8U, seconds: INT8U, ms: INT64U) -
 // #[cfg(feature = "OS_TIME_DLY_RESUME_EN")]
 /// This function is used resume a task that has been delayed 
 /// through a call to either OSTimeDly() or OSTimeDlyHMSM().
-pub fn OSTimeDlyResume(prio: INT8U) -> OS_ERR_STATE {
+pub fn OSTimeDlyResume(prio: OS_PRIO) -> OS_ERR_STATE {
     timer_log!(trace, "OSTimeDlyResume");
 
     if prio >= OS_LOWEST_PRIO {
@@ -168,7 +168,7 @@ pub fn OSTimeDlyResume(prio: INT8U) -> OS_ERR_STATE {
         let executor = GlobalSyncExecutor.as_ref().unwrap();
         let prio_tbl = executor.get_prio_tbl();
 
-        let mut _ptcb = prio_tbl[prio as USIZE];
+        let mut _ptcb = prio_tbl[prio as usize];
         // the task does not exist
         if _ptcb.ptr.is_none() {
             return OS_ERR_STATE::OS_ERR_TASK_NOT_EXIST;
@@ -197,7 +197,7 @@ pub fn OSTimeDlyResume(prio: INT8U) -> OS_ERR_STATE {
 
 /// Obtain the current value of the clock ticks since OS boot.
 #[cfg(feature = "OS_TIME_GET_SET_EN")]
-pub fn OSTimeGet() -> INT64U {
+pub fn OSTimeGet() -> u64 {
     timer_log!(trace, "OSTimeGet");
     RTC_DRIVER.now() 
 }

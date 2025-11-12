@@ -17,16 +17,19 @@ crate-type = ["rlib"]
 [dependencies]
 cortex-m = { version = "0.7" }
 cortex-m-rt = { version = "0.7", features = ["device"] }
-stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata", "stm32f401re"]}
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = [
+    "metadata",
+    "stm32f401re",
+] }
 
 critical-section = { version = "1.1", features = ["restore-state-bool"] }
 
-lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
+lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
 
 spin = "0.10.0"
 
 # Embassy Preempt Log
-embassy-preempt-log = { path = "../embassy-preempt-log"}
+embassy-preempt-log = { path = "../embassy-preempt-log" }
 defmt = { version = "1.0.1", optional = true }
 panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
 
@@ -39,14 +42,16 @@ embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 # Embassy Preempt Mem
 embassy-preempt-mem = { path = "../embassy-preempt-mem" }
 
-# Embassy Preempt Driver
-embassy-preempt-driver = { path = "../embassy-preempt-driver", features = ["stm32f401re"] }
+# Embassy Preempt Platform - 平台抽象层（包含timer驱动）
+embassy-preempt-platform = { path = "../embassy-preempt-platform", features = [
+    "stm32f401re",
+    "time_driver_tim3",
+] }
 
-# 暂时
-embassy-preempt-port = { path = "../embassy-preempt-port" }
-
-# 暂时
-embassy-preempt-platform = { path = "../embassy-preempt-platform" }
+# Embassy Preempt Driver - 普通驱动
+embassy-preempt-driver = { path = "../embassy-preempt-driver", features = [
+    "stm32f401re",
+] }
 
 [dependencies.spinning_top]
 version = "0.3.0"
@@ -61,22 +66,48 @@ default = [
     "OS_TIME_GET_SET_EN",
     "OS_TASK_CREATE_EXT_EN",
     "OS_TASK_REG_TBL_SIZE",
-    "OS_TASK_NAME_EN"
+    "OS_TASK_NAME_EN",
 ]
 
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe"]
-log-os = ["log-base", "embassy-preempt-log/log-os", "embassy-preempt-port/log-os", "embassy-preempt-platform/log-os"]
-log-task = ["log-base", "embassy-preempt-log/log-task", "embassy-preempt-port/log-task", "embassy-preempt-platform/log-task"]
-log-mem = ["log-base", "embassy-preempt-log/log-mem", "embassy-preempt-port/log-mem", "embassy-preempt-mem/log-mem", "embassy-preempt-platform/log-mem"]
-log-timer = ["log-base", "embassy-preempt-log/log-timer", "embassy-preempt-port/log-timer", "embassy-preempt-platform/log-timer"]
-log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler", "embassy-preempt-port/log-scheduler", "embassy-preempt-platform/log-scheduler"]
+log-os = [
+    "log-base",
+    "embassy-preempt-log/log-os",
+    # "embassy-preempt-port/log-os",
+    "embassy-preempt-platform/log-os",
+]
+log-task = [
+    "log-base",
+    "embassy-preempt-log/log-task",
+    # "embassy-preempt-port/log-task",
+    "embassy-preempt-platform/log-task",
+]
+log-mem = [
+    "log-base",
+    "embassy-preempt-log/log-mem",
+    # "embassy-preempt-port/log-mem",
+    "embassy-preempt-mem/log-mem",
+    "embassy-preempt-platform/log-mem",
+]
+log-timer = [
+    "log-base",
+    "embassy-preempt-log/log-timer",
+    # "embassy-preempt-port/log-timer",
+    "embassy-preempt-platform/log-timer",
+]
+log-scheduler = [
+    "log-base",
+    "embassy-preempt-log/log-scheduler",
+    # "embassy-preempt-port/log-scheduler",
+    "embassy-preempt-platform/log-scheduler",
+]
 
 cortex_m = []
 delay_idle = []
 
-OS_EVENT_EN = []        ## this feature will be set in build.rs
-OS_EVENT_NAME_EN = []       ## this feature will be set in build.rs
+OS_EVENT_EN = []                                                      ## this feature will be set in build.rs
+OS_EVENT_NAME_EN = []                                                 ## this feature will be set in build.rs
 OS_SCHED_LOCK_EN = []
 OS_TIME_DLY_HMSM_EN = []
 OS_TASK_CHANGE_PRIO_EN = []
@@ -95,21 +126,21 @@ OS_TASK_CREATE_EXT_EN = []
 OS_TASK_PROFILE_EN = []
 OS_TASK_NAME_EN = []
 OS_SAFETY_CRITICAL = []
-OS_ARG_CHK_EN = []      ## Enable (1) or Disable (0) argument checking
+OS_ARG_CHK_EN = []                                                    ## Enable (1) or Disable (0) argument checking
 OS_MAX_QS = []
 OS_TASK_REG_TBL_SIZE = ["embassy-preempt-cfg/OS_TASK_REG_TBL_SIZE"]
 OS_TASK_STAT_STK_CHK_EN = []
-OS_MAX_MEM_PART=[]
-OS_FLAG_EN=[]
-OS_MAX_FLAGS=[]
-OS_TMR_EN=[]
-OS_CPU_HOOKS_EN=[]
-OS_DEBUG_EN=[]
-OS_TIME_GET_SET_EN=["embassy-preempt-cfg/OS_TIME_GET_SET_EN"]
-OS_SAFETY_CRITICAL_IEC61508=[]
-OS_STACK_LESS_THAN_64=[]
-OS_STACK_LESS_THAN_256=[]
-OS_EVENT_MULTI_EN=[]
+OS_MAX_MEM_PART = []
+OS_FLAG_EN = []
+OS_MAX_FLAGS = []
+OS_TMR_EN = []
+OS_CPU_HOOKS_EN = []
+OS_DEBUG_EN = []
+OS_TIME_GET_SET_EN = ["embassy-preempt-cfg/OS_TIME_GET_SET_EN"]
+OS_SAFETY_CRITICAL_IEC61508 = []
+OS_STACK_LESS_THAN_64 = []
+OS_STACK_LESS_THAN_256 = []
+OS_EVENT_MULTI_EN = []
 
 # Spin lock support
 use_spin = ["spinning_top"]

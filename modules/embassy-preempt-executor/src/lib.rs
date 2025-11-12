@@ -31,9 +31,10 @@ use core::ptr::NonNull;
 
 // Import logging macros when logging is enabled
 use core::sync::atomic::Ordering;
+use embassy_preempt_platform::{OsStk, traits::timer::{AlarmHandle, Driver}};
 use lazy_static::lazy_static;
 use state::State;
-use embassy_preempt_port::time_driver::{AlarmHandle, Driver, RTC_DRIVER};
+use embassy_preempt_platform::timer_driver::RTC_DRIVER;
 use task::{OS_TCB, OS_TCB_REF};
 pub use os_task::*;
 pub use os_core::*;
@@ -219,7 +220,7 @@ impl SyncExecutor {
     
     #[cfg(feature = "OS_TASK_NAME_EN")]
     /// set task's name
-    pub fn set_name(&self, prio: INT8U, name: alloc::string::String) {
+    pub fn set_name(&self, prio: OS_PRIO, name: alloc::string::String) {
         let prio_tbl = self.os_prio_tbl.get_mut();
         prio_tbl[prio as usize].OSTCBTaskName = name;
     }
@@ -300,7 +301,7 @@ impl SyncExecutor {
     /// when this function return, the caller interrupt will also return and the pendsv will run.
     pub unsafe fn interrupt_poll(&'static self) { unsafe {
         unsafe extern "Rust" {
-            fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
+            fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk>;
             fn restore_thread_task();
         }
         // test: print the ready queue
@@ -340,7 +341,7 @@ impl SyncExecutor {
                 // by yck: but this branch will not be executed
                 let mut program_stk = PROGRAM_STACK.exclusive_access();
                 program_stk.STK_REF = NonNull::new(
-                    program_stk.HEAP_REF.as_ptr().offset(program_stk.layout.size() as isize) as *mut OS_STK,
+                    program_stk.HEAP_REF.as_ptr().offset(program_stk.layout.size() as isize) as *mut OsStk,
                 )
                 .unwrap();
                 stk = program_stk.clone();
