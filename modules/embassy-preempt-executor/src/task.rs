@@ -90,6 +90,7 @@ pub(crate) struct OS_TCB_EXT {
 
 /// the storage of the task. It contains the task's TCB and the future
 #[allow(unused)]
+#[repr(C)]
 pub struct OS_TASK_STORAGE<F: Future + 'static> {
     task_tcb: OS_TCB,
     // this part is invisible to other crate
@@ -226,11 +227,13 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         future_func: impl FnOnce() -> F,
     ) -> OS_ERR_STATE {
         
-        task_log!(trace, "init of OS_TASK_STORAGE");
+        task_log!(debug, "init of OS_TASK_STORAGE");
+        task_log!(trace, "prio: {}, _name: {}", prio, _name[0..]);
         // by noah: claim a TaskStorage
         let task_ref = OS_TASK_STORAGE::<F>::claim();
 
         let this: &mut OS_TASK_STORAGE<F>;
+        // !!!DANGER!!! 必须保证C结构体内存布局
         unsafe {
             this = &mut *(task_ref.as_ptr() as *mut OS_TASK_STORAGE<F>);
             this.task_tcb.OS_POLL_FN.set(Some(OS_TASK_STORAGE::<F>::poll));
@@ -246,7 +249,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         if !this.task_tcb.OSTCBStat.spawn() {
             panic!("task with prio {} spawn failed", prio);
         }
-        // init ext info
+        // init ext infoxs
         #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
         this.task_tcb.OSTCBExtInfo.init(pext, opt, id);
         // add the task to ready queue
@@ -270,6 +273,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         }
         #[cfg(feature = "OS_TASK_NAME_EN")]
         {
+            let name = &_name[0..];
             this.task_tcb.OSTCBTaskName = _name;
         }
 

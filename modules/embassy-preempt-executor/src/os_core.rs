@@ -696,10 +696,10 @@ fn OS_InitTaskIdle() {
     };
     os_log!(trace, "create idle task");
     SyncOSTaskCreate(idle_fn, 0 as *mut c_void, 0 as *mut usize, OS_TASK_IDLE_PRIO);
+    
     #[cfg(feature = "OS_TASK_NAME_EN")]
     {
-        // TODO: Fix task name setting - causing heap corruption
-        // OSTaskNameSet(OS_TASK_IDLE_PRIO, "embassy-preempt Idle Task");
+        OSTaskNameSet(OS_TASK_IDLE_PRIO, "embassy-preempt Idle Task");
     }
 
 }

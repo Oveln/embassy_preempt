@@ -33,7 +33,7 @@ codegen-units = 1           # 控制代码生成单元的数量
 debug = 2
 debug-assertions = true     # 启用调试断言
 incremental = false         # 禁用增量编译
-opt-level = 1
+opt-level = 0
 overflow-checks = true      # 启用整数溢出检查
 
 # cargo build --release
