@@ -1,5 +1,0 @@
-[default.general]
-chip = "STM32F401RETx"
-
-[default.rtt]
-enabled = true
