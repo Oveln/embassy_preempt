@@ -16,7 +16,7 @@ use stm32_metapac::{Interrupt, FLASH, RCC};
 
 use embassy_preempt_cfg::{APB_HZ, TICK_HZ, SYSCLK_HZ};
 use crate::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE};
-use embassy_preempt_app::led::{interrupt_pin_high, interrupt_pin_low};
+use embassy_preempt_driver::led::{interrupt_pin_high, interrupt_pin_low};
 
 
 #[cfg(any(

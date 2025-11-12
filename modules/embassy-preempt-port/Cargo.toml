@@ -21,8 +21,8 @@ panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
 # Embassy Preempt CFG
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 
-# Embassy Preempt App
-embassy-preempt-app = { path = "../embassy-preempt-app" }
+# Embassy Preempt Driver
+embassy-preempt-driver = { path = "../embassy-preempt-driver" }
 
 # Embassy Preempt struct
 embassy-preempt-structs = { path = "../embassy-preempt-structs" }

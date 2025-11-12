@@ -39,8 +39,8 @@ embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 # Embassy Preempt Mem
 embassy-preempt-mem = { path = "../embassy-preempt-mem" }
 
-# Embassy Preempt App
-embassy-preempt-app = { path = "../embassy-preempt-app", features = ["stm32f401re"] }
+# Embassy Preempt Driver
+embassy-preempt-driver = { path = "../embassy-preempt-driver", features = ["stm32f401re"] }
 
 # 暂时
 embassy-preempt-port = { path = "../embassy-preempt-port" }

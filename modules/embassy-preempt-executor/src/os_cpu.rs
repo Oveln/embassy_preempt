@@ -8,7 +8,7 @@ use cortex_m::register::psp;
 use cortex_m_rt::exception;
 
 use super::OS_STK;
-use embassy_preempt_app::led::{stack_pin_high, stack_pin_low};
+use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
 use crate::GlobalSyncExecutor;
 use embassy_preempt_mem::heap::{INTERRUPT_STACK, PROGRAM_STACK};
 use embassy_preempt_cfg::ucosii::OSCtxSwCtr;

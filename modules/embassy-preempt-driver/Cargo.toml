@@ -1,5 +1,5 @@
 [package]
-name = "embassy-preempt-app"
+name = "embassy-preempt-driver"
 version = "0.1.0"
 edition = "2024"
 
