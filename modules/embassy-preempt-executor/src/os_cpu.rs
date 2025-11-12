@@ -6,6 +6,7 @@ use core::ptr::NonNull;
 
 use cortex_m::register::psp;
 use cortex_m_rt::exception;
+use embassy_preempt_platform::{PLATFORM, Platform};
 
 use super::OS_STK;
 use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
@@ -16,19 +17,10 @@ use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
 /// finish the init part of the CPU/MCU
 pub fn OSInitHookBegin() {}
 
-const NVIC_INT_CTRL: u32 = 0xE000ED04;
-const NVIC_PENDSVSET: u32 = 0x10000000;
 #[unsafe(no_mangle)]
 /// the function to start the first task
 pub extern "Rust" fn restore_thread_task() {
-    os_log!(trace, "restore_thread_task");
-    unsafe {
-        asm!(
-            "STR     R1, [R0]",
-            in("r0") NVIC_INT_CTRL,
-            in("r1") NVIC_PENDSVSET,
-        )
-    }
+    PLATFORM.restore_thread_task();
 }
 
 // the pendsv handler used to switch the task
@@ -136,49 +128,15 @@ fn PendSV() {
 #[unsafe(no_mangle)]
 /// the function when there is no task to run
 pub extern "Rust" fn run_idle() {
-    os_log!(trace, "run_idle");
-    // undate the counter of the system
-    // OSIdleCtr.fetch_add(1, Ordering::Relaxed);
-
-    // After WFE, probe-rs reports that the RTT read pointer has been modified.
-    // Therefore, when logging is enabled, avoid WFE in idle to prevent interference.
-    #[cfg(not(feature = "log-base"))]
-    unsafe {
-        asm!("wfe");
-    }
+    PLATFORM.run_idle();
 }
-
-/// the context structure store in stack
-#[repr(C, align(4))]
-struct UcStk {
-    // below are the remaining part of the task's context
-    r4: u32,
-    r5: u32,
-    r6: u32,
-    r7: u32,
-    r8: u32,
-    r9: u32,
-    r10: u32,
-    r11: u32,
-    r14: u32,
-    // below are stored when the interrupt occurs
-    r0: u32,
-    r1: u32,
-    r2: u32,
-    r3: u32,
-    r12: u32,
-    lr: u32,
-    pc: u32,
-    xpsr: u32,
-}
-const CONTEXT_STACK_SIZE: usize = 17;
 
 #[unsafe(no_mangle)]
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
 pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> {
     scheduler_log!(trace, "OSTaskStkInit");
-    let executor_function_ptr: fn() = || unsafe {
+    let executor_function: fn() = || unsafe {
         scheduler_log!(info, "entering the executor function");
         stack_pin_high();
         let global_executor = GlobalSyncExecutor.as_ref().unwrap();
@@ -187,68 +145,11 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
         global_executor.single_poll(task);
         global_executor.poll();
     };
-    let executor_function_ptr = executor_function_ptr as *const () as usize;
-    scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function_ptr);
-    let ptos = stk_ref.as_ptr() as *mut usize;
-    // do align with 8 and move the stack pointer down an align size
-    let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
-    ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
-    let psp = ptos as *mut UcStk;
-    // initialize the stack
-    unsafe {
-        (*psp).r0 = 0;
-        (*psp).r1 = 0x01010101;
-        (*psp).r2 = 0x02020202;
-        (*psp).r3 = 0x03030303;
-        (*psp).r4 = 0x04040404;
-        (*psp).r5 = 0x05050505;
-        (*psp).r6 = 0x06060606;
-        (*psp).r7 = 0x07070707;
-        (*psp).r8 = 0x08080808;
-        (*psp).r9 = 0x09090909;
-        (*psp).r10 = 0x10101010;
-        (*psp).r11 = 0x11111111;
-        (*psp).r12 = 0x12121212;
-        (*psp).r14 = 0xFFFFFFFD;
-        (*psp).lr = 0;
-        (*psp).pc = executor_function_ptr as u32;
-        (*psp).xpsr = 0x01000000;
-    }
-    // return the new stack pointer
-    NonNull::new(ptos as *mut OS_STK).unwrap()
+    PLATFORM.init_task_stack(stk_ref, executor_function)
 }
 
 #[unsafe(no_mangle)]
 /// the function to set the program stack
 pub extern "Rust" fn set_program_sp(sp: *mut u8) {
-    os_log!(trace, "set_program_sp");
-    unsafe {
-        psp::write(sp as u32);
-    }
-    // unsafe {
-    //     asm!(
-    //         "MSR psp, r0",
-    //         in("r0") sp,
-    //         options(nostack, preserves_flags),
-    //     )
-    // }
-}
-#[unsafe(no_mangle)]
-#[inline(never)]
-/// the function to set the interrupt stack and change the control register to use the psp
-/// Safety: the function will break the stack context
-pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8) {
-    unsafe {
-        asm!(
-            // fisrt change the MSP
-           "MSR msp, r1",
-            // then change the control register to use the psp
-            "MRS r0, control",
-            "ORR r0, r0, #2",
-            "MSR control, r0",
-            "BX lr",
-            in("r1") int_ptr,
-            options(nostack, preserves_flags),
-        )
-    }
+    PLATFORM.set_program_sp(sp);
 }

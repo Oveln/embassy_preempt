@@ -42,6 +42,8 @@ use core::sync::atomic::Ordering;
 use crate::os_cpu::*;
 
 use embassy_preempt_mem::heap::{Init_Heap, OS_InitStackAllocator};
+use embassy_preempt_platform::PLATFORM;
+use embassy_preempt_platform::Platform;
 use crate::GlobalSyncExecutor;
 use crate::SyncOSTaskCreate;
 use crate::os_time::blockdelay;
@@ -404,7 +406,7 @@ pub extern "C" fn OSStart() -> ! {
     let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
     drop(int_stk);
     unsafe {
-        set_int_change_2_psp(int_ptr);
+        PLATFORM.set_int_change_2_psp(int_ptr);
         // find the highest priority task in the ready queue
         critical_section::with(|_| GlobalSyncExecutor.as_ref().unwrap().set_highrdy());
         GlobalSyncExecutor.as_ref().unwrap().poll();

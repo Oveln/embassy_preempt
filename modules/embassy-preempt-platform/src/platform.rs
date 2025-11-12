@@ -4,7 +4,7 @@ use core::ptr::NonNull;
 
 /// Core platform functionality required by the RTOS
 pub trait Platform {
-    type OS_STK;
+    type OsStk;
     /// Initialize core peripherals (NVIC, SCB, etc.)
     fn init_core_peripherals(&'static self);
 
@@ -12,13 +12,13 @@ pub trait Platform {
     fn restore_thread_task(&'static self);
 
     /// Set the program stack pointer
-    fn set_program_sp(&'static self, sp: *mut u32);
+    fn set_program_sp(&'static self, sp: *mut u8);
 
     /// Set the interrupt stack and switch to PSP
-    fn set_int_change_2_psp(&'static self, int_ptr: *mut u32);
+    fn set_int_change_2_psp(&'static self, int_ptr: *mut u8);
 
     /// Initialize the task stack
-    fn init_task_stack(&'static self, stk_ref: NonNull<Self::OS_STK>) -> NonNull<Self::OS_STK>;
+    fn init_task_stack(&'static self, stk_ref: NonNull<Self::OsStk>, executor_function: fn()) -> NonNull<Self::OsStk>;
 
     /// Run idle task (typically WFE or similar low-power instruction)
     fn run_idle(&'static self);
@@ -28,10 +28,4 @@ pub trait Platform {
 
     /// Exit critical section
     fn exit_critical_section(&'static self);
-
-    /// Get current timestamp in ticks
-    fn now(&'static self) -> u64;
-
-    /// Initialize timer driver
-    fn init_timer_driver(&'static self);
 }

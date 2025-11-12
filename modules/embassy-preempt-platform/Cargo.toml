@@ -12,21 +12,35 @@ path = "src/lib.rs"
 crate-type = ["rlib"]  # Rust库类型
 
 [dependencies]
-defmt = { version = "1.0.1"}
-embassy-preempt-log ={ path = "../embassy-preempt-log" }
+defmt = { version = "1.0.1", optional = true}
+embassy-preempt-log ={ path = "../embassy-preempt-log"}
+embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 
 cortex-m = { version = "0.7", optional = true }
 cortex-m-rt = { version = "0.7", optional = true }
+cortex-m-semihosting = { version = "0.5", optional = true }
 critical-section = { version = "1.1", features = ["restore-state-bool"] }
 stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", optional = true, features = ["metadata"] }
 
 [features]
-default = ["cortex-m", "stm32f401re"]
+default = ["cortex-m", "stm32f401re", "time_driver_tim3"]
 
 # Platform implementations
-cortex-m = ["dep:cortex-m"]
+cortex-m = ["dep:cortex-m", "dep:cortex-m-semihosting"]
 stm32f401re = ["dep:stm32-metapac", "cortex-m", "stm32-metapac/stm32f401re"]
 riscv = []  # Placeholder for future RISC-V support
+
+# Time driver options
+time_driver_tim3 = []
+
+logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
+log-base = ["embassy-preempt-log/log-base", "dep:defmt"]
+log-os = ["log-base", "embassy-preempt-log/log-os"]
+log-task = ["log-base", "embassy-preempt-log/log-task"]
+log-mem = ["log-base", "embassy-preempt-log/log-mem"]
+log-timer = ["log-base", "embassy-preempt-log/log-timer"]
+log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler"]
+semihosting = ["dep:cortex-m-semihosting"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }

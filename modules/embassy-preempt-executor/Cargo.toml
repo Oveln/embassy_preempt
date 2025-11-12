@@ -45,6 +45,9 @@ embassy-preempt-driver = { path = "../embassy-preempt-driver", features = ["stm3
 # 暂时
 embassy-preempt-port = { path = "../embassy-preempt-port" }
 
+# 暂时
+embassy-preempt-platform = { path = "../embassy-preempt-platform" }
+
 [dependencies.spinning_top]
 version = "0.3.0"
 optional = true
@@ -63,11 +66,11 @@ default = [
 
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe"]
-log-os = ["log-base", "embassy-preempt-log/log-os", "embassy-preempt-port/log-os"]
-log-task = ["log-base", "embassy-preempt-log/log-task", "embassy-preempt-port/log-task"]
-log-mem = ["log-base", "embassy-preempt-log/log-mem", "embassy-preempt-port/log-mem", "embassy-preempt-mem/log-mem"]
-log-timer = ["log-base", "embassy-preempt-log/log-timer", "embassy-preempt-port/log-timer"]
-log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler", "embassy-preempt-port/log-scheduler"]
+log-os = ["log-base", "embassy-preempt-log/log-os", "embassy-preempt-port/log-os", "embassy-preempt-platform/log-os"]
+log-task = ["log-base", "embassy-preempt-log/log-task", "embassy-preempt-port/log-task", "embassy-preempt-platform/log-task"]
+log-mem = ["log-base", "embassy-preempt-log/log-mem", "embassy-preempt-port/log-mem", "embassy-preempt-mem/log-mem", "embassy-preempt-platform/log-mem"]
+log-timer = ["log-base", "embassy-preempt-log/log-timer", "embassy-preempt-port/log-timer", "embassy-preempt-platform/log-timer"]
+log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler", "embassy-preempt-port/log-scheduler", "embassy-preempt-platform/log-scheduler"]
 
 cortex_m = []
 delay_idle = []

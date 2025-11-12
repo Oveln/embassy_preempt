@@ -18,6 +18,9 @@
 //!
 //! - [`stm32f401re`]: STM32F401RE microcontroller support
 
+#[macro_use]
+extern crate embassy_preempt_log;
+
 // Declare modules
 pub mod platform;
 
