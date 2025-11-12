@@ -4,8 +4,6 @@ use core::arch::asm;
 use core::mem;
 use core::ptr::NonNull;
 
-use cortex_m::register::psp;
-use cortex_m_rt::exception;
 use embassy_preempt_platform::{OsStk, PLATFORM, Platform};
 
 use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
@@ -23,8 +21,8 @@ pub extern "Rust" fn restore_thread_task() {
 }
 
 // the pendsv handler used to switch the task
-#[exception]
-fn PendSV() {
+#[unsafe(no_mangle)]
+extern "C" fn PendSV() {
     const EXC_RETURN_TO_PSP: u32 = 0xFFFFFFFD;
     stack_pin_high();
     // first close the interrupt

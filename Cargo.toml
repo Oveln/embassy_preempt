@@ -11,7 +11,6 @@ members = [
     "modules/embassy-preempt-mem",
     "modules/embassy-preempt-event",
     "modules/embassy-preempt-driver",
-    "modules/embassy-preempt-port", # 这个库是暂时的
     "modules/embassy-preempt-platform"
 ]
 
