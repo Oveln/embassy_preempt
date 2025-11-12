@@ -8,6 +8,7 @@ members = [
     "modules/embassy-preempt-structs",
     "modules/embassy-preempt-executor",
     "modules/embassy-preempt-cfg",
+    "modules/embassy-preempt-mem",
     "modules/embassy-preempt-event",
     "modules/embassy-preempt-port", # 这个库是暂时的
     "modules/embassy-preempt-platform"

@@ -29,7 +29,8 @@ use embassy_preempt_cfg::{INT16U, OS_MAX_EVENTS, OS_LOWEST_PRIO};
 use embassy_preempt_cfg::ucosii::{OS_PRIO, OS_EVENT_TBL_SIZE};
 use embassy_preempt_structs::cell::SyncUnsafeCell;
 use embassy_preempt_executor::{GlobalSyncExecutor, OSUnMapTbl};
-use embassy_preempt_executor::{task::OS_TCB_REF, mem::arena::ARENA};
+use embassy_preempt_executor::task::OS_TCB_REF;
+use embassy_preempt_mem::arena::ARENA;
 
 
 /*

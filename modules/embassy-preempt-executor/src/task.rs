@@ -11,8 +11,8 @@ use super::waker;
 use super::State;
 use super::GlobalSyncExecutor;
 
-use crate::mem::arena::ARENA;
-use crate::mem::heap::OS_STK_REF;
+use embassy_preempt_mem::arena::ARENA;
+use embassy_preempt_mem::heap::OS_STK_REF;
 use embassy_preempt_port::{INT8U, INT16U, INT32U, PTR};
 use embassy_preempt_cfg::ucosii::OS_ERR_STATE;
 use embassy_preempt_cfg::OS_TASK_REG_TBL_SIZE;

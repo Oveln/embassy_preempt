@@ -16,7 +16,6 @@ pub mod waker;
 pub mod task;
 pub mod os_task;
 pub mod os_core;
-pub mod mem;
 pub mod os_time;
 pub mod os_cpu;
 
@@ -43,7 +42,7 @@ pub use self::waker::task_from_waker;
 use embassy_preempt_app::led::{stack_pin_high, stack_pin_low};
 // use arena::ARENA;
 use embassy_preempt_cfg::*;
-use crate::mem::heap::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
+use embassy_preempt_mem::heap::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
 
 #[cfg(feature = "delay_idle")]
 use crate::os_time::blockdelay::delay;

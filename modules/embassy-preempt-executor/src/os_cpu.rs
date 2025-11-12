@@ -10,7 +10,7 @@ use cortex_m_rt::exception;
 use super::OS_STK;
 use embassy_preempt_app::led::{stack_pin_high, stack_pin_low};
 use crate::GlobalSyncExecutor;
-use crate::mem::heap::{INTERRUPT_STACK, PROGRAM_STACK};
+use embassy_preempt_mem::heap::{INTERRUPT_STACK, PROGRAM_STACK};
 use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
 
 /// finish the init part of the CPU/MCU
@@ -85,7 +85,7 @@ fn PendSV() {
     
     os_log!(info, "OSCtxSwCtr is {}", OSCtxSwCtr.load(core::sync::atomic::Ordering::SeqCst));
 
-    let stk_ptr: crate::mem::heap::OS_STK_REF = global_executor.OSTCBHighRdy.get_mut().take_stk();
+    let stk_ptr: embassy_preempt_mem::heap::OS_STK_REF = global_executor.OSTCBHighRdy.get_mut().take_stk();
     let stk_heap_ref = stk_ptr.HEAP_REF;
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
     // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)

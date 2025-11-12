@@ -15,7 +15,7 @@ pub fn OSSemCreate(cnt: INT16U) -> Option<OS_EVENT_REF> {
     }
     let globaleventpool = GlobalEventPool.as_ref().unwrap();
     let pevent = globaleventpool.alloc();
-    let mut pevent = pevent.unwrap();
+    let mut pevent = pevent?;
 
     unsafe {
         // get an event control block

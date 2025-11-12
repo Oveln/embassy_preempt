@@ -41,7 +41,7 @@ use core::sync::atomic::Ordering;
 // use core::cell::RefCell;
 use crate::os_cpu::*;
 
-use crate::mem::heap::{Init_Heap, OS_InitStackAllocator};
+use embassy_preempt_mem::heap::{Init_Heap, OS_InitStackAllocator};
 use crate::GlobalSyncExecutor;
 use crate::SyncOSTaskCreate;
 use crate::os_time::blockdelay;
@@ -390,7 +390,7 @@ pub fn OSSchedUnlock() {
 // #[cfg(not(feature = "test"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn OSStart() -> ! {
-    use crate::mem::heap::stack_allocator::INTERRUPT_STACK;
+    use embassy_preempt_mem::heap::stack_allocator::INTERRUPT_STACK;
 
     unsafe extern "Rust" {
         fn set_int_change_2_psp(int_ptr: *mut u8);
