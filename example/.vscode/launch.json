@@ -8,7 +8,9 @@
       "cwd": "${workspaceFolder}",
       "speed": 24000,
       "runtimeExecutable": "probe-rs",
-      "runtimeArgs": ["dap-server"],
+      "runtimeArgs": [
+        "dap-server"
+      ],
       //!MODIFY
       "chip": "STM32F401RETx",
       "flashingConfig": {
@@ -24,6 +26,16 @@
           "coreIndex": 0,
           //!MODIFY
           "programBinary": "target/thumbv7em-none-eabi/debug/switch_test",
+          "rttEnabled": true,
+          "rttChannelFormats": [
+            {
+              "channelNumber": 0,
+              // Format RTT data as String data
+              "dataFormat": "String",
+              // Include host-side timestamps for every line of data transferred from the target RTT output
+              "showTimestamps": true
+            },
+          ]
         }
       ],
       "env": {
@@ -31,7 +43,7 @@
         // If you set this variable, check the VSCode console log window for the location of the log file.
         "RUST_LOG": "info"
       },
-       // Info, Debug
+      // Info, Debug
       "consoleLogLevel": "Console"
     }
   ]
