@@ -13,9 +13,9 @@ use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
 
 pub const STACK_START: usize = 0x20000000;
-pub const STACK_SIZE: usize = 20 * 1024; // 20 KiB
-pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 512 B also ok
-pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
+pub const STACK_SIZE: usize = 20 * 4096; // 20 KiB
+pub const PROGRAM_STACK_SIZE: usize = 4096; // 1KiB 512 B also ok
+pub const INTERRUPT_STACK_SIZE: usize = 4096; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
 
