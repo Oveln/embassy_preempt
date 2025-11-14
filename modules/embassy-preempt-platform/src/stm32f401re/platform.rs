@@ -144,9 +144,27 @@ impl Platform for STM32F401RE {
         was_active
     }
 
-    fn exit_critical_section(&'static self) {
+    unsafe fn exit_critical_section(&'static self) {
         unsafe {
             interrupt::enable();
+        }
+    }
+
+    fn shutdown(&'static self) {
+        #[cfg(feature = "semihosting")]
+        {
+            // Use semihosting to exit cleanly for defmt-test
+            use cortex_m_semihosting::debug;
+            loop {
+                debug::exit(debug::EXIT_SUCCESS);
+            }
+        }
+
+        #[cfg(not(feature = "semihosting"))]
+        {
+            // If not have feature "semihosting", when test end need Ctrl+C to stop the program
+            os_log!("Shutdown, please press Ctrl+C to stop the program");
+            loop {}
         }
     }
 }

@@ -88,10 +88,10 @@ const ALARM_COUNT: USIZE = 3;
 pub extern "C" fn TIM3() {
     interrupt_pin_high();
 
-    os_log!(trace, "TIM3");
+    // os_log!(trace, "TIM3");
     RTC_DRIVER.on_interrupt();
 
-    os_log!(trace, "exit TIM3");
+    // os_log!(trace, "exit TIM3");
     interrupt_pin_low();
 }
 

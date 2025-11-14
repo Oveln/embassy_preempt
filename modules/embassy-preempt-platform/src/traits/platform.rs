@@ -27,5 +27,8 @@ pub trait Platform {
     fn enter_critical_section(&'static self) -> bool;
 
     /// Exit critical section
-    fn exit_critical_section(&'static self);
+    unsafe fn exit_critical_section(&'static self);
+
+    /// Shutdown the system with visual effect (e.g., blinking LED)
+    fn shutdown(&'static self);
 }

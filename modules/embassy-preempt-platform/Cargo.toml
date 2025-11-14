@@ -18,7 +18,7 @@ embassy-preempt-log ={ path = "../embassy-preempt-log"}
 
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 
-cortex-m = { version = "0.7", optional = true }
+cortex-m = { version = "0.7.7", optional = true }
 cortex-m-rt = { version = "0.7", optional = true }
 cortex-m-semihosting = { version = "0.5", optional = true }
 critical-section = { version = "1.1", features = ["restore-state-bool"] }
@@ -28,7 +28,7 @@ stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", ta
 # embassy-sync = { version = "0.6", optional = true }
 
 [features]
-default = ["cortex-m", "stm32f401re", "time_driver_tim3"]
+default = ["cortex-m", "stm32f401re", "time_driver_tim3", 'semihosting']
 
 # Platform implementations
 cortex-m = ["dep:cortex-m", "dep:cortex-m-semihosting"]
@@ -55,7 +55,9 @@ log-task = ["log-base", "embassy-preempt-log/log-task"]
 log-mem = ["log-base", "embassy-preempt-log/log-mem"]
 log-timer = ["log-base", "embassy-preempt-log/log-timer"]
 log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler"]
-semihosting = ["dep:cortex-m-semihosting"]
+semihosting = ["dep:cortex-m-semihosting", "dep:cortex-m-rt"]
+
+# critical_section_cortex_m = ["coretx-m/ritical-section-single-core"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }

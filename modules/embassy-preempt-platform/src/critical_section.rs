@@ -7,9 +7,6 @@ set_impl!(SingleCoreCriticalSection);
 
 unsafe impl Impl for SingleCoreCriticalSection {
     unsafe fn acquire() -> RawRestoreState {
-        // let was_active = primask::read().is_active();
-        // interrupt::disable();
-        // was_active
         PLATFORM.enter_critical_section()
     }
 
