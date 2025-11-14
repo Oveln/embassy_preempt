@@ -5,7 +5,7 @@
 use core::ffi::c_void;
 
 use embassy_preempt_log::task_log;
-use embassy_preempt_app::led::LED_Init;
+use embassy_preempt_driver::led::LED_Init;
 // <- derive attribute
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::{AsyncOSTaskCreate, SyncOSTaskCreate};

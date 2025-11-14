@@ -1,13 +1,90 @@
 [package]
-name = "exam"
+name = "example"
 version = "0.1.0"
 edition = "2024"
 
 [workspace]
 
+# Disable testing for all binaries to avoid test crate compilation errors
+[[bin]]
+name = "space_performance"
+test = false
+
+[[bin]]
+name = "stack_cost_test"
+test = false
+
+[[bin]]
+name = "hardware_test"
+test = false
+
+[[bin]]
+name = "sync_bottom_test"
+test = false
+
+[[bin]]
+name = "preempt_test"
+test = false
+
+[[bin]]
+name = "usart_test"
+test = false
+
+[[bin]]
+name = "scheduling1_test"
+test = false
+
+[[bin]]
+name = "scheduling2_test"
+test = false
+
+[[bin]]
+name = "time_performance"
+test = false
+
+[[bin]]
+name = "sync_time_performance"
+test = false
+
+[[bin]]
+name = "comprehensive_test"
+test = false
+
+[[bin]]
+name = "bottom_test"
+test = false
+
+[[bin]]
+name = "prio_test"
+test = false
+
+[[bin]]
+name = "usart"
+test = false
+
+[[bin]]
+name = "switch_test"
+test = false
+
+[[bin]]
+name = "iic_test"
+test = false
+
+[[test]]
+name = "task_create_test"
+harness = false
+
+[[test]]
+name = "test_example"
+harness = false
+
+[[test]]
+name = "prio_test"
+harness = false
+
 
 [dependencies]
-cortex-m = { version = "0.7"}
+cortex-m = { version = "0.7.7"}
 cortex-m-rt = { version = "0.7", features = ["device"]}
 defmt = { version = "1.0.1", optional = true}
 defmt-rtt = { version = "1.1.0", optional = true}
@@ -20,12 +97,16 @@ embassy-preempt-executor = { path = "../modules/embassy-preempt-executor"}
 embassy-preempt-driver = { path = "../modules/embassy-preempt-driver" }
 embassy-preempt-log = { path = "../modules/embassy-preempt-log"}
 embassy-preempt-platform = { path = "../modules/embassy-preempt-platform" }
+embassy-preempt-mem = { path = "../modules/embassy-preempt-mem" }
 # executor = { workspace = true, optional = true, features = ["stm32f401re","defmt"] }
 # app = { workspace = true, optional = true}
 
 stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata", "stm32f401re", "rt"]}
 
+cortex-m-semihosting = { version = "0.5"}
 
+[dev-dependencies]
+defmt-test = {version = "0.4.0"}
 
 # cargo build/run
 [profile.dev]

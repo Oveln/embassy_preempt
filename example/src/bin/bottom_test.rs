@@ -4,7 +4,7 @@
 use core::ffi::c_void;
 
 // extern crate embassy_preempt;
-use embassy_preempt_app::led::{LED_Init, LED_OFF, LED_ON};
+use embassy_preempt_driver::led::{LED_Init, LED_OFF, LED_ON};
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_log::task_log;

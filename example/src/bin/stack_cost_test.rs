@@ -7,7 +7,7 @@ use core::arch::asm;
 use core::ffi::c_void;
 
 use embassy_preempt_log::task_log;
-use embassy_preempt_app::led::{interrupt_pin_low, thread_pin_high, thread_pin_low, Pin_Init};
+use embassy_preempt_driver::led::{interrupt_pin_low, thread_pin_high, thread_pin_low, Pin_Init};
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_executor::os_time::timer::Timer;

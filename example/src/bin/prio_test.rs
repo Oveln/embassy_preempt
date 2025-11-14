@@ -2,6 +2,7 @@
 #![no_std]
 #![feature(impl_trait_in_assoc_type)]
 
+use core::any::type_name;
 use core::ffi::c_void;
 
 use embassy_preempt_log::task_log;
@@ -10,6 +11,7 @@ use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
 use embassy_preempt_executor::os_time::blockdelay::delay;
 use embassy_preempt_executor::os_time::timer::Timer;
+use embassy_preempt_platform::OsStk;
 // use embassy_preempt::{self as _};
 
 const LONG_TIME: usize = 10;
@@ -24,6 +26,7 @@ fn main_test() -> ! {
 }
 fn test_basic_schedule() {
     task_log!(info, "==========test begin==========");
+    task_log!(info, "OsStk: {}",type_name::<OsStk>());
     // os初始化
     OSInit();
     // 创建6个任务，测试优先级调度的顺序是否正确
@@ -74,8 +77,11 @@ fn task4(_args: *mut c_void) {
 fn task5(_args: *mut c_void) {
     // 任务5
     task_log!(info, "---task5 begin---");
+    let ptos = 0 as *mut usize;
+    task_log!(info, "ptos is {:x}",ptos);
     // 任务5中涉及任务创建
-    SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 11);
+    SyncOSTaskCreate(task1, 0 as *mut c_void, ptos, 11);
+    task_log!(info, "created task1 in task5");
     delay(SHORT_TIME);
     task_log!(info, "---task5 end---");
     delay(SHORT_TIME);

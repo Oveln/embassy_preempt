@@ -4,7 +4,7 @@
 
 use core::ffi::c_void;
 
-use embassy_preempt_app::led::{LED_Init, LED_OFF, LED_ON};
+use embassy_preempt_driver::led::{LED_Init, LED_OFF, LED_ON};
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::SyncOSTaskCreate;
 // use embassy_preempt_port::bottom_driver::OSWaitBot;

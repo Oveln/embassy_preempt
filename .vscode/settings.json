@@ -17,7 +17,6 @@
     "modules/embassy-preempt-executor/Cargo.toml",
     "modules/embassy-preempt-cfg/Cargo.toml",
     "modules/embassy-preempt-event/Cargo.toml",
-    "modules/embassy-preempt-port/Cargo.toml",
     "modules/embassy-preempt-mem/Cargo.toml",
     "modules/embassy-preempt-platform/Cargo.toml"
   ],
