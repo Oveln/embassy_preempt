@@ -238,6 +238,10 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
             this.task_tcb.OS_POLL_FN.set(Some(OS_TASK_STORAGE::<F>::poll));
             this.future.write_in_place(future_func);
         }
+        assert_eq!(
+            (&this.task_tcb) as  *const OS_TCB as usize,
+            task_ref.as_ptr() as usize
+        );
         // set the prio also need to set it in the bitmap
         this.task_tcb.OSTCBPrio = prio;
         this.task_tcb.OSTCBY = prio >> 3;
@@ -273,6 +277,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         #[cfg(feature = "OS_TASK_NAME_EN")]
         {
             let name = &_name[0..];
+            task_log!(trace, "created task name: {} will be set", name);
             this.task_tcb.OSTCBTaskName = _name;
         }
 

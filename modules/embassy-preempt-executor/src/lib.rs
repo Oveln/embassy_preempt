@@ -182,19 +182,19 @@ impl SyncExecutor {
         });
     }
     // check if an prio is exiting
-    pub extern "aapcs" fn prio_exist(&self, prio: u8) -> bool {
+    pub fn prio_exist(&self, prio: OS_PRIO) -> bool {
         let prio_tbl: &[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_unmut();
         prio_tbl[prio as usize].ptr.is_some()
     }
     // to take up space in the bitmap
-    pub extern "aapcs" fn reserve_bit(&self, prio: u8) {
+    pub fn reserve_bit(&self, prio: OS_PRIO) {
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
         prio_tbl[prio as usize].ptr = Some(NonNull::dangling());
     }
-    pub extern "aapcs" fn clear_bit(&self, prio: u8) {
+    pub fn clear_bit(&self, prio: OS_PRIO) {
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
