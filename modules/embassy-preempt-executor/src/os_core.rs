@@ -393,18 +393,18 @@ pub extern "C" fn OSStart() -> ! {
     use embassy_preempt_mem::heap::stack_allocator::INTERRUPT_STACK;
 
     unsafe extern "Rust" {
-        fn set_int_change_2_psp(int_ptr: *mut u8);
+        fn configure_interrupt_stack(int_ptr: *mut u8);
     }
     os_log!(trace, "OSStart");
     // set OSRunning
     OSRunning.store(true, Ordering::Release);
-    // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
+    // before we step into the loop, we call configure_interrupt_stack(as part of the function of OSStartHighRdy in ucosii)
     // to change the stack pointer to program pointer and use psp
     let int_stk = INTERRUPT_STACK.exclusive_access();
     let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
     drop(int_stk);
     unsafe {
-        PLATFORM.set_int_change_2_psp(int_ptr);
+        PLATFORM.configure_interrupt_stack(int_ptr);
         // find the highest priority task in the ready queue
         critical_section::with(|_| GlobalSyncExecutor.as_ref().unwrap().set_highrdy());
         GlobalSyncExecutor.as_ref().unwrap().poll();
@@ -677,10 +677,6 @@ fn OS_InitRdyList() {
 */
 // must use this function
 fn OS_InitTaskIdle() {
-    unsafe extern "Rust" {
-        #[allow(unused)]
-        fn run_idle();
-    }
     os_log!(trace, "OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
@@ -689,9 +685,7 @@ fn OS_InitTaskIdle() {
                 blockdelay::delay(1);
             }
             OSIdleCtr.fetch_add(1, Ordering::SeqCst);
-            unsafe {
-                run_idle();
-            }
+            PLATFORM.enter_idle_state();
         }
     };
     os_log!(trace, "create idle task");

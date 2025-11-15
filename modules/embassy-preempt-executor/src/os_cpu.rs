@@ -1,6 +1,5 @@
 //! about the cpu
 
-use core::arch::asm;
 use core::mem;
 use core::ptr::NonNull;
 
@@ -14,29 +13,14 @@ use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
 /// finish the init part of the CPU/MCU
 pub fn OSInitHookBegin() {}
 
-#[unsafe(no_mangle)]
-/// the function to start the first task
-pub extern "Rust" fn restore_thread_task() {
-    PLATFORM.restore_thread_task();
-}
-
 // the pendsv handler used to switch the task
 #[unsafe(no_mangle)]
 extern "C" fn PendSV() {
     const EXC_RETURN_TO_PSP: u32 = 0xFFFFFFFD;
     stack_pin_high();
-    // first close the interrupt
+    // first close the interrupt and save context
     unsafe {
-        asm!(
-            "CPSID I",
-            "MRS     R0, PSP",
-            // save the context
-            "STMFD   R0!, {{R4-R11, R14}}",
-            // fix: we need to write back to the PSP
-            "MSR     PSP, R0",
-            // "CPSIE   I",
-            options(nostack, preserves_flags)
-        );
+        PLATFORM.save_task_context();
     }
     os_log!(info, "PendSV");
     // then switch the task
@@ -46,20 +30,9 @@ extern "C" fn PendSV() {
     if prio_highrdy == prio_cur {
         // we will reset the msp to the original
         let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
+        let current_psp = unsafe { PLATFORM.get_current_stack_pointer() };
         unsafe {
-            asm!(
-                // "CPSID I",
-                "MRS    R0, PSP",
-                "LDMFD   R0!, {{R4-R11, R14}}",
-                "MSR     PSP, R0",
-                // reset the msp
-                "MSR     MSP, R1",
-                "CPSIE   I",
-                "BX      R2",
-                in("r1") msp_stk,
-                in("r2") EXC_RETURN_TO_PSP,
-                options(nostack, preserves_flags),
-            )
+            PLATFORM.restore_task_context(current_psp, msp_stk, EXC_RETURN_TO_PSP);
         }
     }
     #[cfg(feature = "OS_TASK_PROFILE_EN")]
@@ -84,14 +57,7 @@ extern "C" fn PendSV() {
 
     // see if it is a thread
     if *tcb_cur.needs_stack_save.get_unmut() {
-        let old_stk_ptr: *mut usize;
-        unsafe {
-            asm!(
-                "MRS     R0, PSP",
-                out("r0") old_stk_ptr,
-                options(nostack, preserves_flags),
-            )
-        }
+        let old_stk_ptr = unsafe { PLATFORM.get_current_stack_pointer() };
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OsStk).unwrap();
         tcb_cur.set_stk(old_stk);
     } else if old_stk.HEAP_REF != stk_heap_ref {
@@ -106,32 +72,13 @@ extern "C" fn PendSV() {
     let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
     stack_pin_low();
     unsafe {
-        asm!(
-            // "CPSID I",
-            "LDMFD   R0!, {{R4-R11, R14}}",
-            "MSR     PSP, R0",
-            // reset the msp
-            "MSR     MSP, R1",
-            "CPSIE   I",
-            "BX      R2",
-            in("r0") program_stk_ptr,
-            in("r1") msp_stk,
-            in("r2") EXC_RETURN_TO_PSP,
-            options(nostack, preserves_flags),
-        )
+        PLATFORM.restore_task_context(program_stk_ptr, msp_stk, EXC_RETURN_TO_PSP);
     }
 }
 
-#[unsafe(no_mangle)]
-/// the function when there is no task to run
-pub extern "Rust" fn run_idle() {
-    PLATFORM.run_idle();
-}
-
-#[unsafe(no_mangle)]
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
-pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
+pub fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
     scheduler_log!(trace, "OSTaskStkInit");
     let executor_function: fn() = || unsafe {
         scheduler_log!(info, "entering the executor function");
@@ -143,10 +90,4 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
         global_executor.poll();
     };
     PLATFORM.init_task_stack(stk_ref, executor_function)
-}
-
-#[unsafe(no_mangle)]
-/// the function to set the program stack
-pub extern "Rust" fn set_program_sp(sp: *mut u8) {
-    PLATFORM.set_program_sp(sp);
 }

@@ -31,7 +31,7 @@ use core::ptr::NonNull;
 
 // Import logging macros when logging is enabled
 use core::sync::atomic::Ordering;
-use embassy_preempt_platform::{OsStk, traits::timer::{AlarmHandle, Driver}};
+use embassy_preempt_platform::{OsStk, PLATFORM, Platform, traits::timer::{AlarmHandle, Driver}};
 use lazy_static::lazy_static;
 use state::State;
 use embassy_preempt_platform::timer_driver::RTC_DRIVER;
@@ -45,6 +45,7 @@ use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
 use embassy_preempt_cfg::*;
 use embassy_preempt_mem::heap::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
 
+use crate::os_cpu::OSTaskStkInit;
 #[cfg(feature = "delay_idle")]
 use crate::os_time::blockdelay::delay;
 // use crate::ucosii::*;
@@ -300,10 +301,6 @@ impl SyncExecutor {
     /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
     /// when this function return, the caller interrupt will also return and the pendsv will run.
     pub unsafe fn interrupt_poll(&'static self) { unsafe {
-        unsafe extern "Rust" {
-            fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk>;
-            fn restore_thread_task();
-        }
         // test: print the ready queue
         #[cfg(feature = "log-scheduler")]
         critical_section::with(|_| {
@@ -369,7 +366,7 @@ impl SyncExecutor {
         critical_section::with(|_| {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
                 task_log!(info, "restore the task/thread");
-                restore_thread_task();
+                PLATFORM.trigger_context_switch();
             }
         });
     }}

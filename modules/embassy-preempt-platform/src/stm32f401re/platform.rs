@@ -53,8 +53,8 @@ impl Platform for STM32F401RE {
         }
     }
 
-    fn restore_thread_task(&'static self) {
-        os_log!(trace, "restore_thread_task");
+    fn trigger_context_switch(&'static self) {
+        os_log!(trace, "trigger_context_switch");
         const NVIC_INT_CTRL: u32 = 0xE000ED04;
         const NVIC_PENDSVSET: u32 = 0x10000000;
         unsafe {
@@ -66,7 +66,7 @@ impl Platform for STM32F401RE {
         }
     }
 
-    fn set_program_sp(&'static self, sp: *mut u8) {
+    fn set_program_stack_pointer(&'static self, sp: *mut u8) {
         use cortex_m::register::psp;
         unsafe {
             psp::write(sp as u32);
@@ -74,17 +74,17 @@ impl Platform for STM32F401RE {
     }
 
     #[inline(never)]
-    fn set_int_change_2_psp(&'static self, int_ptr: *mut u8) {
+    fn configure_interrupt_stack(&'static self, interrupt_stack: *mut u8) {
         unsafe {
             asm!(
-                // fisrt change the MSP
+                // First change the MSP
                "MSR msp, r1",
-                // then change the control register to use the psp
+                // Then change the control register to use the PSP
                 "MRS r0, control",
                 "ORR r0, r0, #2",
                 "MSR control, r0",
                 "BX lr",
-                in("r1") int_ptr,
+                in("r1") interrupt_stack,
                 options(nostack, preserves_flags),
             )
         }
@@ -123,9 +123,9 @@ impl Platform for STM32F401RE {
         NonNull::new(ptos as *mut Self::OsStk).unwrap()
     }
 
-    fn run_idle(&'static self) {
-        os_log!(trace, "run_idle");
-        // undate the counter of the system
+    fn enter_idle_state(&'static self) {
+        os_log!(trace, "enter_idle_state");
+        // Update the counter of the system
         // OSIdleCtr.fetch_add(1, Ordering::Relaxed);
 
         // After WFE, probe-rs reports that the RTT read pointer has been modified.
@@ -166,5 +166,49 @@ impl Platform for STM32F401RE {
             os_log!("Shutdown, please press Ctrl+C to stop the program");
             loop {}
         }
+    }
+
+    /// Performance-critical context saving - must be inline always
+    #[inline(always)]
+    unsafe fn save_task_context(&'static self) {
+        // ARM Cortex-M specific: Save R4-R11 and LR to PSP
+        asm!(
+            "CPSID I",        // Disable interrupts
+            "MRS     R0, PSP", // Get current PSP
+            // Save callee-saved registers (ARM Cortex-M ABI)
+            "STMFD   R0!, {{R4-R11, R14}}", // Save R4-R11, LR
+            "MSR     PSP, R0",  // Write back updated PSP
+            options(nostack, preserves_flags)
+        );
+    }
+
+    /// Performance-critical context restoration - must be inline always
+    #[inline(always)]
+    unsafe fn restore_task_context(&'static self, stack_pointer: *mut usize, interrupt_stack: *mut usize, return_value: u32) {
+        // ARM Cortex-M specific: Restore context and return to thread mode
+        asm!(
+            "LDMFD   R0!, {{R4-R11, R14}}", // Restore R4-R11, LR from stack
+            "MSR     PSP, R0",              // Set new PSP
+            "MSR     MSP, R1",              // Restore MSP
+            "CPSIE   I",                    // Enable interrupts
+            "BX      R2",                   // Branch to EXC_RETURN value
+            in("r0") stack_pointer,         // Task stack pointer
+            in("r1") interrupt_stack,       // Interrupt stack pointer
+            in("r2") return_value,          // EXC_RETURN value
+            options(nostack, preserves_flags),
+        );
+    }
+
+    /// Performance-critical stack pointer access - must be inline always
+    #[inline(always)]
+    unsafe fn get_current_stack_pointer(&'static self) -> *mut usize {
+        let psp_value: *mut usize;
+        // ARM Cortex-M specific: Read Process Stack Pointer
+        asm!(
+            "MRS     R0, PSP", // Read PSP
+            out("r0") psp_value,
+            options(nostack, preserves_flags),
+        );
+        psp_value
     }
 }

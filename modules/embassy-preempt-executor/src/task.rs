@@ -7,6 +7,8 @@ use core::ops::{Deref, DerefMut};
 use core::ptr::NonNull;
 use core::mem;
 
+use embassy_preempt_platform::{PLATFORM, Platform};
+
 use super::waker;
 use super::State;
 use super::GlobalSyncExecutor;
@@ -121,15 +123,14 @@ pub struct AvailableTask<F: Future + 'static> {
 impl OS_TCB {
     // can only be called if the task owns the stack
     pub(crate) fn restore_context_from_stk(&mut self) {
-        unsafe extern "Rust" {
-            fn restore_thread_task();
-        }
         if self.OSTCBStkPtr.is_none() {
             return;
         }
         // in restore_task it will set PROGRAM_STACK a new stk
         // revoke the stk
-        critical_section::with(|_| unsafe { restore_thread_task() });
+        critical_section::with(|_| {
+            PLATFORM.trigger_context_switch();
+        });
     }
     /// get the stk ptr of tcb, and set the tcb's stk ptr to None
     pub fn take_stk(&mut self) -> OS_STK_REF {
