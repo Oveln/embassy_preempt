@@ -8,8 +8,7 @@
 
 pub extern crate alloc;
 
-#[cfg_attr(feature = "cortex_m", path = "state_atomics_arm.rs")]
-pub mod state;
+pub mod state_atomics;
 /// The executor for the uC/OS-II RTOS.
 pub mod timer_queue;
 pub mod waker;
@@ -33,7 +32,7 @@ use core::ptr::NonNull;
 use core::sync::atomic::Ordering;
 use embassy_preempt_platform::{OsStk, PLATFORM, Platform, traits::timer::{AlarmHandle, Driver}};
 use lazy_static::lazy_static;
-use state::State;
+use state_atomics::State;
 use embassy_preempt_platform::timer_driver::RTC_DRIVER;
 use task::{OS_TCB, OS_TCB_REF};
 pub use os_task::*;
