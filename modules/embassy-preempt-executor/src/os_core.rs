@@ -202,8 +202,7 @@ pub extern "C" fn OSInit() {
     Init_Heap();
     OS_InitStackAllocator();
 
-    // by noah: init the core peripheral
-    PLATFORM.init_core_peripherals();
+    let _ = &*PLATFORM;
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */
     // by noah：we need to init the Timer as the time driver

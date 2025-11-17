@@ -3,32 +3,59 @@ use core::ptr::NonNull;
 #[cfg(feature = "log-base")]
 use cortex_m::asm::delay;
 use cortex_m::interrupt;
-use cortex_m::peripheral::{Peripherals, SCB};
 use cortex_m::peripheral::scb::SystemHandler;
 use cortex_m::register::primask;
+use critical_section::Mutex;
+use lazy_static::lazy_static;
+use stm32f4xx_hal::gpio::{GpioExt, gpioc};
+use stm32f4xx_hal::pac::{EXTI, NVIC};
+#[cfg(feature = "cortex-m")]
+use stm32f4xx_hal::pac::SCB;
+use stm32f4xx_hal::rcc::{Rcc, RccExt};
+use stm32f4xx_hal::syscfg::{SysCfg, SysCfgExt};
 
+use crate::driver::button::driver::Button;
 use crate::stm32f401re::ucstk::CONTEXT_STACK_SIZE;
 use crate::traits::Platform;
 
-pub struct STM32F401RE {}
+pub struct STM32F401RE {
+    pub button: Mutex<Button>
+}
 
-pub static PLATFORM: STM32F401RE = STM32F401RE {};
+lazy_static! {
+    pub static ref PLATFORM: STM32F401RE = STM32F401RE::new();
+}
 
-impl Platform for STM32F401RE {
-    type OsStk = usize;
+impl STM32F401RE {
+    fn new() -> Self {
+        let dp = crate::hal::pac::Peripherals::take().unwrap();
+        let cp = cortex_m::Peripherals::take().unwrap();
+        let mut rcc = dp.RCC.constrain();
+        let mut scb = cp.SCB;
+        let mut nvic = cp.NVIC;
 
-    fn init_core_peripherals(&'static self) {
-        let mut p = Peripherals::take().unwrap();
+        STM32F401RE::set_interupt_prio(&mut scb, &mut nvic);
 
+        let mut syscfg = dp.SYSCFG.constrain(&mut rcc);
+        let gpioc = dp.GPIOC.split(&mut rcc);
+        let mut exti = dp.EXTI;
+
+        let button = Button::new(&mut rcc, &mut exti, &mut nvic, &mut syscfg, gpioc.pc13);
+
+        STM32F401RE {
+            button: Mutex::new(button),
+        }
+    }
+    fn set_interupt_prio(scb:&mut SCB, nvic:&mut NVIC) {
         unsafe {
             // Set the NVIC group as 2-2 (same as port implementation)
-            let aircr = p.SCB.aircr.read();
+            let aircr = scb.aircr.read();
             let mut aircr = aircr & !(0b1111 << 8);
             aircr = aircr | (0b101 << 8);
-            p.SCB.aircr.write(aircr);
+            scb.aircr.write(aircr);
 
             // Set TIM3 priority as 3 (same as port)
-            p.NVIC.set_priority(stm32_metapac::Interrupt::TIM3, 32);
+            nvic.set_priority(stm32_metapac::Interrupt::TIM3, 32);
 
             #[cfg(feature = "cortex-m")]
             let _ = cortex_m_semihosting::hprintln!(
@@ -37,7 +64,7 @@ impl Platform for STM32F401RE {
             );
 
             // Set EXTI15_10 priority as 1 (for button interrupt)
-            p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, 16);
+            nvic.set_priority(stm32_metapac::Interrupt::EXTI15_10, 16);
             #[cfg(feature = "cortex-m")]
             let _ = cortex_m_semihosting::hprintln!(
                 "the prio of EXTI15_10 is {}",
@@ -47,11 +74,15 @@ impl Platform for STM32F401RE {
             // Set PendSV priority (lowest priority)
             #[cfg(feature = "cortex-m")]
             let _ = cortex_m_semihosting::hprintln!("the prio of PendSV is {}", SCB::get_priority(SystemHandler::PendSV));
-            p.SCB.set_priority(SystemHandler::PendSV, 0xf << 4);
+            scb.set_priority(SystemHandler::PendSV, 0xf << 4);
             #[cfg(feature = "cortex-m")]
             let _ = cortex_m_semihosting::hprintln!("the prio of PendSV is {}", SCB::get_priority(SystemHandler::PendSV));
         }
     }
+}
+
+impl Platform for STM32F401RE {
+    type OsStk = usize;
 
     fn trigger_context_switch(&'static self) {
         os_log!(trace, "trigger_context_switch");

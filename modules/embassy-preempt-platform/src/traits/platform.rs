@@ -9,13 +9,6 @@ use core::ptr::NonNull;
 pub trait Platform {
     type OsStk;
 
-    /// Initialize core peripherals (interrupt controller, system control, etc.)
-    ///
-    /// Architecture-specific initialization:
-    /// - ARM Cortex-M: NVIC, SCB, priority grouping
-    /// - RISC-V: PLIC, CLINT, privilege levels
-    fn init_core_peripherals(&'static self);
-
     /// Trigger a context switch to start the first task or switch to next task
     ///
     /// Architecture-specific implementation:

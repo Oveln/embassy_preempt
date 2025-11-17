@@ -2,6 +2,8 @@
 use core::mem;
 use core::task::{RawWaker, RawWakerVTable, Waker};
 
+use crate::{GlobalSyncExecutor, wake_task_no_pend};
+
 use super::{wake_task, OS_TCB, OS_TCB_REF};
 
 static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, wake, wake, drop);
@@ -11,7 +13,8 @@ unsafe fn clone(p: *const ()) -> RawWaker {
 }
 
 unsafe fn wake(p: *const ()) { unsafe {
-    wake_task(OS_TCB_REF::from_ptr(p as *const OS_TCB))
+    wake_task_no_pend(OS_TCB_REF::from_ptr(p as *const OS_TCB));
+    GlobalSyncExecutor.as_ref().unwrap().IntCtxSW();
 }}
 
 unsafe fn drop(_: *const ()) {

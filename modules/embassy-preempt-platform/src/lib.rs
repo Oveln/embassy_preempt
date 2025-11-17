@@ -23,6 +23,9 @@ mod panic_handler;
 #[macro_use]
 extern crate embassy_preempt_log;
 
+mod driver;
+pub use driver::button::future;
+
 // Declare modules
 pub mod traits;
 

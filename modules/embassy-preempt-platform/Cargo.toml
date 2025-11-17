@@ -12,6 +12,8 @@ path = "src/lib.rs"
 crate-type = ["rlib"]  # Rust库类型
 
 [dependencies]
+lazy_static ={ version = "1.4.0" }
+spin = { version = "0.10.0" }
 defmt = { version = "1.0.1", optional = true }
 panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
 embassy-preempt-log ={ path = "../embassy-preempt-log"}

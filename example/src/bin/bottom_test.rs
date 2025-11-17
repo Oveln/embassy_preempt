@@ -3,15 +3,11 @@
 #![feature(impl_trait_in_assoc_type)]
 use core::ffi::c_void;
 
-// extern crate embassy_preempt;
 use embassy_preempt_driver::led::{LED_Init, LED_OFF, LED_ON};
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_log::task_log;
-// use embassy_preempt_os_time::timer::Timer;
-// use embassy_preempt_port::bottom_driver::Bottom::bottom;
-// use embassy_preempt_log::task_log;
-// use embassy_preempt_{self as _};
+use embassy_preempt_platform::future::wait_for_button;
 
 #[cortex_m_rt::entry]
 fn test_hardware() -> ! {
@@ -32,12 +28,10 @@ async fn task1(_args: *mut c_void) {
         // led on
         LED_ON();
         task_log!(info, "led on");
-        // bottom::wait_for_rising_edge().await;
+        wait_for_button().await;
         // led off
         LED_OFF();
         task_log!(info, "led off");
-        // delay(1);
-        // delay 5s
-        // bottom::wait_for_rising_edge().await;
+        wait_for_button().await;
     }
 }
