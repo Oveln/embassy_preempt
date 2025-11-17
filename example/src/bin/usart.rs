@@ -8,7 +8,7 @@ use core::ffi::c_void;
 use embassy_preempt_executor::SyncOSTaskCreate;
 use embassy_preempt_executor::os_core::{OSInit, OSStart};
 use embassy_preempt_executor::os_time::OSTimeDly;
-use stm32_metapac::{usart, gpio, GPIOA, RCC, USART1};
+use embassy_preempt_platform::pac::{usart, gpio, GPIOA, RCC, USART1};
 
 
 #[cfg(feature = "defmt")]

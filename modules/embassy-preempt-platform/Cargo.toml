@@ -18,7 +18,7 @@ embassy-preempt-log ={ path = "../embassy-preempt-log"}
 
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 
-cortex-m = { version = "0.7.7", optional = true }
+cortex-m = { version = "0.7.7", optional = true, default-features = false }
 cortex-m-rt = { version = "0.7", optional = true }
 cortex-m-semihosting = { version = "0.5", optional = true }
 critical-section = { version = "1.1", features = ["restore-state-bool"] }
@@ -26,13 +26,22 @@ stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", ta
 
 # Sync primitives for timer driver
 # embassy-sync = { version = "0.6", optional = true }
+embedded-hal = "1.0"
+nb = "1"
+
+[dependencies.stm32f4xx-hal]
+version = "0.23.0"
+features = ["stm32f401"]
+default-features = false
+optional = true
 
 [features]
 default = ["cortex-m", "stm32f401re", "time_driver_tim3", 'semihosting']
 
 # Platform implementations
 cortex-m = ["dep:cortex-m", "dep:cortex-m-semihosting"]
-stm32f401re = ["dep:stm32-metapac", "cortex-m", "stm32-metapac/stm32f401re"]
+# stm32f401re = ["dep:stm32f4xx-hal", "cortex-m"]
+stm32f401re = ["dep:stm32f4xx-hal","dep:stm32-metapac", "cortex-m", "stm32-metapac/stm32f401re"]
 riscv = []  # Placeholder for future RISC-V support
 
 # Time driver options for different timers

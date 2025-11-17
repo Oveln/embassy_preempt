@@ -1,5 +1,5 @@
-use stm32_metapac::gpio::vals;
-use stm32_metapac::{self, GPIOA, RCC};
+use embassy_preempt_platform::pac::{GPIOA, RCC, gpio::vals};
+
 
 /// init the LED
 #[allow(dead_code)]

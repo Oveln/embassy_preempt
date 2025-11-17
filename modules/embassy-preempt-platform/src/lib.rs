@@ -18,7 +18,7 @@
 //! - [`stm32f401re`]: STM32F401RE microcontroller support with timer driver
 
 mod panic_handler;
-mod critical_section;
+// mod critical_section;
 
 #[macro_use]
 extern crate embassy_preempt_log;
@@ -38,6 +38,8 @@ pub use stm32f401re::PLATFORM as PLATFORM;
 pub use stm32_metapac as pac;
 #[cfg(feature = "stm32f401re")]
 pub type OsStk = <stm32f401re::STM32F401RE as Platform>::OsStk;
+#[cfg(feature = "stm32f401re")]
+pub use stm32f4xx_hal as hal;
 
 // Re-export timer driver for STM32F401RE
 #[cfg(feature = "stm32f401re")]

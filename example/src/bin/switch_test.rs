@@ -9,7 +9,7 @@ use core::arch::asm;
 use embassy_preempt_executor::{SyncOSTaskCreate, AsyncOSTaskCreate};
 use embassy_preempt_executor::os_core::{OSInit, OSStart};
 use embassy_preempt_executor::os_time::OSTimeDly;
-use stm32_metapac::{gpio, GPIOA, RCC};
+use embassy_preempt_platform::pac::{gpio, GPIOA, RCC};
 // use app::led::Pin_Init;
 
 #[cfg(feature = "defmt")]

@@ -7,6 +7,10 @@ edition = "2024"
 
 # Disable testing for all binaries to avoid test crate compilation errors
 [[bin]]
+name = "led_test"
+test = false
+
+[[bin]]
 name = "space_performance"
 test = false
 
@@ -93,17 +97,15 @@ panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true}
 critical-section = { version = "1.1", features=["restore-state-bool"]}
 
 embassy-preempt-executor = { path = "../modules/embassy-preempt-executor"}
-# executor = { path = "../modules/executor" , features = ["stm32f401re","memory-x","alarm_test"] }
 embassy-preempt-driver = { path = "../modules/embassy-preempt-driver" }
 embassy-preempt-log = { path = "../modules/embassy-preempt-log"}
 embassy-preempt-platform = { path = "../modules/embassy-preempt-platform" }
 embassy-preempt-mem = { path = "../modules/embassy-preempt-mem" }
-# executor = { workspace = true, optional = true, features = ["stm32f401re","defmt"] }
-# app = { workspace = true, optional = true}
-
-stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata", "stm32f401re", "rt"]}
 
 cortex-m-semihosting = { version = "0.5"}
+
+lazy_static = { version = "1.4.0" }
+spin = { version = "0.10.0" }
 
 [dev-dependencies]
 defmt-test = {version = "0.4.0"}
