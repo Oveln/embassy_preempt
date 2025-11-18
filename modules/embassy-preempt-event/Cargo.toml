@@ -11,6 +11,7 @@ embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 embassy-preempt-structs = { path = "../embassy-preempt-structs" }
 embassy-preempt-executor = { path = "../embassy-preempt-executor" }
 embassy-preempt-mem = { path = "../embassy-preempt-mem" }
+embassy-preempt-log = { path = "../embassy-preempt-log" }
 
 [features]
 OS_EVENT_NAME_EN = []

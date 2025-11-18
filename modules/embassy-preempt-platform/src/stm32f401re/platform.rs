@@ -155,7 +155,6 @@ impl Platform for STM32F401RE {
     }
 
     fn enter_idle_state(&'static self) {
-        os_log!(trace, "enter_idle_state");
         // Update the counter of the system
         // OSIdleCtr.fetch_add(1, Ordering::Relaxed);
 

@@ -6,6 +6,7 @@
 
 use alloc::alloc::{GlobalAlloc, Layout};
 use embassy_preempt_platform::{OsStk, PLATFORM, Platform};
+use embassy_preempt_log::mem_log;
 use core::ptr::NonNull;
 
 
@@ -38,7 +39,7 @@ lazy_static::lazy_static! {
 /// init the stack allocator and set up the program stack and the interrupt stack
 pub fn OS_InitStackAllocator() {
     
-    task_log!(trace, "Init Stack Allocator");
+    mem_log!(trace, "Init Stack Allocator");
     unsafe {
         STACK_ALLOCATOR.lock().init(STACK_START as *mut u8, STACK_SIZE);
     }
@@ -58,19 +59,19 @@ pub fn OS_InitStackAllocator() {
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
     
-    task_log!(trace, "alloc_stack");
+    mem_log!(trace, "alloc_stack");
     let heap_ptr: *mut u8;
     unsafe {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);
     }
     // 
-    task_log!(trace, "alloc a stack at {}", heap_ptr);
+    mem_log!(trace, "alloc a stack at {}", heap_ptr);
     stk_from_ptr(heap_ptr, layout)
 }
 /// dealloc a stack
 pub fn dealloc_stack(stk: &mut OS_STK_REF) {
     
-    task_log!(trace, "dealloc_stack");
+    mem_log!(trace, "dealloc_stack");
     if stk.STK_REF == NonNull::dangling() || stk.HEAP_REF == NonNull::dangling() {
         return;
     }

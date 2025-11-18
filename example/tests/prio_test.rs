@@ -129,8 +129,8 @@ mod tests {
 
     #[test]
     fn test_priority_scheduling() {
-        task_log!(info, "==========priority scheduling test begin==========");
-        task_log!(info, "OsStk: {}", type_name::<OsStk>());
+        task_log!(info, "Starting priority scheduling test");
+        task_log!(info, "Stack type: {}", type_name::<OsStk>());
 
         // os初始化
         OSInit();

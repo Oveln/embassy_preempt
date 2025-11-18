@@ -46,6 +46,7 @@ impl<const N: usize> Arena<N> {
         let align_offset = (ptr as usize).next_multiple_of(layout.align()) - (ptr as usize);
 
         if align_offset + layout.size() > bytes_left {
+            mem_log!(error, "Task arena full: requested {} bytes, {} available", layout.size(), bytes_left);
             panic!("embassy-executor: task arena is full. You must increase the arena size, see the documentation for details: https://docs.embassy.dev/embassy-executor/");
         }
         let res = unsafe { ptr.add(align_offset) };
@@ -57,7 +58,7 @@ impl<const N: usize> Arena<N> {
     /// deallocate the most recently allocated memory block
     pub fn dealloc<T>(&'static self, cs: CriticalSection, ptr: *mut T) {
         
-        task_log!(trace, "dealloc of Arena");
+        mem_log!(trace, "dealloc of Arena");
         let layout = Layout::new::<T>();
 
         let start = self.buf.get().cast::<u8>();
@@ -65,6 +66,7 @@ impl<const N: usize> Arena<N> {
 
         let current_ptr = self.ptr.borrow(cs).get();
         if ptr.is_null() || (ptr as usize >= end as usize) {
+            mem_log!(error, "Invalid dealloc: ptr={:?}, bounds={:?}-{:?}", ptr, start, end);
             panic!("Invalid dealloc: Pointer is out of bounds or null.");
         }
         // convert ptr to u8* and check if it's the last allocated block
@@ -75,6 +77,7 @@ impl<const N: usize> Arena<N> {
             // if it's the last allocated block, roll back the allocation pointer
             self.ptr.borrow(cs).set(ptr as *mut u8);
         } else {
+            mem_log!(error, "Non-LIFO deallocation: ptr={:?}, current_ptr={:?}", ptr, current_ptr);
             panic!("Non-LIFO deallocation is not supported in this arena allocator.");
         }
     }

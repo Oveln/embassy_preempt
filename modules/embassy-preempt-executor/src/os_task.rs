@@ -52,9 +52,10 @@ where
     F: FnOnce(*mut c_void) -> R + 'static,
     R: ReturnUnitOrNeverReturn,
 {
-    task_log!(trace, "SyncOSTaskCreate");
+    task_log!(info, "Creating sync task with priority {}", prio);
     // check the priority
     if prio > OS_LOWEST_PRIO as u8 {
+        task_log!(error, "Invalid task priority {}: exceeds maximum {}", prio, OS_LOWEST_PRIO);
         return OS_ERR_STATE::OS_ERR_PRIO_INVALID;
     }
     // warp the normal func to a async func
@@ -83,7 +84,7 @@ where
     FutFn: FnOnce(*mut c_void) -> F + 'static,
 {
     
-    task_log!(trace, "AsyncOSTaskCreate");
+    task_log!(info, "Creating async task with priority {}", prio);
     let future_func = || task(p_arg);
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {

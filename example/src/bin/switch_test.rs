@@ -12,10 +12,7 @@ use embassy_preempt_executor::os_time::OSTimeDly;
 use embassy_preempt_platform::pac::{gpio, GPIOA, RCC};
 // use app::led::Pin_Init;
 
-#[cfg(feature = "defmt")]
-use defmt::info;
-#[cfg(feature = "alarm_test")]
-use defmt::info;
+use embassy_preempt_log::{os_log, task_log};
 
 #[cortex_m_rt::entry]
 fn usart_test() -> ! {
@@ -62,7 +59,7 @@ async fn task2(_args: *mut c_void) {
         task_pin_low(2);
         delay(1);
         #[cfg(feature = "alarm_test")]
-        trace!("the task2");
+        task_log!(trace, "the task2");
         delay(1);
         // critical_section::with(|_| task_pin_high(2));
         task_pin_high(2);
@@ -77,7 +74,7 @@ async fn task3(_args: *mut c_void) {
         delay(1);
         task_pin_high(3);
         #[cfg(feature = "alarm_test")]
-        trace!("the task3");
+        task_log!(trace, "the task3");
         OSTimeDly(500 * 100);
     }
 }
@@ -87,7 +84,7 @@ async fn task4(_args: *mut c_void) {
         task_pin_low(4);
         delay(1);
         #[cfg(feature = "alarm_test")]
-        trace!("the task4");
+        task_log!(trace, "the task4");
         delay(1);
         task_pin_high(4);
         OSTimeDly(50 * 100);
@@ -99,7 +96,7 @@ async fn task5(_args: *mut c_void) {
         task_pin_low(5);
         delay(1);
         #[cfg(feature = "alarm_test")]
-        trace!("the task5");
+        task_log!(trace, "the task5");
         delay(1);
         task_pin_high(5);
         OSTimeDly(50 * 100);

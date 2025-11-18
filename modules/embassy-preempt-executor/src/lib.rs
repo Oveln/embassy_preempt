@@ -209,10 +209,10 @@ impl SyncExecutor {
             tmp = self.OSRdyTbl.get();
         }
         {
-            task_log!(info, "the ready queue is:");
+            scheduler_log!(trace, "the ready queue is:");
             for i in 0..OS_LOWEST_PRIO + 1 {
                 if tmp[(i / 8) as usize] & (1 << (i % 8)) != 0 {
-                    task_log!(info, "the {}th task is ready", i);
+                    scheduler_log!(trace, "the {}th task is ready", i);
                 }
             }
         }
@@ -262,10 +262,10 @@ impl SyncExecutor {
     }
     // as an interface to join the scheduler logic
     pub unsafe fn IntCtxSW(&'static self) {
-              task_log!(info, "IntCtxSW");
+              scheduler_log!(trace, "IntCtxSW");
         stack_pin_high();
         // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
-        task_log!(info, "IntCtxSW");
+        scheduler_log!(trace, "IntCtxSW");
         if critical_section::with(|_| unsafe {
             let new_prio = self.find_highrdy_prio();
             task_log!(trace, 
@@ -303,9 +303,9 @@ impl SyncExecutor {
         // test: print the ready queue
         #[cfg(feature = "log-scheduler")]
         critical_section::with(|_| {
-            task_log!(info, "in interrupt_poll");
+            scheduler_log!(trace, "in interrupt_poll");
             self.print_ready_queue();
-            task_log!(info, "the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
+            scheduler_log!(trace, "the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
         });
 
         task_log!(trace, "interrupt_poll");
@@ -322,10 +322,10 @@ impl SyncExecutor {
         // then we need to restore the highest priority task
         task_log!(trace, "interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
         task_log!(trace, "interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
-        task_log!(info, "the current task is {}", *self.OSPrioCur.get_unmut());
+        scheduler_log!(trace, "the current task is {}", *self.OSPrioCur.get_unmut());
         // task_log!(info, "alloc stack for the task {}", *self.OSPrioHighRdy.get_unmut());
         if task.OSTCBStkPtr.is_none() {
-            task_log!(info, "the task's stk is none");
+            mem_log!(trace, "the task's stk is none");
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
 
@@ -343,13 +343,13 @@ impl SyncExecutor {
                 stk = program_stk.clone();
             } else {
                   {
-                    // task_log!(info, "the current task is {}", *self.OSPrioCur.get_unmut());
-                    task_log!(info, "alloc stack for the prio {} task", *self.OSPrioHighRdy.get_unmut());
+                    // scheduler_log!(trace, "the current task is {}", *self.OSPrioCur.get_unmut());
+                    mem_log!(trace, "alloc stack for the prio {} task", *self.OSPrioHighRdy.get_unmut());
                 }
                 let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
                 stk = alloc_stack(layout);
                 {
-                    task_log!(info, "the bottom of the allocated stk is {:?}", stk.STK_REF);
+                    mem_log!(trace, "the bottom of the allocated stk is {:?}", stk.STK_REF);
                 }
             }
             // then we need to mock the stack for the task(the stk will change during the mock)
@@ -358,13 +358,13 @@ impl SyncExecutor {
             task.OSTCBStkPtr = Some(stk);
         } else {
               {
-                task_log!(info, "the highrdy task {} have a stack {}", *self.OSPrioHighRdy.get_unmut(), task.OSTCBStkPtr.as_ref().unwrap().STK_REF);
+                mem_log!(trace, "the highrdy task {} have a stack {}", *self.OSPrioHighRdy.get_unmut(), task.OSTCBStkPtr.as_ref().unwrap().STK_REF);
             }
         }
         // restore the task from stk
         critical_section::with(|_| {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
-                task_log!(info, "restore the task/thread");
+                scheduler_log!(trace, "restore the task/thread");
                 PLATFORM.trigger_context_switch();
             }
         });

@@ -33,9 +33,9 @@ fn test_basic_schedule() -> ! {
 fn task1(_args: *mut c_void) {
     loop {
         // 任务1
-        task_log!(info, "---task1 begin---");
+        task_log!(info, "Task 1 starting execution");
         OSTimeDly(100_000);
-        task_log!(info, "---task1 end---");
+        task_log!(info, "Task 1 completed execution cycle");
         delay(SHORT_TIME);
     }
 }
@@ -43,9 +43,9 @@ fn task1(_args: *mut c_void) {
 fn task2(_args: *mut c_void) {
     loop {
         // 任务2
-        task_log!(info, "---task2 begin---");
+        task_log!(info, "Task 2 starting execution");
         OSTimeDly(200_000);
-        task_log!(info, "---task2 end---");
+        task_log!(info, "Task 2 completed execution cycle");
         delay(SHORT_TIME);
     }
 }
@@ -53,19 +53,19 @@ fn task2(_args: *mut c_void) {
 async fn task3(_args: *mut c_void) {
     // 任务3
     loop {
-        task_log!(info, "---task3 begin---");
+        task_log!(info, "Task 3 (async) starting execution");
         Timer::after_secs(LONG_TIME as u64).await;
-        task_log!(info, "---task3 end---");
+        task_log!(info, "Task 3 (async) completed execution cycle");
         delay(SHORT_TIME);
     }
 }
 
 fn task4(_args: *mut c_void) {
     // 任务4
-    task_log!(info, "---task4 begin---");
-    // 任务3中涉及任务创建
+    task_log!(info, "Task 4 starting execution - creating Task 1");
+    // Task 4 creates a new task instance
     SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 14);
     delay(SHORT_TIME);
-    task_log!(info, "---task4 end---");
+    task_log!(info, "Task 4 completed execution - Task 1 created");
     delay(MID_TIME);
 }
