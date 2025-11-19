@@ -5,7 +5,7 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
-use embassy_preempt_platform::{OsStk, PLATFORM, Platform};
+use embassy_preempt_platform::{OsStk, Platform};
 use embassy_preempt_log::mem_log;
 use core::ptr::NonNull;
 
@@ -55,7 +55,7 @@ pub fn OS_InitStackAllocator() {
     PROGRAM_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
-    PLATFORM().set_program_stack_pointer(stk_ptr);
+    embassy_preempt_platform::get_platform_trait().set_program_stack_pointer(stk_ptr);
     // we also need to allocate a stack for interrupt
     let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);

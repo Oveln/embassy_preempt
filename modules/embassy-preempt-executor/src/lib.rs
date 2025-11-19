@@ -30,7 +30,7 @@ use core::ptr::NonNull;
 
 // Import logging macros when logging is enabled
 use core::sync::atomic::Ordering;
-use embassy_preempt_platform::{OsStk, PLATFORM, Platform, traits::timer::{AlarmHandle, Driver}};
+use embassy_preempt_platform::{OsStk, Platform, traits::timer::{AlarmHandle, Driver}};
 use spin::Once;
 use state_atomics::State;
 use embassy_preempt_platform::timer_driver::RTC_DRIVER;
@@ -369,7 +369,7 @@ impl SyncExecutor {
         critical_section::with(|_| {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
                 scheduler_log!(trace, "restore the task/thread");
-                PLATFORM().trigger_context_switch();
+                embassy_preempt_platform::get_platform_trait().trigger_context_switch();
             }
         });
     }}

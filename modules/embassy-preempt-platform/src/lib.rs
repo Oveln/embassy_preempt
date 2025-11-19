@@ -77,4 +77,7 @@ static __PLATFORM: Once<chip::PlatformImpl> = Once::new();
 pub fn get_platform() -> &'static chip::PlatformImpl {
     __PLATFORM.call_once(|| chip::PlatformImpl::new())
 }
-pub use get_platform as PLATFORM;
+
+pub fn get_platform_trait() -> &'static dyn Platform<OsStk = OsStk> {
+    __PLATFORM.call_once(|| chip::PlatformImpl::new())  as &dyn Platform<OsStk = OsStk>
+}

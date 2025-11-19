@@ -42,7 +42,6 @@ use core::sync::atomic::Ordering;
 use crate::os_cpu::*;
 
 use embassy_preempt_mem::heap::{Init_Heap, OS_InitStackAllocator};
-use embassy_preempt_platform::PLATFORM;
 use embassy_preempt_platform::Platform;
 use crate::GlobalSyncExecutor;
 use crate::SyncOSTaskCreate;
@@ -202,7 +201,7 @@ pub extern "C" fn OSInit() {
     Init_Heap();
     OS_InitStackAllocator();
 
-    PLATFORM();
+    embassy_preempt_platform::get_platform_trait();
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */
     // by noah：we need to init the Timer as the time driver
@@ -403,7 +402,7 @@ pub extern "C" fn OSStart() -> ! {
     let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
     drop(int_stk);
     unsafe {
-        PLATFORM().configure_interrupt_stack(int_ptr);
+        embassy_preempt_platform::get_platform_trait().configure_interrupt_stack(int_ptr);
         // find the highest priority task in the ready queue
         critical_section::with(|_| GlobalSyncExecutor().as_ref().unwrap().set_highrdy());
         GlobalSyncExecutor().as_ref().unwrap().poll();
@@ -684,7 +683,7 @@ fn OS_InitTaskIdle() {
                 blockdelay::delay(1);
             }
             OSIdleCtr.fetch_add(1, Ordering::SeqCst);
-            PLATFORM().enter_idle_state();
+            embassy_preempt_platform::get_platform_trait().enter_idle_state();
         }
     };
     os_log!(trace, "create idle task");

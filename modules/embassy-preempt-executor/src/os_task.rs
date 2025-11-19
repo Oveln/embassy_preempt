@@ -14,7 +14,7 @@
 
 pub extern crate alloc;
 use alloc::string::ToString;
-use embassy_preempt_platform::{OsStk, PLATFORM};
+use embassy_preempt_platform::{OsStk};
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::future::Future;

@@ -7,7 +7,7 @@ use core::ops::{Deref, DerefMut};
 use core::ptr::NonNull;
 use core::mem;
 
-use embassy_preempt_platform::{PLATFORM, Platform};
+use embassy_preempt_platform::Platform;
 
 use super::waker;
 use super::State;
@@ -129,7 +129,7 @@ impl OS_TCB {
         // in restore_task it will set PROGRAM_STACK a new stk
         // revoke the stk
         critical_section::with(|_| {
-            PLATFORM().trigger_context_switch();
+            embassy_preempt_platform::get_platform_trait().trigger_context_switch();
         });
     }
     /// get the stk ptr of tcb, and set the tcb's stk ptr to None
