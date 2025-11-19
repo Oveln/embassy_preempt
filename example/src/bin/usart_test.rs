@@ -10,7 +10,7 @@ use embassy_preempt_executor::os_time::OSTimeDly;
 use embassy_preempt_platform::pac::{usart, gpio, GPIOA, RCC, USART1};
 use embassy_preempt_log::{os_log, task_log};
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn usart_test() -> ! {
     led_init();
     usart_init();

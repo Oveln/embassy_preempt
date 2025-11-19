@@ -13,7 +13,7 @@ use embassy_preempt_log::task_log;
 // use embassy_preempt::port::bottom_driver::Bottom::bottom;
 // use embassy_preempt::{self as _};
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn test_hardware() -> ! {
     // os初始化
     OSInit();

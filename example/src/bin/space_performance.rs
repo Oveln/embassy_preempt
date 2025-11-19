@@ -14,7 +14,7 @@ use embassy_preempt_executor::os_time::timer::Timer;
 use embassy_preempt_log::task_log;
 // use embassy_preempt::{self as _};
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn test_space_performance() -> ! {
     // hardware init
     LED_Init();

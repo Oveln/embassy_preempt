@@ -13,7 +13,7 @@ use embassy_preempt_platform::pac::{usart, gpio, GPIOA, RCC, USART1};
 
 use embassy_preempt_log::{os_log, task_log};
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn usart_test() -> ! {
     #[cfg(feature = "alarm_test")]
     os_log!(info, "OS Start");

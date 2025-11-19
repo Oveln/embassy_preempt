@@ -12,7 +12,7 @@ use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_executor::os_time::timer::Timer;
 // use embassy_preempt::{self as _};
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn test_hardware() -> ! {
     // os初始化
     OSInit();

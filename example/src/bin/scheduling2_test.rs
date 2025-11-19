@@ -19,7 +19,7 @@ const MID_TIME: u64 = 10000;
 // 1 us
 const SHORT_TIME: u64 = 1000;
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn main_test() -> ! {
     loop {
         test_basic_schedule();

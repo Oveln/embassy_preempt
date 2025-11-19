@@ -16,7 +16,7 @@ const BLOCK_TIME: u64 = 1;
 
 // use embassy_preempt::{self as _};
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn test_time_performance() -> ! {
     // hardware init
     led_init();

@@ -101,6 +101,7 @@ embassy-preempt-driver = { path = "../modules/embassy-preempt-driver" }
 embassy-preempt-log = { path = "../modules/embassy-preempt-log"}
 embassy-preempt-platform = { path = "../modules/embassy-preempt-platform" }
 embassy-preempt-mem = { path = "../modules/embassy-preempt-mem" }
+embassy-preempt-macros = { path = "../modules/embassy-preempt-macros" }
 
 cortex-m-semihosting = { version = "0.5"}
 

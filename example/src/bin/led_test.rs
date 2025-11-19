@@ -17,7 +17,7 @@ lazy_static! {
     static ref LED: Mutex<Led> = Mutex::new(Led::new());
 }
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn test_hardware() -> ! {
     // os初始化
     OSInit();

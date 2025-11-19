@@ -12,7 +12,7 @@ use embassy_preempt_executor::os_time::OSTimeDly;
 use embassy_preempt_platform::pac::{gpio, GPIOA, GPIOC, RCC};
 use embassy_preempt_log::task_log;
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn iic_test() -> ! {
     led_init();
     iic_init();

@@ -16,7 +16,7 @@ const LONG_TIME: usize = 10;
 const MID_TIME: usize = 5;
 const SHORT_TIME: usize = 3;
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn main_test() -> ! {
     loop {
         test_basic_schedule();

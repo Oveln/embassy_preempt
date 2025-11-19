@@ -20,7 +20,7 @@ const SHORT_TIME: u64 = 10;
 // the set alarm will return false
 const SHORT_SHORT_TIME: u64 = 1;
 
-#[cortex_m_rt::entry]
+#[embassy_preempt_macros::entry]
 fn test_basic_schedule() -> ! {
     LED_Init();
     // os初始化

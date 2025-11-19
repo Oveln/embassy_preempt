@@ -9,7 +9,8 @@ use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_log::task_log;
 use embassy_preempt_platform::future::wait_for_button;
 
-#[cortex_m_rt::entry]
+// #[embassy_preempt_macros::entry]
+#[embassy_preempt_macros::entry]
 fn test_hardware() -> ! {
     // os初始化
     OSInit();
