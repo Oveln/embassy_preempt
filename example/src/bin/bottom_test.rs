@@ -6,6 +6,7 @@ use core::ffi::c_void;
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_log::task_log;
+use embassy_preempt_platform::PLATFORM;
 use embassy_preempt_platform::driver::button::future::wait_for_button;
 
 // #[embassy_preempt_macros::entry]
@@ -21,9 +22,9 @@ fn test_hardware() -> ! {
 
 async fn task1(_args: *mut c_void) {
     loop {
+        critical_section::with(|cs| PLATFORM().led.borrow(cs).toggle());
         task_log!(info, "waiting for button");
         wait_for_button().await;
         task_log!(info, "button pressed");
-        wait_for_button().await;
     }
 }

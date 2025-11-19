@@ -3,7 +3,7 @@ use core::{cell::UnsafeCell, sync::atomic::{AtomicBool, Ordering}};
 use critical_section::Mutex;
 use stm32f4xx_hal::{gpio::{ExtiPin, Pin}, pac::{self, EXTI, NVIC}, rcc::Rcc, syscfg::SysCfg};
 
-use crate::{PLATFORM, get_platform};
+use crate::get_platform;
 
 
 /// Button driver using HAL GPIO but manual EXTI configuration
@@ -18,10 +18,10 @@ impl Button {
     pub fn new(rcc: &mut Rcc, exti: &mut EXTI, nvic: &mut NVIC, syscfg: &mut SysCfg, pc13: Pin<'C', 13>) -> Self {
 
         // Enable GPIOC clock
-        rcc.ahb1enr().modify(|r, w| w.gpiocen().enabled());
+        rcc.ahb1enr().modify(|_r, w| w.gpiocen().enabled());
 
         // Enable SYSCFG clock for EXTI
-        rcc.apb2enr().modify(|r, w| w.syscfgen().enabled());
+        rcc.apb2enr().modify(|_r, w| w.syscfgen().enabled());
 
         // Configure PC13 as input with pull-down
         let mut pin = pc13.into_pull_down_input();

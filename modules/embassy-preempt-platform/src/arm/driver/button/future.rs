@@ -1,7 +1,7 @@
 use core::task::{Context, Poll};
 use core::pin::Pin;
 
-use crate::{PLATFORM, get_platform};
+use crate::get_platform;
 
 /// Future that completes when button is pressed
 pub struct ButtonFuture {

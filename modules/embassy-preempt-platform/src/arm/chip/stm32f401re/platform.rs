@@ -7,20 +7,21 @@ use cortex_m::peripheral::scb::SystemHandler;
 use cortex_m::register::primask;
 use critical_section::Mutex;
 use spin::Once;
-use stm32f4xx_hal::gpio::{GpioExt, gpioc};
-use stm32f4xx_hal::pac::{EXTI, NVIC};
+use stm32f4xx_hal::gpio::GpioExt;
 #[cfg(feature = "cortex-m")]
-use stm32f4xx_hal::pac::SCB;
-use stm32f4xx_hal::rcc::{Rcc, RccExt};
-use stm32f4xx_hal::syscfg::{SysCfg, SysCfgExt};
+use stm32f4xx_hal::pac::{NVIC, SCB};
+use stm32f4xx_hal::rcc::RccExt;
+use stm32f4xx_hal::syscfg::SysCfgExt;
 
 use crate::chip::ucstk::CONTEXT_STACK_SIZE;
 use crate::driver::button::driver::Button;
+use crate::driver::led::driver::Led;
 use crate::traits::Platform;
 
 /// STM32F401RE
 pub struct PlatformImpl {
-    pub button: Mutex<Button>
+    pub button: Mutex<Button>,
+    pub led: Mutex<Led>,
 }
 
 impl PlatformImpl {
@@ -35,12 +36,15 @@ impl PlatformImpl {
 
         let mut syscfg = dp.SYSCFG.constrain(&mut rcc);
         let gpioc = dp.GPIOC.split(&mut rcc);
+        let gpioa = dp.GPIOA.split(&mut rcc);
         let mut exti = dp.EXTI;
 
         let button = Button::new(&mut rcc, &mut exti, &mut nvic, &mut syscfg, gpioc.pc13);
+        let led = Led::new(&mut rcc, gpioa.pa5);
 
         PlatformImpl {
             button: Mutex::new(button),
+            led: Mutex::new(led),
         }
     }
     fn set_interupt_prio(scb:&mut SCB, nvic:&mut NVIC) {
