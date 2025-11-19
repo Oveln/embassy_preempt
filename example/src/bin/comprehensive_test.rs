@@ -5,7 +5,6 @@
 use core::ffi::c_void;
 
 use embassy_preempt_log::task_log;
-use embassy_preempt_driver::led::LED_Init;
 // <- derive attribute
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
@@ -22,7 +21,6 @@ const SHORT_SHORT_TIME: u64 = 1;
 
 #[embassy_preempt_macros::entry]
 fn test_basic_schedule() -> ! {
-    LED_Init();
     // os初始化
     OSInit();
     // TASK create. The prio should be interlude, and the prio should be low to high

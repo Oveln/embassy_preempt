@@ -46,6 +46,9 @@ pub use stm32f4xx_hal as hal;
 #[cfg(feature = "stm32f401re")]
 pub use arch::chip::stm32f401re as chip;
 
+#[cfg(feature = "stm32f401re")]
+pub use stm32_metapac as pac;
+
 // RISC-V platforms (placeholder for future implementation)
 #[cfg(all(feature = "riscv", feature = "riscv32"))]
 pub mod riscv;

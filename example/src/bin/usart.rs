@@ -18,8 +18,7 @@ fn usart_test() -> ! {
     #[cfg(feature = "alarm_test")]
     os_log!(info, "OS Start");
 
-    led_init();
-    usart_init();
+      usart_init();
 
     OSInit();
     
@@ -40,34 +39,13 @@ fn task1(_args: *mut c_void) {
 
 fn task2(_args: *mut c_void) {
     loop {
-        led_on();
+        task_log!(info, "task2 running");
         OSTimeDly(500 * 100);
-        led_off();
+        task_log!(info, "task2 waiting");
         OSTimeDly(500 * 100);
     }
 }
 
-#[allow(dead_code)]
-pub fn led_init() {
-    RCC.ahb1enr().modify(|f| {
-        f.set_gpioaen(true);
-    });
-    GPIOA.moder().modify(|f| {
-        f.set_moder(5, gpio::vals::Moder::OUTPUT);
-    });
-    GPIOA.otyper().modify(|f| {
-        f.set_ot(5, gpio::vals::Ot::PUSHPULL);
-    });
-    GPIOA.ospeedr().modify(|f| {
-        f.set_ospeedr(5, gpio::vals::Ospeedr::HIGHSPEED);
-    });
-    GPIOA.pupdr().modify(|v| {
-        v.set_pupdr(5, gpio::vals::Pupdr::FLOATING);
-    });
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::HIGH);
-    });
-}
 
 // 波特率、时钟
 const BAUD_RATE: u64 = 115200;
@@ -128,18 +106,3 @@ fn usart_receive_byte() -> u8{
     (USART1.dr().read().dr() & 0x01FF) as u8
 }
 
-#[allow(dead_code)]
-#[inline]
-pub fn led_on() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::HIGH);
-    });
-}
-
-#[allow(dead_code)]
-#[inline]
-pub fn led_off() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::LOW);
-    });
-}

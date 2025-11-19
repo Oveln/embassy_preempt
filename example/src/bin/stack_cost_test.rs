@@ -7,7 +7,6 @@ use core::arch::asm;
 use core::ffi::c_void;
 
 use embassy_preempt_log::task_log;
-use embassy_preempt_driver::led::{interrupt_pin_low, thread_pin_high, thread_pin_low, Pin_Init};
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_executor::os_time::timer::Timer;
@@ -21,8 +20,6 @@ const BLOCK_TIME: usize = 1;
 #[embassy_preempt_macros::entry]
 fn test_time_performance() -> ! {
     // hardware init
-    led_init();
-    Pin_Init();
     // os初始化
     OSInit();
     AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
@@ -38,20 +35,6 @@ fn test_time_performance() -> ! {
 // 主要测试任务
 async fn test_task(_args: *mut c_void) {
     loop {
-        // set the thread pin low, indicating that the thread time test is finished
-        thread_pin_low();
-        // bottom::wait_for_rising_edge().await;
-        // set the interrupt pin low, indicating that the interrput and scheduling test is finished
-        interrupt_pin_low();
-        // set the thread pin high, indicating that the thread time test begins
-        thread_pin_high();
-
-        // delay 5s
-        Timer::after_millis(50).await;
-        thread_pin_low();
-        // bottom::wait_for_rising_edge().await;
-        interrupt_pin_low();
-        thread_pin_high();
         Timer::after_millis(50).await;
     }
 }
@@ -59,10 +42,6 @@ async fn test_task(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 async fn task1(_args: *mut c_void) {
     loop {
-        // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
-        led_on();
-        Timer::after_millis(5 * 1000).await;
-        led_off();
         task_log!(trace, "the task1");
         Timer::after_millis(5 * 1000).await;
     }
@@ -114,53 +93,6 @@ async fn task5(_args: *mut c_void) {
     }
 }
 
-/// init the LED
-#[allow(dead_code)]
-pub fn led_init() {
-    // enable the RCC
-    RCC.ahb1enr().modify(|v| {
-        v.set_gpioaen(true);
-    });
-    // set GPIO
-    GPIOA.moder().modify(|v| {
-        // set mode as output
-        v.set_moder(5, gpio::vals::Moder::OUTPUT);
-    });
-    GPIOA.otyper().modify(|v| {
-        // set output type as push-pull
-        v.set_ot(5, gpio::vals::Ot::PUSHPULL);
-    });
-    GPIOA.ospeedr().modify(|v| {
-        // set output speed as high
-        v.set_ospeedr(5, gpio::vals::Ospeedr::HIGHSPEED);
-    });
-    GPIOA.pupdr().modify(|v| {
-        // set pull-up/pull-down as no pull-up/pull-down
-        v.set_pupdr(5, gpio::vals::Pupdr::FLOATING);
-    });
-    GPIOA.odr().modify(|v| {
-        // set output as high
-        v.set_odr(5, gpio::vals::Odr::HIGH);
-    });
-}
-
-/// turn on the LED
-#[allow(dead_code)]
-#[inline]
-pub fn led_on() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::HIGH);
-    });
-}
-
-/// turn off the LED
-#[allow(dead_code)]
-#[inline]
-pub fn led_off() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::LOW);
-    });
-}
 
 #[inline(never)]
 pub fn delay(time: usize) {

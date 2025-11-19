@@ -22,8 +22,7 @@ const ONE_MS:u64 = 100;
 #[embassy_preempt_macros::entry]
 fn sync_time_performance() -> ! {
     // hardware init
-    led_init();
-    pin_init();
+        pin_init();
     // os初始化
     OSInit();
     SyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
@@ -67,11 +66,8 @@ fn test_task(_args: *mut c_void) {
 fn task1(_args: *mut c_void) {
     loop {
         task_log!(info, "the task1");
-        // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
-        led_on();
         // Timer::after_millis(5 * 100).await;
         OSTimeDly(500 * ONE_MS);
-        led_off();
         // Timer::after_millis(5 * 100).await;
         OSTimeDly(500 * ONE_MS);
     }
@@ -117,53 +113,6 @@ fn task5(_args: *mut c_void) {
     }
 }
 
-/// init the LED
-#[allow(dead_code)]
-pub fn led_init() {
-    // enable the RCC
-    RCC.ahb1enr().modify(|v| {
-        v.set_gpioaen(true);
-    });
-    // set GPIO
-    GPIOA.moder().modify(|v| {
-        // set mode as output
-        v.set_moder(5, gpio::vals::Moder::OUTPUT);
-    });
-    GPIOA.otyper().modify(|v| {
-        // set output type as push-pull
-        v.set_ot(5, gpio::vals::Ot::PUSHPULL);
-    });
-    GPIOA.ospeedr().modify(|v| {
-        // set output speed as high
-        v.set_ospeedr(5, gpio::vals::Ospeedr::HIGHSPEED);
-    });
-    GPIOA.pupdr().modify(|v| {
-        // set pull-up/pull-down as no pull-up/pull-down
-        v.set_pupdr(5, gpio::vals::Pupdr::FLOATING);
-    });
-    GPIOA.odr().modify(|v| {
-        // set output as high
-        v.set_odr(5, gpio::vals::Odr::HIGH);
-    });
-}
-
-/// turn on the LED
-#[allow(dead_code)]
-#[inline]
-pub fn led_on() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::HIGH);
-    });
-}
-
-/// turn off the LED
-#[allow(dead_code)]
-#[inline]
-pub fn led_off() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::LOW);
-    });
-}
 
 /// TEST: thread pin and interrupt pin are used in the time_performance test
 /// use the PA0 as the thread pin

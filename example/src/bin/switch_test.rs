@@ -10,7 +10,6 @@ use embassy_preempt_executor::{SyncOSTaskCreate, AsyncOSTaskCreate};
 use embassy_preempt_executor::os_core::{OSInit, OSStart};
 use embassy_preempt_executor::os_time::OSTimeDly;
 use embassy_preempt_platform::pac::{gpio, GPIOA, RCC};
-// use app::led::Pin_Init;
 
 use embassy_preempt_log::{os_log, task_log};
 
@@ -19,8 +18,7 @@ fn usart_test() -> ! {
     // #[cfg(feature = "alarm_test")]
     // info!("OS Start");
 
-    led_init();
-    // Pin_Init();
+        // Pin_Init();
     pin_init();
     // usart_init();
 
@@ -46,9 +44,9 @@ fn usart_test() -> ! {
 
 async fn task1(_args: *mut c_void) {
     loop {
-        led_on();
+        task_log!(info, "task1 running");
         OSTimeDly(500 * 100);
-        led_off();
+        task_log!(info, "task1 waiting");
         OSTimeDly(500 * 100);
     }
 }
@@ -103,27 +101,6 @@ async fn task5(_args: *mut c_void) {
     }
 }
 
-#[allow(dead_code)]
-pub fn led_init() {
-    RCC.ahb1enr().modify(|f| {
-        f.set_gpioaen(true);
-    });
-    GPIOA.moder().modify(|f| {
-        f.set_moder(5, gpio::vals::Moder::OUTPUT);
-    });
-    GPIOA.otyper().modify(|f| {
-        f.set_ot(5, gpio::vals::Ot::PUSHPULL);
-    });
-    GPIOA.ospeedr().modify(|f| {
-        f.set_ospeedr(5, gpio::vals::Ospeedr::HIGHSPEED);
-    });
-    GPIOA.pupdr().modify(|v| {
-        v.set_pupdr(5, gpio::vals::Pupdr::FLOATING);
-    });
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::HIGH);
-    });
-}
 
 #[allow(dead_code)]
 pub fn pin_init() {
@@ -266,18 +243,3 @@ pub fn delay(time: usize) {
     }
 }
 
-#[allow(dead_code)]
-#[inline]
-pub fn led_on() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::HIGH);
-    });
-}
-
-#[allow(dead_code)]
-#[inline]
-pub fn led_off() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(5, gpio::vals::Odr::LOW);
-    });
-}

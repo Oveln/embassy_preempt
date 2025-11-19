@@ -6,7 +6,6 @@ use core::ffi::c_void;
 
 // extern crate embassy_preempt;
 use embassy_preempt_log::task_log;
-use embassy_preempt_driver::led::{LED_Init, LED_OFF, LED_ON};
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_executor::os_time::timer::Timer;
@@ -23,19 +22,8 @@ fn test_hardware() -> ! {
 }
 
 async fn task1(_args: *mut c_void) {
-    // init the led
-    LED_Init();
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
-        // delay(1);
-        // delay 5s
-        Timer::after_ticks(20000).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
-        // delay(1);
+        task_log!(info, "hardware test running");
         // delay 5s
         Timer::after_ticks(20000).await;
     }

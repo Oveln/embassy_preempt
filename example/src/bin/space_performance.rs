@@ -6,7 +6,6 @@
 use core::ffi::c_void;
 
 // extern crate embassy_preempt;
-use embassy_preempt_driver::led::{LED_Init, Pin_Init, LED_OFF, LED_ON};
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_executor::os_time::timer::Timer;
@@ -17,8 +16,6 @@ use embassy_preempt_log::task_log;
 #[embassy_preempt_macros::entry]
 fn test_space_performance() -> ! {
     // hardware init
-    LED_Init();
-    Pin_Init();
     // os初始化
     OSInit();
     AsyncOSTaskCreate(test_task,0 as *mut c_void,0 as *mut usize,10);
@@ -49,13 +46,9 @@ fn test_space_performance() -> ! {
 // 主要测试任务
 async fn test_task(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // bottom::wait_for_rising_edge().await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         // bottom::wait_for_rising_edge().await;
@@ -65,15 +58,11 @@ async fn test_task(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task1(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -83,15 +72,11 @@ async fn task1(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task2(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -101,15 +86,11 @@ async fn task2(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task3(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -119,15 +100,11 @@ async fn task3(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task4(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -137,15 +114,11 @@ async fn task4(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task5(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -155,15 +128,11 @@ async fn task5(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task6(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -173,15 +142,11 @@ async fn task6(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task7(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -191,15 +156,11 @@ async fn task7(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task8(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -209,15 +170,11 @@ async fn task8(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task9(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -227,15 +184,11 @@ async fn task9(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task10(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -245,15 +198,11 @@ async fn task10(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task11(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -263,15 +212,11 @@ async fn task11(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task12(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -281,15 +226,11 @@ async fn task12(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task13(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -299,15 +240,11 @@ async fn task13(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task14(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -317,15 +254,11 @@ async fn task14(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task15(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -335,15 +268,11 @@ async fn task15(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task16(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -353,15 +282,11 @@ async fn task16(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task17(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -371,15 +296,11 @@ async fn task17(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task18(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -389,15 +310,11 @@ async fn task18(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task19(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -407,15 +324,11 @@ async fn task19(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task20(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
+                  task_log!(info, "task running");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
+                    task_log!(info, "task waiting");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;

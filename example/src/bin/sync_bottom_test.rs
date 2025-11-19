@@ -4,7 +4,6 @@
 
 use core::ffi::c_void;
 
-use embassy_preempt_driver::led::{LED_Init, LED_OFF, LED_ON};
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::SyncOSTaskCreate;
 // use embassy_preempt_port::bottom_driver::OSWaitBot;
@@ -17,8 +16,6 @@ use embassy_preempt_log::task_log;
 fn test_hardware() -> ! {
     // os初始化
     OSInit();
-    // init the led
-    LED_Init();
     // 为了测试硬件以及time driver的正确性，只创建1个任务以避免抢占
     SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 10);
     // 启动os
@@ -26,19 +23,8 @@ fn test_hardware() -> ! {
 }
 
 fn task1(_args: *mut c_void) {
-    // led on
-    LED_ON();
     loop {
-        // led on
-        LED_ON();
-        task_log!(info, "led on");
-        // bottom::wait_for_rising_edge().await;
-        // OSWaitBot();
-        // led off
-        LED_OFF();
-        task_log!(info, "led off");
-        // delay(1);
-        // delay 5s
+        task_log!(info, "sync bottom test running");
         // bottom::wait_for_rising_edge().await;
         // OSWaitBot();
     }

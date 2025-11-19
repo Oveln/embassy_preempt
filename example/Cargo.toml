@@ -6,9 +6,9 @@ edition = "2024"
 [workspace]
 
 # Disable testing for all binaries to avoid test crate compilation errors
-[[bin]]
-name = "led_test"
-test = false
+# [[bin]]
+# name = "led_test"
+# test = false
 
 [[bin]]
 name = "space_performance"
@@ -127,7 +127,7 @@ lto = true      # 启用链接时优化
 
 [features]
 # memory-x = ["executor/memory-x"]     # If you have not added memory.x, you need to activate the feature
-default = ["logs"]
+default = ["logs","embassy-preempt-platform/stm32f401re","embassy-preempt-platform/cortex-m4"]
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe", "embassy-preempt-executor/log-base"]
 log-os = ["log-base", "embassy-preempt-log/log-os", "embassy-preempt-executor/log-os"]
