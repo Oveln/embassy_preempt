@@ -10,7 +10,6 @@ members = [
     "modules/embassy-preempt-cfg",
     "modules/embassy-preempt-mem",
     "modules/embassy-preempt-event",
-    "modules/embassy-preempt-driver",
     "modules/embassy-preempt-platform",
     "modules/embassy-preempt-macros"
 ]

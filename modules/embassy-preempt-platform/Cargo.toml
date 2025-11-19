@@ -9,27 +9,36 @@ license = "MIT OR Apache-2.0"
 [lib]
 name = "embassy_preempt_platform"
 path = "src/lib.rs"
-crate-type = ["rlib"]  # Rust库类型
+crate-type = ["rlib"]             # Rust库类型
 
 [dependencies]
+# Core dependencies (platform-agnostic)
 spin = { version = "0.10.0" }
-defmt = { version = "1.0.1", optional = true }
-panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
-embassy-preempt-log ={ path = "../embassy-preempt-log"}
-
+embedded-hal = "1.0"
+nb = "1"
+critical-section = { version = "1.1", features = ["restore-state-bool"] }
+embassy-preempt-log = { path = "../embassy-preempt-log" }
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 
+# Debug and logging (optional)
+defmt = { version = "1.0.1", optional = true }
+panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
+
+# ARM Cortex-M dependencies
 cortex-m = { version = "0.7.7", optional = true, default-features = false }
 cortex-m-rt = { version = "0.7", optional = true }
 cortex-m-semihosting = { version = "0.5", optional = true }
-critical-section = { version = "1.1", features = ["restore-state-bool"] }
-stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", optional = true, features = ["metadata"] }
 
-# Sync primitives for timer driver
-# embassy-sync = { version = "0.6", optional = true }
-embedded-hal = "1.0"
-nb = "1"
+# STM32 support (ARM-specific)
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", optional = true, features = [
+    "metadata",
+] }
 
+# RISC-V dependencies
+riscv = { version = "0.15.0", optional = true, default-features = false }
+riscv-rt = { version = "0.16.0", optional = true }
+
+# Platform-specific HALs
 [dependencies.stm32f4xx-hal]
 version = "0.23.0"
 features = ["stm32f401"]
@@ -37,15 +46,34 @@ default-features = false
 optional = true
 
 [features]
-default = ["cortex-m", "stm32f401re", "time_driver_tim3", 'semihosting']
+default = ["arm", "cortex-m", "stm32f401re", "time_driver_tim3", 'semihosting']
 
-# Platform implementations
-cortex-m = ["dep:cortex-m", "dep:cortex-m-semihosting"]
-# stm32f401re = ["dep:stm32f4xx-hal", "cortex-m"]
-stm32f401re = ["dep:stm32f4xx-hal","dep:stm32-metapac", "cortex-m", "stm32-metapac/stm32f401re"]
-riscv = []  # Placeholder for future RISC-V support
+# ===== PLATFORM ARCHITECTURES =====
 
-# Time driver options for different timers
+# ARM architecture support
+arm = []
+cortex-m = ["arm", "dep:cortex-m", "dep:cortex-m-semihosting"]
+cortex-m4 = ["cortex-m"]
+cortex-m7 = ["cortex-m"]
+
+# RISC-V architecture support
+riscv = ["dep:riscv", "dep:riscv-rt"]
+riscv32 = ["riscv"]
+riscv64 = ["riscv"]
+
+# ===== ARM CORTEX-M PLATFORMS =====
+
+# STM32F4xx series
+stm32f4xx = ["cortex-m", "dep:stm32-metapac"]
+stm32f401re = [
+    "stm32f4xx",
+    "dep:stm32f4xx-hal",
+    "stm32-metapac/stm32f401re",
+]
+
+# ===== TIMER DRIVERS =====
+
+# ARM Cortex-M Timer drivers
 time_driver_tim1 = []
 time_driver_tim2 = []
 time_driver_tim3 = []
@@ -55,9 +83,12 @@ time_driver_tim8 = []
 time_driver_tim9 = []
 time_driver_tim12 = []
 
+# ===== DEBUG AND LOGGING =====
+
 # Early debug support
 early_debug_gpio = []
 
+# Logging configuration
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe"]
 log-os = ["log-base", "embassy-preempt-log/log-os"]
@@ -65,9 +96,20 @@ log-task = ["log-base", "embassy-preempt-log/log-task"]
 log-mem = ["log-base", "embassy-preempt-log/log-mem"]
 log-timer = ["log-base", "embassy-preempt-log/log-timer"]
 log-scheduler = ["log-base", "embassy-preempt-log/log-scheduler"]
-semihosting = ["dep:cortex-m-semihosting", "dep:cortex-m-rt"]
 
-# critical_section_cortex_m = ["coretx-m/ritical-section-single-core"]
+# Semihosting (ARM only)
+semihosting = ["cortex-m", "dep:cortex-m-semihosting", "dep:cortex-m-rt"]
+
+# Platform-specific debugging
+arm_semihosting = ["semihosting"]
+riscv_debug = []  # For RISC-V debug adapters
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(loom)',
+    'cfg(arm)',
+    'cfg(riscv)',
+    'cfg(riscv32)',
+    'cfg(riscv64)',
+]}
+

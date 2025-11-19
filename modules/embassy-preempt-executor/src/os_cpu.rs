@@ -5,7 +5,6 @@ use core::ptr::NonNull;
 
 use embassy_preempt_platform::{OsStk, PLATFORM, Platform};
 
-use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
 use crate::GlobalSyncExecutor;
 use embassy_preempt_mem::heap::{get_program_stack, get_interrupt_stack};
 use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
@@ -17,7 +16,6 @@ pub fn OSInitHookBegin() {}
 #[unsafe(no_mangle)]
 extern "C" fn PendSV() {
     const EXC_RETURN_TO_PSP: u32 = 0xFFFFFFFD;
-    stack_pin_high();
     // first close the interrupt and save context
     unsafe {
         PLATFORM().save_task_context();
@@ -70,7 +68,6 @@ extern "C" fn PendSV() {
         tcb_cur.needs_stack_save.set(false);
     }
     let msp_stk = get_interrupt_stack().get().STK_REF.as_ptr();
-    stack_pin_low();
     unsafe {
         PLATFORM().restore_task_context(program_stk_ptr, msp_stk, EXC_RETURN_TO_PSP);
     }
@@ -82,10 +79,8 @@ pub fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
     scheduler_log!(trace, "OSTaskStkInit");
     let executor_function: fn() = || unsafe {
         scheduler_log!(info, "entering the executor function");
-        stack_pin_high();
         let global_executor = GlobalSyncExecutor().as_ref().unwrap();
         let task = global_executor.OSTCBHighRdy.get_mut().clone();
-        stack_pin_low();
         global_executor.single_poll(task);
         global_executor.poll();
     };

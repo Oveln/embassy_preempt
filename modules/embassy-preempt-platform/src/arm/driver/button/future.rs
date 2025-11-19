@@ -1,7 +1,7 @@
 use core::task::{Context, Poll};
 use core::pin::Pin;
 
-use crate::PLATFORM;
+use crate::{PLATFORM, get_platform};
 
 /// Future that completes when button is pressed
 pub struct ButtonFuture {
@@ -29,7 +29,7 @@ impl core::future::Future for ButtonFuture {
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         
         critical_section::with(|cs| {
-            let button = PLATFORM().button.borrow(cs);
+            let button = get_platform().button.borrow(cs);
             // First poll - register waker
             if self.yielded_once {
                 os_log!(info, "ButtonFuture::poll: yielded once");

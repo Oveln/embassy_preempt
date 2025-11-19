@@ -14,30 +14,24 @@ use stm32f4xx_hal::pac::SCB;
 use stm32f4xx_hal::rcc::{Rcc, RccExt};
 use stm32f4xx_hal::syscfg::{SysCfg, SysCfgExt};
 
+use crate::chip::ucstk::CONTEXT_STACK_SIZE;
 use crate::driver::button::driver::Button;
-use crate::stm32f401re::ucstk::CONTEXT_STACK_SIZE;
 use crate::traits::Platform;
 
-pub struct STM32F401RE {
+/// STM32F401RE
+pub struct PlatformImpl {
     pub button: Mutex<Button>
 }
 
-static PLATFORM: Once<STM32F401RE> = Once::new();
-
-/// Get a reference to the platform instance (replaces lazy_static)
-pub fn get_platform() -> &'static STM32F401RE {
-    PLATFORM.call_once(|| STM32F401RE::new())
-}
-
-impl STM32F401RE {
-    fn new() -> Self {
+impl PlatformImpl {
+    pub(crate) fn new() -> Self {
         let dp = crate::hal::pac::Peripherals::take().unwrap();
         let cp = cortex_m::Peripherals::take().unwrap();
         let mut rcc = dp.RCC.constrain();
         let mut scb = cp.SCB;
         let mut nvic = cp.NVIC;
 
-        STM32F401RE::set_interupt_prio(&mut scb, &mut nvic);
+        PlatformImpl::set_interupt_prio(&mut scb, &mut nvic);
 
         let mut syscfg = dp.SYSCFG.constrain(&mut rcc);
         let gpioc = dp.GPIOC.split(&mut rcc);
@@ -45,7 +39,7 @@ impl STM32F401RE {
 
         let button = Button::new(&mut rcc, &mut exti, &mut nvic, &mut syscfg, gpioc.pc13);
 
-        STM32F401RE {
+        PlatformImpl {
             button: Mutex::new(button),
         }
     }
@@ -84,7 +78,7 @@ impl STM32F401RE {
     }
 }
 
-impl Platform for STM32F401RE {
+impl Platform for PlatformImpl {
     type OsStk = usize;
 
     fn trigger_context_switch(&'static self) {
@@ -132,7 +126,7 @@ impl Platform for STM32F401RE {
         // do align with 8 and move the stack pointer down an align size
         let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
         ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
-        let psp = ptos as *mut crate::stm32f401re::ucstk::UcStk;
+        let psp = ptos as *mut crate::chip::ucstk::UcStk;
         // initialize the stack
         unsafe {
             (*psp).r0 = 0;

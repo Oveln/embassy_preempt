@@ -39,11 +39,6 @@ embassy-preempt-platform = { path = "../embassy-preempt-platform", features = [
     "time_driver_tim3",
 ] }
 
-# Embassy Preempt Driver - 普通驱动
-embassy-preempt-driver = { path = "../embassy-preempt-driver", features = [
-    "stm32f401re",
-] }
-
 [dependencies.spinning_top]
 version = "0.3.0"
 optional = true

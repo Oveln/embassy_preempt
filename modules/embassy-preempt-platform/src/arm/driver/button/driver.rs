@@ -3,7 +3,7 @@ use core::{cell::UnsafeCell, sync::atomic::{AtomicBool, Ordering}};
 use critical_section::Mutex;
 use stm32f4xx_hal::{gpio::{ExtiPin, Pin}, pac::{self, EXTI, NVIC}, rcc::Rcc, syscfg::SysCfg};
 
-use crate::PLATFORM;
+use crate::{PLATFORM, get_platform};
 
 
 /// Button driver using HAL GPIO but manual EXTI configuration
@@ -73,7 +73,7 @@ pub unsafe extern "C" fn EXTI15_10() {
     os_log!(info, "click");
     // let button = BUTTON.as_mut().unwrap();
     critical_section::with(|cs| {
-        let button = PLATFORM().button.borrow(cs);
+        let button = get_platform().button.borrow(cs);
         let waker = button.waker.borrow(cs).get();
         let waker = (*waker).take();
         if let Some(waker) = waker {

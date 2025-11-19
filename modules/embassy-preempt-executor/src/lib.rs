@@ -39,7 +39,6 @@ pub use os_task::*;
 pub use os_core::*;
 
 pub use self::waker::task_from_waker;
-use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
 // use arena::ARENA;
 use embassy_preempt_cfg::*;
 use embassy_preempt_mem::heap::{alloc_stack, OS_STK_REF, get_program_stack, TASK_STACK_SIZE};
@@ -270,7 +269,6 @@ impl SyncExecutor {
     // as an interface to join the scheduler logic
     pub unsafe fn IntCtxSW(&'static self) {
               scheduler_log!(trace, "IntCtxSW");
-        stack_pin_high();
         // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
         scheduler_log!(trace, "IntCtxSW");
         if critical_section::with(|_| unsafe {
@@ -301,7 +299,6 @@ impl SyncExecutor {
         {
             unsafe { self.interrupt_poll() }
         }
-        stack_pin_low();
     }
 
     /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
