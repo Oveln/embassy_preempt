@@ -7,7 +7,7 @@ use embassy_preempt_platform::{OsStk, PLATFORM, Platform};
 
 use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
 use crate::GlobalSyncExecutor;
-use embassy_preempt_mem::heap::{INTERRUPT_STACK, PROGRAM_STACK};
+use embassy_preempt_mem::heap::{get_program_stack, get_interrupt_stack};
 use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
 
 /// finish the init part of the CPU/MCU
@@ -20,19 +20,19 @@ extern "C" fn PendSV() {
     stack_pin_high();
     // first close the interrupt and save context
     unsafe {
-        PLATFORM.save_task_context();
+        PLATFORM().save_task_context();
     }
     os_log!(info, "PendSV");
     // then switch the task
-    let global_executor = GlobalSyncExecutor.as_ref().unwrap();
+    let global_executor = GlobalSyncExecutor().as_ref().unwrap();
     let prio_cur = global_executor.OSPrioCur.get_unmut();
     let prio_highrdy = global_executor.OSPrioHighRdy.get_unmut();
     if prio_highrdy == prio_cur {
         // we will reset the msp to the original
-        let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
-        let current_psp = unsafe { PLATFORM.get_current_stack_pointer() };
+        let msp_stk = get_interrupt_stack().get().STK_REF.as_ptr();
+        let current_psp = unsafe { PLATFORM().get_current_stack_pointer() };
         unsafe {
-            PLATFORM.restore_task_context(current_psp, msp_stk, EXC_RETURN_TO_PSP);
+            PLATFORM().restore_task_context(current_psp, msp_stk, EXC_RETURN_TO_PSP);
         }
     }
     #[cfg(feature = "OS_TASK_PROFILE_EN")]
@@ -51,13 +51,13 @@ extern "C" fn PendSV() {
     let stk_heap_ref = stk_ptr.HEAP_REF;
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
     // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
-    let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
+    let mut old_stk = get_program_stack().swap(stk_ptr);
     
     let tcb_cur = global_executor.OSTCBCur.get_mut();
 
     // see if it is a thread
     if *tcb_cur.needs_stack_save.get_unmut() {
-        let old_stk_ptr = unsafe { PLATFORM.get_current_stack_pointer() };
+        let old_stk_ptr = unsafe { PLATFORM().get_current_stack_pointer() };
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OsStk).unwrap();
         tcb_cur.set_stk(old_stk);
     } else if old_stk.HEAP_REF != stk_heap_ref {
@@ -69,10 +69,10 @@ extern "C" fn PendSV() {
         global_executor.set_cur_highrdy();
         tcb_cur.needs_stack_save.set(false);
     }
-    let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
+    let msp_stk = get_interrupt_stack().get().STK_REF.as_ptr();
     stack_pin_low();
     unsafe {
-        PLATFORM.restore_task_context(program_stk_ptr, msp_stk, EXC_RETURN_TO_PSP);
+        PLATFORM().restore_task_context(program_stk_ptr, msp_stk, EXC_RETURN_TO_PSP);
     }
 }
 
@@ -83,11 +83,11 @@ pub fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
     let executor_function: fn() = || unsafe {
         scheduler_log!(info, "entering the executor function");
         stack_pin_high();
-        let global_executor = GlobalSyncExecutor.as_ref().unwrap();
+        let global_executor = GlobalSyncExecutor().as_ref().unwrap();
         let task = global_executor.OSTCBHighRdy.get_mut().clone();
         stack_pin_low();
         global_executor.single_poll(task);
         global_executor.poll();
     };
-    PLATFORM.init_task_stack(stk_ref, executor_function)
+    PLATFORM().init_task_stack(stk_ref, executor_function)
 }

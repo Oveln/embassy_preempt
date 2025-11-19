@@ -119,7 +119,7 @@ fn init_task<F: Future + 'static>(prio: OS_PRIO, future_func: impl FnOnce() -> F
     }
     // because this func can be call when the OS has started, so need a cs
     if critical_section::with(|_cs| {
-        let executor = GlobalSyncExecutor.as_ref().unwrap();
+        let executor = GlobalSyncExecutor().as_ref().unwrap();
         if executor.prio_exist(prio) {
             return true;
         } else {
@@ -139,12 +139,12 @@ fn init_task<F: Future + 'static>(prio: OS_PRIO, future_func: impl FnOnce() -> F
         if OSRunning.load(Ordering::Acquire) {
             // schedule the task, not using poll, we have to make a preemptive schedule
             unsafe {
-                GlobalSyncExecutor.as_ref().unwrap().IntCtxSW();
+                GlobalSyncExecutor().as_ref().unwrap().IntCtxSW();
             }
         }
     } else {
         critical_section::with(|_cs| {
-            let executor = GlobalSyncExecutor.as_ref().unwrap();
+            let executor = GlobalSyncExecutor().as_ref().unwrap();
             // clear the reserve bit
             executor.clear_bit(prio);
         })
@@ -165,7 +165,7 @@ fn init_task<F: Future + 'static>(prio: OS_PRIO, future_func: impl FnOnce() -> F
 pub fn OSTaskChangePrio(old_prio: OS_PRIO, new_prio:OS_PRIO) -> OS_ERR_STATE {
       task_log!(trace, "OSTaskChangePrio");
     let mut old_prio = old_prio;
-    let executor = GlobalSyncExecutor.as_ref().unwrap();
+    let executor = GlobalSyncExecutor().as_ref().unwrap();
     #[cfg(feature = "OS_ARG_CHK_EN")]
     {
         if old_prio >= OS_LOWEST_PRIO {
@@ -244,7 +244,7 @@ pub fn OSTaskChangePrio(old_prio: OS_PRIO, new_prio:OS_PRIO) -> OS_ERR_STATE {
         return result;
     }
     if OSRunning.load(Ordering::Acquire) {
-        unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW() };
+        unsafe { GlobalSyncExecutor().as_ref().unwrap().IntCtxSW() };
     }
     return OS_ERR_STATE::OS_ERR_NONE;
 }
@@ -273,7 +273,7 @@ pub fn OSTaskDel(prio: OS_PRIO) -> OS_ERR_STATE {
         }
     }
     let result = critical_section::with(|_| {
-        let executor = GlobalSyncExecutor.as_ref().unwrap();
+        let executor = GlobalSyncExecutor().as_ref().unwrap();
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = executor.os_prio_tbl.get_mut();
 
@@ -332,7 +332,7 @@ pub fn OSTaskDel(prio: OS_PRIO) -> OS_ERR_STATE {
         return result;
     }
     if OSRunning.load(Ordering::Acquire) {
-        unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW() };
+        unsafe { GlobalSyncExecutor().as_ref().unwrap().IntCtxSW() };
     }
     return OS_ERR_STATE::OS_ERR_NONE;
 }
@@ -356,7 +356,7 @@ pub fn OSTaskNameSet(prio: OS_PRIO, pname: &str) -> OS_ERR_STATE {
     }
 
     let result = critical_section::with(|_cs| { 
-        let executor = GlobalSyncExecutor.as_ref().unwrap();   
+        let executor = GlobalSyncExecutor().as_ref().unwrap();   
         if executor.prio_exist(prio) {
             executor.set_name(prio, pname.to_string());
             OS_ERR_STATE::OS_ERR_NONE

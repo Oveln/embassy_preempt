@@ -33,15 +33,28 @@ pub const OS_ARENA_SIZE: usize = 10240;
 /// This value is specified by the Cargo features "`tick-hz-*`"
 pub const TICK_HZ: u64 = tick::TICK_HZ;
 
-lazy_static::lazy_static! {
-    /// input frequency of the Timer, you should config it yourself(set the Hardware)
-    pub static ref APB_HZ: UPSafeCell<u64> = unsafe {
-        UPSafeCell::new(0)
-    };
-    /// the system clock frequency, you should config it yourself(set the Hardware)
-    pub static ref SYSCLK_HZ: UPSafeCell<u64> = unsafe {
-        UPSafeCell::new(0)
-    };
+use spin::Once;
+
+static APB_HZ_ONCE: Once<UPSafeCell<u64>> = Once::new();
+static SYSCLK_HZ_ONCE: Once<UPSafeCell<u64>> = Once::new();
+
+/// input frequency of the Timer, you should config it yourself(set the Hardware)
+pub fn get_apb_hz() -> &'static UPSafeCell<u64> {
+    APB_HZ_ONCE.call_once(|| unsafe { UPSafeCell::new(0) })
+}
+
+/// the system clock frequency, you should config it yourself(set the Hardware)
+pub fn get_sysclk_hz() -> &'static UPSafeCell<u64> {
+    SYSCLK_HZ_ONCE.call_once(|| unsafe { UPSafeCell::new(0) })
+}
+
+/// Legacy compatibility functions that maintain the same API as lazy_static
+pub fn APB_HZ() -> &'static UPSafeCell<u64> {
+    get_apb_hz()
+}
+
+pub fn SYSCLK_HZ() -> &'static UPSafeCell<u64> {
+    get_sysclk_hz()
 }
 
 /// the block delay of idle task in poll

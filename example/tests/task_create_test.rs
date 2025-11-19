@@ -35,5 +35,5 @@ async fn task1(_args: *mut c_void) {
 
 fn task2(_args: *mut c_void) {
     task_log!(info,"hello from task2");
-    embassy_preempt_platform::PLATFORM.shutdown();
+    embassy_preempt_platform::PLATFORM().shutdown();
 }

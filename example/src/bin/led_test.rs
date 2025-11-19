@@ -10,12 +10,9 @@ use embassy_preempt_executor::os_time::OSTimeDly;
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::AsyncOSTaskCreate;
 use embassy_preempt_log::task_log;
-use lazy_static::lazy_static;
-use spin::Mutex;
+use spin::{Mutex, Once};
 
-lazy_static! {
-    static ref LED: Mutex<Led> = Mutex::new(Led::new());
-}
+static LED: Once<Mutex<Led>> = Once::new();
 
 #[embassy_preempt_macros::entry]
 fn test_hardware() -> ! {
@@ -28,8 +25,9 @@ fn test_hardware() -> ! {
 }
 
 async fn task1(_args: *mut c_void) {
+    let led = LED.call_once(|| Mutex::new(Led::new()));
     loop {
-        let mut led = LED.lock();
+        let mut led = led.lock();
         led.toggle();
         task_log!(info, "toggle in task");
         OSTimeDly(50000);

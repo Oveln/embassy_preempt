@@ -135,7 +135,7 @@ impl RtcDriver {
         TIMER.cnt().write(|w| w.set_cnt(0));
 
         // calculate the psc
-        let psc = (*APB_HZ.get() / TICK_HZ) as INT32U - 1;
+        let psc = (*APB_HZ().get() / TICK_HZ) as INT32U - 1;
         let psc: INT16U = match psc.try_into() {
             Err(_) => panic!("psc division overflow: {}", psc),
             Ok(n) => n,
@@ -528,7 +528,7 @@ pub fn get_APBfreq() {
         }
         _ => 16_000_000,
     };
-    SYSCLK_HZ.set(SYSCLK as u64);
+    SYSCLK_HZ().set(SYSCLK as u64);
 
     let AHB_PSC = match RCC.cfgr().read().hpre().to_bits() {
         0b0000 => 1,
@@ -542,7 +542,7 @@ pub fn get_APBfreq() {
         0b1111 => 512,
         _ => 1,
     };
-    APB_HZ.set((SYSCLK / AHB_PSC) as u64);
+    APB_HZ().set((SYSCLK / AHB_PSC) as u64);
 }
 
 /*
@@ -565,5 +565,5 @@ pub fn get_current_time() -> u64 {
 /// 获取APB总线频率
 pub fn get_apb_frequency() -> u64 {
     get_APBfreq();
-    *APB_HZ.get()
+    *APB_HZ().get()
 }

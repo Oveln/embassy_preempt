@@ -201,7 +201,7 @@ fn task7(_args: *mut c_void) {
         });
         
     }
-    embassy_preempt_platform::PLATFORM.shutdown();
+    embassy_preempt_platform::PLATFORM().shutdown();
 }
 
 fn task1(_args: *mut c_void) {

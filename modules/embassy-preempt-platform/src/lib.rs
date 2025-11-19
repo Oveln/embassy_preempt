@@ -36,7 +36,7 @@ pub use traits::Platform;
 #[cfg(feature = "stm32f401re")]
 pub mod stm32f401re;
 #[cfg(feature = "stm32f401re")]
-pub use stm32f401re::PLATFORM as PLATFORM;
+pub use stm32f401re::get_platform as PLATFORM;
 #[cfg(feature = "stm32f401re")]
 pub use stm32_metapac as pac;
 #[cfg(feature = "stm32f401re")]

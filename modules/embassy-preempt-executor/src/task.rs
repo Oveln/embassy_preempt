@@ -129,7 +129,7 @@ impl OS_TCB {
         // in restore_task it will set PROGRAM_STACK a new stk
         // revoke the stk
         critical_section::with(|_| {
-            PLATFORM.trigger_context_switch();
+            PLATFORM().trigger_context_switch();
         });
     }
     /// get the stk ptr of tcb, and set the tcb's stk ptr to None
@@ -260,7 +260,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // the operation about the bitmap will be done in the RunQueue
         // need a cs
         critical_section::with(|_cs| {
-            unsafe { GlobalSyncExecutor.as_ref().unwrap().enqueue(task_ref) };
+            unsafe { GlobalSyncExecutor().as_ref().unwrap().enqueue(task_ref) };
         });
         #[cfg(feature = "OS_EVENT_EN")]
         {

@@ -21,14 +21,19 @@ pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to
 
 
 use embassy_preempt_structs::cell::UPSafeCell;
+use spin::Once;
 static STACK_ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
-lazy_static::lazy_static! {
-    pub static ref PROGRAM_STACK: UPSafeCell<OS_STK_REF> = unsafe {
-        UPSafeCell::new(OS_STK_REF::default())
-    };
-    pub static ref INTERRUPT_STACK: UPSafeCell<OS_STK_REF> = unsafe {
-        UPSafeCell::new(OS_STK_REF::default())
-    };
+static PROGRAM_STACK: Once<UPSafeCell<OS_STK_REF>> = Once::new();
+static INTERRUPT_STACK: Once<UPSafeCell<OS_STK_REF>> = Once::new();
+
+/// Get access to the program stack
+pub fn get_program_stack() -> &'static UPSafeCell<OS_STK_REF> {
+    PROGRAM_STACK.get().expect("PROGRAM_STACK not initialized")
+}
+
+/// Get access to the interrupt stack
+pub fn get_interrupt_stack() -> &'static UPSafeCell<OS_STK_REF> {
+    INTERRUPT_STACK.get().expect("INTERRUPT_STACK not initialized")
 }
 
 /*
@@ -47,14 +52,14 @@ pub fn OS_InitStackAllocator() {
     let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
     let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
-    PROGRAM_STACK.set(stk);
+    PROGRAM_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
-    PLATFORM.set_program_stack_pointer(stk_ptr);
+    PLATFORM().set_program_stack_pointer(stk_ptr);
     // we also need to allocate a stack for interrupt
     let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
-    INTERRUPT_STACK.set(stk);
+    INTERRUPT_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {

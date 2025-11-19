@@ -5,13 +5,14 @@ edition = "2024"
 
 [dependencies]
 critical-section = { version = "1.1", features=["restore-state-bool"]}
-lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
 
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
 embassy-preempt-structs = { path = "../embassy-preempt-structs" }
 embassy-preempt-executor = { path = "../embassy-preempt-executor" }
 embassy-preempt-mem = { path = "../embassy-preempt-mem" }
 embassy-preempt-log = { path = "../embassy-preempt-log" }
+
+spin = "0.10.0"
 
 [features]
 OS_EVENT_NAME_EN = []

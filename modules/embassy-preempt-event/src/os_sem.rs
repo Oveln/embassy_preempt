@@ -12,7 +12,7 @@ pub fn OSSemCreate(cnt: u16) -> Option<OS_EVENT_REF> {
     if OSIntNesting.load(Ordering::Acquire) > 0 {
         return None;
     }
-    let globaleventpool = GlobalEventPool.as_ref().unwrap();
+    let globaleventpool = GlobalEventPool().as_ref().unwrap();
     let pevent = globaleventpool.alloc();
     let mut pevent = pevent?;
 
@@ -81,7 +81,7 @@ pub fn OSSemDel(mut pevent: OS_EVENT_REF, opt: u8) -> (OS_ERR_STATE, OS_EVENT_RE
         match opt as u32 {
             OS_DEL_NO_PEND => {
                 if tasks_waiting == false {
-                    GlobalEventPool.as_ref().unwrap().free(pevent);
+                    GlobalEventPool().as_ref().unwrap().free(pevent);
                     pevent.OSEventCnt = 0;
                     pevent_return = OS_EVENT_REF::default();
                     return OS_ERR_STATE::OS_ERR_NONE;
@@ -94,12 +94,12 @@ pub fn OSSemDel(mut pevent: OS_EVENT_REF, opt: u8) -> (OS_ERR_STATE, OS_EVENT_RE
                 while pevent.OSEventGrp != 0 {
                     OS_EventTaskRdy(pevent);
                 }
-                GlobalEventPool.as_ref().unwrap().free(pevent);
+                GlobalEventPool().as_ref().unwrap().free(pevent);
                 pevent.OSEventCnt = 0;
                 // reschedule only if task(s) were waiting
                 if tasks_waiting {
                     unsafe {
-                        GlobalSyncExecutor.as_ref().unwrap().IntCtxSW();
+                        GlobalSyncExecutor().as_ref().unwrap().IntCtxSW();
                     }
                 }
                 // semaphore has been deleted
@@ -168,7 +168,7 @@ pub fn OSSemPost(mut pevent: OS_EVENT_REF) -> OS_ERR_STATE {
     let result = critical_section::with(|_| {
         if pevent.OSEventGrp != 0 {
             OS_EventTaskRdy(pevent);       
-            unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW(); } 
+            unsafe { GlobalSyncExecutor().as_ref().unwrap().IntCtxSW(); } 
             return OS_ERR_STATE::OS_ERR_NONE;
         }
         // make sure semaphore will not overflow

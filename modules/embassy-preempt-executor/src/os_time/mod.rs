@@ -23,7 +23,7 @@ pub fn OSTimerInit() {
 /// delay async task 'n' ticks
 pub(crate) unsafe fn delay_tick(_ticks: u64) { unsafe {
     // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
-    let executor = GlobalSyncExecutor.as_ref().unwrap();
+    let executor = GlobalSyncExecutor().as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
     task.expires_at.set(RTC_DRIVER.now() + _ticks);
     // update timer
@@ -66,7 +66,7 @@ pub(crate) unsafe fn delay_tick(_ticks: u64) { unsafe {
         executor.OSPrioHighRdy != executor.OSPrioCur
     }) {
         // call the interrupt poll
-        GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
+        GlobalSyncExecutor().as_ref().unwrap().interrupt_poll();
         timer_log!(trace, "end the delay");
     }
 }}
@@ -165,7 +165,7 @@ pub fn OSTimeDlyResume(prio: OS_PRIO) -> OS_ERR_STATE {
     }
 
     let result = critical_section::with(|_| {
-        let executor = GlobalSyncExecutor.as_ref().unwrap();
+        let executor = GlobalSyncExecutor().as_ref().unwrap();
         let prio_tbl = executor.get_prio_tbl();
 
         let mut _ptcb = prio_tbl[prio as usize];
@@ -189,7 +189,7 @@ pub fn OSTimeDlyResume(prio: OS_PRIO) -> OS_ERR_STATE {
     }
 
     if OSRunning.load(Ordering::Acquire) {
-        unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW() };
+        unsafe { GlobalSyncExecutor().as_ref().unwrap().IntCtxSW() };
     }
 
     return OS_ERR_STATE::OS_ERR_NONE;

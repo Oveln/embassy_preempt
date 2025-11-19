@@ -6,7 +6,7 @@ use cortex_m::interrupt;
 use cortex_m::peripheral::scb::SystemHandler;
 use cortex_m::register::primask;
 use critical_section::Mutex;
-use lazy_static::lazy_static;
+use spin::Once;
 use stm32f4xx_hal::gpio::{GpioExt, gpioc};
 use stm32f4xx_hal::pac::{EXTI, NVIC};
 #[cfg(feature = "cortex-m")]
@@ -22,8 +22,11 @@ pub struct STM32F401RE {
     pub button: Mutex<Button>
 }
 
-lazy_static! {
-    pub static ref PLATFORM: STM32F401RE = STM32F401RE::new();
+static PLATFORM: Once<STM32F401RE> = Once::new();
+
+/// Get a reference to the platform instance (replaces lazy_static)
+pub fn get_platform() -> &'static STM32F401RE {
+    PLATFORM.call_once(|| STM32F401RE::new())
 }
 
 impl STM32F401RE {

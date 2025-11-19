@@ -73,7 +73,7 @@ pub unsafe extern "C" fn EXTI15_10() {
     os_log!(info, "click");
     // let button = BUTTON.as_mut().unwrap();
     critical_section::with(|cs| {
-        let button = PLATFORM.button.borrow(cs);
+        let button = PLATFORM().button.borrow(cs);
         let waker = button.waker.borrow(cs).get();
         let waker = (*waker).take();
         if let Some(waker) = waker {

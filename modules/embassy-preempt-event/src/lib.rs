@@ -22,7 +22,7 @@ use core::ptr::NonNull;
 use alloc::string::String;
 use core::ops::{Deref, DerefMut};
 
-use lazy_static::lazy_static;
+use spin::Once;
 use critical_section::{self, CriticalSection};
 
 use embassy_preempt_cfg::{OS_MAX_EVENTS, OS_LOWEST_PRIO};
@@ -155,9 +155,16 @@ impl DerefMut for OS_EVENT_REF {
 *********************************************************************************************************
 */
 
-lazy_static! {
-    /// the global event pool
-    pub static ref GlobalEventPool: Option<EventPool> = Some(EventPool::new());
+static GLOBAL_EVENT_POOL: Once<Option<EventPool>> = Once::new();
+
+/// Get the global event pool
+pub fn get_global_event_pool() -> &'static Option<EventPool> {
+    GLOBAL_EVENT_POOL.call_once(|| Some(EventPool::new()))
+}
+
+/// Legacy compatibility function that maintains the same API as lazy_static
+pub fn GlobalEventPool() -> &'static Option<EventPool> {
+    get_global_event_pool()
 }
 
 /// the event pool
@@ -267,7 +274,7 @@ pub fn OS_EventTaskRdy(pevent: OS_EVENT_REF) {
         prio = (y << 3) + x;
     }
 
-    let executor = GlobalSyncExecutor.as_ref().unwrap();
+    let executor = GlobalSyncExecutor().as_ref().unwrap();
     let prio_tbl = executor.get_prio_tbl();
     let ptcb = prio_tbl[prio as usize];
 
@@ -283,7 +290,7 @@ pub fn OS_EventTaskRdy(pevent: OS_EVENT_REF) {
 // #[cfg(feature = "OS_EVENT_EN")]
 /// suspend a task because an event has not occurred
 pub fn OS_EventTaskWait(mut pevent: OS_EVENT_REF) {
-    let executor = GlobalSyncExecutor.as_ref().unwrap();
+    let executor = GlobalSyncExecutor().as_ref().unwrap();
     let task = executor.OSTCBCur.get_unmut();
     unsafe {
         #[cfg(feature = "OS_EVENT_EN")]

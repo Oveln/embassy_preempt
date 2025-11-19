@@ -202,7 +202,7 @@ pub extern "C" fn OSInit() {
     Init_Heap();
     OS_InitStackAllocator();
 
-    let _ = &*PLATFORM;
+    PLATFORM();
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */
     // by noah：we need to init the Timer as the time driver
@@ -282,7 +282,7 @@ pub unsafe fn OSIntExit() {
             }
             if OSIntNesting.load(Ordering::Acquire) == 0 {
                 if OSLockNesting.load(Ordering::Acquire) == 0 {
-                    unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW() };
+                    unsafe { GlobalSyncExecutor().as_ref().unwrap().IntCtxSW() };
                 }
             }
         })
@@ -353,7 +353,7 @@ pub fn OSSchedUnlock() {
                     OSLockNesting.fetch_sub(1, Ordering::SeqCst);
 
                     if OSLockNesting.load(Ordering::Acquire) == 0 {
-                        unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW() };
+                        unsafe { GlobalSyncExecutor().as_ref().unwrap().IntCtxSW() };
                     }
                 }
             }
@@ -389,7 +389,7 @@ pub fn OSSchedUnlock() {
 // #[cfg(not(feature = "test"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn OSStart() -> ! {
-    use embassy_preempt_mem::heap::stack_allocator::INTERRUPT_STACK;
+    use embassy_preempt_mem::heap::stack_allocator::get_interrupt_stack;
 
     unsafe extern "Rust" {
         fn configure_interrupt_stack(int_ptr: *mut u8);
@@ -399,14 +399,14 @@ pub extern "C" fn OSStart() -> ! {
     OSRunning.store(true, Ordering::Release);
     // before we step into the loop, we call configure_interrupt_stack(as part of the function of OSStartHighRdy in ucosii)
     // to change the stack pointer to program pointer and use psp
-    let int_stk = INTERRUPT_STACK.exclusive_access();
+    let int_stk = get_interrupt_stack().exclusive_access();
     let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
     drop(int_stk);
     unsafe {
-        PLATFORM.configure_interrupt_stack(int_ptr);
+        PLATFORM().configure_interrupt_stack(int_ptr);
         // find the highest priority task in the ready queue
-        critical_section::with(|_| GlobalSyncExecutor.as_ref().unwrap().set_highrdy());
-        GlobalSyncExecutor.as_ref().unwrap().poll();
+        critical_section::with(|_| GlobalSyncExecutor().as_ref().unwrap().set_highrdy());
+        GlobalSyncExecutor().as_ref().unwrap().poll();
     }
 }
 
@@ -684,7 +684,7 @@ fn OS_InitTaskIdle() {
                 blockdelay::delay(1);
             }
             OSIdleCtr.fetch_add(1, Ordering::SeqCst);
-            PLATFORM.enter_idle_state();
+            PLATFORM().enter_idle_state();
         }
     };
     os_log!(trace, "create idle task");

@@ -31,7 +31,7 @@ use core::ptr::NonNull;
 // Import logging macros when logging is enabled
 use core::sync::atomic::Ordering;
 use embassy_preempt_platform::{OsStk, PLATFORM, Platform, traits::timer::{AlarmHandle, Driver}};
-use lazy_static::lazy_static;
+use spin::Once;
 use state_atomics::State;
 use embassy_preempt_platform::timer_driver::RTC_DRIVER;
 use task::{OS_TCB, OS_TCB_REF};
@@ -42,7 +42,7 @@ pub use self::waker::task_from_waker;
 use embassy_preempt_driver::led::{stack_pin_high, stack_pin_low};
 // use arena::ARENA;
 use embassy_preempt_cfg::*;
-use embassy_preempt_mem::heap::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
+use embassy_preempt_mem::heap::{alloc_stack, OS_STK_REF, get_program_stack, TASK_STACK_SIZE};
 
 use crate::os_cpu::OSTaskStkInit;
 #[cfg(feature = "delay_idle")]
@@ -57,9 +57,16 @@ use embassy_preempt_structs::cell::SyncUnsafeCell;
 ****************************************************************************************************************************************
 */
 // create a global executor
-lazy_static! {
+static GLOBAL_EXECUTOR: Once<Option<SyncExecutor>> = Once::new();
+
 /// the global executor will be initialized at os init
-    pub static ref GlobalSyncExecutor: Option<SyncExecutor> = Some(SyncExecutor::new());
+pub fn get_global_executor() -> &'static Option<SyncExecutor> {
+    GLOBAL_EXECUTOR.call_once(|| Some(SyncExecutor::new()))
+}
+
+/// Legacy compatibility function that maintains the same API as lazy_static
+pub fn GlobalSyncExecutor() -> &'static Option<SyncExecutor> {
+    get_global_executor()
 }
 /*
 ****************************************************************************************************************************************
@@ -335,7 +342,7 @@ impl SyncExecutor {
                         task_log!(info, "the current task is idle");             
                 // if is idle, we don't need to alloc stack,just use the idle stack
                 // by yck: but this branch will not be executed
-                let mut program_stk = PROGRAM_STACK.exclusive_access();
+                let mut program_stk = get_program_stack().exclusive_access();
                 program_stk.STK_REF = NonNull::new(
                     program_stk.HEAP_REF.as_ptr().offset(program_stk.layout.size() as isize) as *mut OsStk,
                 )
@@ -365,7 +372,7 @@ impl SyncExecutor {
         critical_section::with(|_| {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
                 scheduler_log!(trace, "restore the task/thread");
-                PLATFORM.trigger_context_switch();
+                PLATFORM().trigger_context_switch();
             }
         });
     }}
@@ -472,7 +479,7 @@ pub fn wake_task(task: OS_TCB_REF) {
     if header.OSTCBStat.run_enqueue() {
         // We have just marked the task as scheduled, so enqueue it.
         unsafe {
-            let executor = GlobalSyncExecutor.as_ref().unwrap_unchecked();
+            let executor = GlobalSyncExecutor().as_ref().unwrap_unchecked();
             executor.enqueue(task);
         }
     }
@@ -483,7 +490,7 @@ pub fn wake_task_no_pend(task: OS_TCB_REF) {
     task_log!(trace, "wake_task_no_pend");
     // We have just marked the task as scheduled, so enqueue it.
     unsafe {
-        let executor = GlobalSyncExecutor.as_ref().unwrap();
+        let executor = GlobalSyncExecutor().as_ref().unwrap();
         executor.enqueue(task);
     }
 }

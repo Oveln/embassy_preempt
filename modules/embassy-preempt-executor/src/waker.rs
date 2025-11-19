@@ -14,7 +14,7 @@ unsafe fn clone(p: *const ()) -> RawWaker {
 
 unsafe fn wake(p: *const ()) { unsafe {
     wake_task_no_pend(OS_TCB_REF::from_ptr(p as *const OS_TCB));
-    GlobalSyncExecutor.as_ref().unwrap().IntCtxSW();
+    GlobalSyncExecutor().as_ref().unwrap().IntCtxSW();
 }}
 
 unsafe fn drop(_: *const ()) {
