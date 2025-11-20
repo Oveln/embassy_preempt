@@ -514,9 +514,9 @@ impl Driver for RtcDriver {
             }
 
             // Half overflow
-            if sr.ccif(0) {
-                self.next_period();
-            }
+            // if sr.ccif(0) {
+            //     self.next_period();
+            // }
 
             for n in 0..ALARM_COUNT {
                 if sr.ccif(n + 1) && dier.ccie(n + 1) {
