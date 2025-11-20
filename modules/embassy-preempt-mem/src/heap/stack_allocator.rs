@@ -48,7 +48,12 @@ pub fn OS_InitStackAllocator() {
     unsafe {
         STACK_ALLOCATOR.lock().init(STACK_START as *mut u8, STACK_SIZE);
     }
-    // then we init the program stack
+    // allocate interrupt Stack and set the interrupt stack pointe
+    let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 4).unwrap();
+    let stk = alloc_stack(layout);
+    INTERRUPT_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
+
+    // allocate program stack
     let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
     let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
@@ -56,10 +61,6 @@ pub fn OS_InitStackAllocator() {
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
     embassy_preempt_platform::get_platform_trait().set_program_stack_pointer(stk_ptr);
-    // we also need to allocate a stack for interrupt
-    let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 4).unwrap();
-    let stk = alloc_stack(layout);
-    INTERRUPT_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
