@@ -9,6 +9,9 @@
 #[cfg(feature = "log-base")]
 use defmt_rtt as _;
 
+#[cfg(feature = "log-base")]
+pub use defmt;
+
 // Define all core logging macros
 #[macro_export]
 macro_rules! debug {
@@ -40,7 +43,10 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! __log {
     ($level:ident, $($arg:tt)*) => {
-        defmt::$level!($($arg)*)
+        {
+            use embassy_preempt_log::defmt;
+            defmt::$level!($($arg)*)
+        }
     };
 }
 

@@ -139,7 +139,7 @@ impl PlatformImpl {
             // Set TIM3 priority as 3 (same as port)
             nvic.set_priority(stm32_metapac::Interrupt::TIM3, 32);
 
-            #[cfg(feature = "cortex-m")]
+            #[cfg(feature = "semihosting")]
             let _ = cortex_m_semihosting::hprintln!(
                 "the prio of TIM3 is {}",
                 cortex_m::peripheral::NVIC::get_priority(stm32_metapac::Interrupt::TIM3)
@@ -147,17 +147,17 @@ impl PlatformImpl {
 
             // Set EXTI15_10 priority as 1 (for button interrupt)
             nvic.set_priority(stm32_metapac::Interrupt::EXTI15_10, 16);
-            #[cfg(feature = "cortex-m")]
+            #[cfg(feature = "semihosting")]
             let _ = cortex_m_semihosting::hprintln!(
                 "the prio of EXTI15_10 is {}",
                 cortex_m::peripheral::NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10)
             );
 
             // Set PendSV priority (lowest priority)
-            #[cfg(feature = "cortex-m")]
+            #[cfg(feature = "semihosting")]
             let _ = cortex_m_semihosting::hprintln!("the prio of PendSV is {}", SCB::get_priority(SystemHandler::PendSV));
             scb.set_priority(SystemHandler::PendSV, 0xf << 4);
-            #[cfg(feature = "cortex-m")]
+            #[cfg(feature = "semihosting")]
             let _ = cortex_m_semihosting::hprintln!("the prio of PendSV is {}", SCB::get_priority(SystemHandler::PendSV));
         }
     }
@@ -318,7 +318,7 @@ impl Platform for PlatformImpl {
         #[cfg(not(feature = "semihosting"))]
         {
             // Without semihosting, manual intervention is required
-            os_log!("Shutdown, please press Ctrl+C to stop the program");
+            os_log!(info, "Shutdown, please press Ctrl+C to stop the program");
             loop {}  // Infinite loop waiting for reset
         }
     }

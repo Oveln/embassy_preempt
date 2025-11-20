@@ -21,8 +21,6 @@ spin = "0.10.0"
 
 # Embassy Preempt Log
 embassy-preempt-log = { path = "../embassy-preempt-log" }
-defmt = { version = "1.0.1", optional = true }
-panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
 
 # Embassy Preempt struct
 embassy-preempt-structs = { path = "../embassy-preempt-structs" }
@@ -53,40 +51,6 @@ default = [
     "OS_TASK_CREATE_EXT_EN",
     "OS_TASK_REG_TBL_SIZE",
     "OS_TASK_NAME_EN",
-]
-
-logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
-log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe"]
-log-os = [
-    "log-base",
-    "embassy-preempt-log/log-os",
-    # "embassy-preempt-port/log-os",
-    "embassy-preempt-platform/log-os",
-]
-log-task = [
-    "log-base",
-    "embassy-preempt-log/log-task",
-    # "embassy-preempt-port/log-task",
-    "embassy-preempt-platform/log-task",
-]
-log-mem = [
-    "log-base",
-    "embassy-preempt-log/log-mem",
-    # "embassy-preempt-port/log-mem",
-    "embassy-preempt-mem/log-mem",
-    "embassy-preempt-platform/log-mem",
-]
-log-timer = [
-    "log-base",
-    "embassy-preempt-log/log-timer",
-    # "embassy-preempt-port/log-timer",
-    "embassy-preempt-platform/log-timer",
-]
-log-scheduler = [
-    "log-base",
-    "embassy-preempt-log/log-scheduler",
-    # "embassy-preempt-port/log-scheduler",
-    "embassy-preempt-platform/log-scheduler",
 ]
 
 cortex_m = []

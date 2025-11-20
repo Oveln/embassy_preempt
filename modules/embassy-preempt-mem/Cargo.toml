@@ -21,8 +21,6 @@ spin = "0.10.0"
 
 # Embassy Preempt Log
 embassy-preempt-log = { path = "../embassy-preempt-log"}
-defmt = { version = "1.0.1", optional = true }
-panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
 
 # Embassy Preempt struct
 embassy-preempt-structs = { path = "../embassy-preempt-structs" }
@@ -48,10 +46,6 @@ default = [
     "OS_ARG_CHK_EN",
     "OS_MEM_NAME_EN"
 ]
-
-logs = ["log-base", "log-mem"]
-log-base = ["embassy-preempt-log/log-base", "dep:defmt", "dep:panic-probe"]
-log-mem = ["log-base", "embassy-preempt-log/log-mem"]
 
 cortex_m = []
 

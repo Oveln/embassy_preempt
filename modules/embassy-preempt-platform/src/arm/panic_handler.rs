@@ -1,20 +1,9 @@
 
-#[cfg(feature = "log-base")]
+#[cfg(all(feature = "cortex-m", not(feature = "semihosting")))]
 use panic_probe as _;
 
-// same panicking *behavior* as `panic-probe` but doesn't print a panic message
-// this prevents the panic message being printed *twice* when `defmt::panic` is invoked
-#[cfg(feature = "log-base")]
-#[defmt::panic_handler]
-fn panic() -> ! {
-    cortex_m::asm::udf()
-}
-
-#[cfg(not(feature = "log-base"))]
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
+#[cfg(any(not(feature = "cortex-m"), feature = "semihosting"))]
+use panic_halt as _;
 
 
 // ==================================================================
