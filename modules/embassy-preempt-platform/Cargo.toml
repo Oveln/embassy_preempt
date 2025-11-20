@@ -50,6 +50,8 @@ default = ["arm", "cortex-m", "stm32f401re", "time_driver_tim3", 'semihosting']
 
 # ===== PLATFORM ARCHITECTURES =====
 
+memory-x = []
+
 # ARM architecture support
 arm = []
 cortex-m = ["arm", "dep:cortex-m", "dep:cortex-m-semihosting"]

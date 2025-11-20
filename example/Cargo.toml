@@ -98,7 +98,7 @@ critical-section = { version = "1.1", features=["restore-state-bool"]}
 
 embassy-preempt-executor = { path = "../modules/embassy-preempt-executor"}
 embassy-preempt-log = { path = "../modules/embassy-preempt-log"}
-embassy-preempt-platform = { path = "../modules/embassy-preempt-platform" }
+embassy-preempt-platform = { path = "../modules/embassy-preempt-platform", features = ["memory-x"]}
 embassy-preempt-mem = { path = "../modules/embassy-preempt-mem" }
 embassy-preempt-macros = { path = "../modules/embassy-preempt-macros" }
 
