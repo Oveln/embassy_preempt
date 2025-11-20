@@ -46,7 +46,6 @@ use embassy_preempt_platform::Platform;
 use crate::GlobalSyncExecutor;
 use crate::SyncOSTaskCreate;
 use crate::os_time::blockdelay;
-use crate::os_time::OSTimerInit;
 #[cfg(feature = "OS_TASK_NAME_EN")]
 use crate::OSTaskNameSet;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
@@ -204,8 +203,6 @@ pub extern "C" fn OSInit() {
     embassy_preempt_platform::get_platform_trait();
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */
-    // by noah：we need to init the Timer as the time driver
-    OSTimerInit();
     // by noah: *TEST*
     OS_InitEventList();
 }

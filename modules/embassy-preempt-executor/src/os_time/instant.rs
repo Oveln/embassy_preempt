@@ -1,7 +1,7 @@
 use core::ops::Add;
 
 use super::duration::Duration;
-use embassy_preempt_platform::{timer_driver::RTC_DRIVER, traits::timer::Driver};
+use embassy_preempt_platform::{get_platform_trait, traits::timer::Driver};
 
 
 #[allow(unused)]
@@ -22,7 +22,7 @@ impl Instant {
         Instant {
             // by noah: in stage one, we set the tick as zero
             // fix by noah：now we can get the tick from time_driver
-            ticks: RTC_DRIVER.now(),
+            ticks: get_platform_trait().get_timer_driver().now(),
             // ticks: embassy_time_driver::now(),
         }
     }

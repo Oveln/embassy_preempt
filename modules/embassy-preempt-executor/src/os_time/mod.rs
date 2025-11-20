@@ -1,7 +1,7 @@
 use core::sync::atomic::Ordering;
 
 use crate::{wake_task_no_pend, GlobalSyncExecutor};
-use embassy_preempt_platform::timer_driver::RTC_DRIVER;
+use embassy_preempt_platform::get_platform_trait;
 use embassy_preempt_platform::traits::timer::Driver;
 use embassy_preempt_cfg::OS_LOWEST_PRIO;
 use embassy_preempt_cfg::ucosii::{OS_ERR_STATE, OS_PRIO, OSIntNesting, OSLockNesting, OSRunning};
@@ -14,18 +14,12 @@ pub mod instant;
 /// the mod of timer of uC/OS-II kernel
 pub mod timer;
 
-/// init the Timer as the Systick
-pub fn OSTimerInit() {
-    timer_log!(trace, "OSTimerInit");
-    RTC_DRIVER.init();
-}
-
 /// delay async task 'n' ticks
 pub(crate) unsafe fn delay_tick(_ticks: u64) { unsafe {
     // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
     let executor = GlobalSyncExecutor().as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
-    task.expires_at.set(RTC_DRIVER.now() + _ticks);
+    task.expires_at.set(get_platform_trait().get_timer_driver().now() + _ticks);
     // update timer
     let mut next_expire = critical_section::with(|_| {
         executor.set_task_unready(*task);
@@ -46,13 +40,13 @@ pub(crate) unsafe fn delay_tick(_ticks: u64) { unsafe {
         // So we can not set the **task which is waiting for the next_expire** as unready
         // The **task which is waiting for the next_expire** must be current task
         // we must do this until we set the alarm successfully or there is no alarm required
-        while !RTC_DRIVER.set_alarm(executor.alarm, next_expire) {
+        while !get_platform_trait().get_timer_driver().set_alarm(executor.alarm, next_expire) {
             // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
             // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
             // (just like the operation in alarm_callback)
             executor
                 .timer_queue
-                .dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+                .dequeue_expired(get_platform_trait().get_timer_driver().now(), wake_task_no_pend);
             // then we need to set a new alarm according to the next expiration time
             next_expire = executor.timer_queue.next_expiration();
             timer_log!(trace, "in delay_tick the next expire is {:?}", next_expire);
@@ -174,7 +168,7 @@ pub fn OSTimeDlyResume(prio: OS_PRIO) -> OS_ERR_STATE {
             return OS_ERR_STATE::OS_ERR_TASK_NOT_EXIST;
         }
         unsafe {
-            if _ptcb.expires_at.get() == u64::MAX || _ptcb.expires_at.get() < RTC_DRIVER.now() {
+            if _ptcb.expires_at.get() == u64::MAX || _ptcb.expires_at.get() < get_platform_trait().get_timer_driver().now() {
                 return OS_ERR_STATE::OS_ERR_TIME_NOT_DLY;
             } 
             _ptcb.expires_at.set(u64::MAX);
@@ -199,7 +193,7 @@ pub fn OSTimeDlyResume(prio: OS_PRIO) -> OS_ERR_STATE {
 #[cfg(feature = "OS_TIME_GET_SET_EN")]
 pub fn OSTimeGet() -> u64 {
     timer_log!(trace, "OSTimeGet");
-    RTC_DRIVER.now() 
+    get_platform_trait().get_timer_driver().now() 
 }
 
 #[unsafe(no_mangle)]

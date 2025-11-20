@@ -30,10 +30,9 @@ use core::ptr::NonNull;
 
 // Import logging macros when logging is enabled
 use core::sync::atomic::Ordering;
-use embassy_preempt_platform::{OsStk, Platform, traits::timer::{AlarmHandle, Driver}};
+use embassy_preempt_platform::{OsStk, Platform, get_platform_trait, traits::timer::{AlarmHandle, Driver}};
 use spin::Once;
 use state_atomics::State;
-use embassy_preempt_platform::timer_driver::RTC_DRIVER;
 use task::{OS_TCB, OS_TCB_REF};
 pub use os_task::*;
 pub use os_core::*;
@@ -100,7 +99,7 @@ pub struct SyncExecutor {
 
 impl SyncExecutor {
     pub(crate) fn new() -> Self {
-        let alarm = unsafe { RTC_DRIVER.allocate_alarm().unwrap() };
+        let alarm = unsafe { get_platform_trait().get_timer_driver().allocate_alarm().unwrap() };
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); (OS_LOWEST_PRIO + 1) as usize]),
 
@@ -252,14 +251,14 @@ impl SyncExecutor {
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
         loop {
-            unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend) };
+            unsafe { this.timer_queue.dequeue_expired(get_platform_trait().get_timer_driver().now(), wake_task_no_pend) };
             // then we need to set a new alarm according to the next expiration time
             let next_expire = unsafe { this.timer_queue.next_expiration() };
             // by noah：we also need to updater the set_time of the timer_queue
             unsafe {
                 this.timer_queue.set_time.set(next_expire);
             }
-            if RTC_DRIVER.set_alarm(this.alarm, next_expire) {
+            if get_platform_trait().get_timer_driver().set_alarm(this.alarm, next_expire) {
                 break;
             }
         }
@@ -377,7 +376,7 @@ impl SyncExecutor {
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
     pub unsafe fn poll(&'static self) -> ! { unsafe {
         task_log!(trace, "poll");
-        RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
+        get_platform_trait().get_timer_driver().set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop
         loop {
             // test: print the ready queue
@@ -428,7 +427,7 @@ impl SyncExecutor {
             // which in turn will go to the task body, and will not return here
             critical_section::with(|_| {
                 task.needs_stack_save.set(false);
-                self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+                self.timer_queue.dequeue_expired(get_platform_trait().get_timer_driver().now(), wake_task_no_pend);
                 self.set_task_unready(task);
                 // set the task's stack to None
                 // check: this seems no need to set it to None as it will always be None
@@ -440,12 +439,12 @@ impl SyncExecutor {
                     // So we can not set the **task which is waiting for the next_expire** as unready
                     // The **task which is waiting for the next_expire** must be current task
                     // we must do this until we set the alarm successfully or there is no alarm required
-                    while !RTC_DRIVER.set_alarm(self.alarm, next_expire) {
+                    while !get_platform_trait().get_timer_driver().set_alarm(self.alarm, next_expire) {
                         task_log!(trace, "the set alarm return false");
                         // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                         // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
                         // (just like the operation in alarm_callback)
-                        self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+                        self.timer_queue.dequeue_expired(get_platform_trait().get_timer_driver().now(), wake_task_no_pend);
                         // then we need to set a new alarm according to the next expiration time
                         next_expire = self.timer_queue.next_expiration();
                         // by noah：we also need to updater the set_time of the timer_queue

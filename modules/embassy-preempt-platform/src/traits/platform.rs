@@ -43,18 +43,6 @@ pub trait Platform {
     /// - RISC-V: WFI instruction or custom sleep
     fn enter_idle_state(&'static self);
 
-    /// Enter critical section (disable interrupts)
-    ///
-    /// Returns whether interrupts were previously enabled.
-    /// Architecture-specific interrupt control.
-    fn enter_critical_section(&'static self) -> bool;
-
-    /// Exit critical section (restore interrupt state)
-    ///
-    /// # Safety
-    /// Must be called after enter_critical_section() and must match the nesting level.
-    unsafe fn exit_critical_section(&'static self);
-
     /// Shutdown the system with optional visual feedback
     ///
     /// Platform-specific shutdown implementation with LED effects or debug output.
@@ -99,4 +87,6 @@ pub trait Platform {
     /// # Safety
     /// Must be called in a context where stack pointer is meaningful.
     unsafe fn get_current_stack_pointer(&'static self) -> *mut usize;
+
+    fn get_timer_driver(&'static self) -> &'static dyn crate::traits::timer::Driver;
 }
