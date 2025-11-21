@@ -22,7 +22,7 @@ export default withSidebar(
   }),
   {
     // 侧边栏配置
-    excludeByGlobPattern: ['node_modules/**', '.vitepress/**'],
+    excludeByGlobPattern: ['node_modules/**', '.vitepress/**', 'public/**'],
     // sortMenusOrderByDescending: true,  // 从新到旧排序
     sortMenusByFrontmatterDate: true,
     useTitleFromFrontmatter: true      // 从 frontmatter 获取标题
