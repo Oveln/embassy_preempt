@@ -1,8 +1,9 @@
 import { defineConfig } from 'vitepress'
 import { withSidebar } from 'vitepress-sidebar'
+import { withMermaid } from "vitepress-plugin-mermaid"
 
 // https://vitepress.dev/reference/site-config
-export default withSidebar(
+export default withMermaid(withSidebar(
   defineConfig({
     title: "Embassy Preempt 博客",
     description: "基于 Rust 的嵌入式异步实时操作系统技术博客",
@@ -27,4 +28,4 @@ export default withSidebar(
     sortMenusByFrontmatterDate: true,
     useTitleFromFrontmatter: true      // 从 frontmatter 获取标题
   }
-)
+))
