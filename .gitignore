@@ -11,3 +11,20 @@ build/
 compile_commands.json
 .cache
 book
+
+# VitePress blog in blogs/
+node_modules/
+blogs/node_modules/
+blogs/dist/
+blogs/.vitepress/dist/
+blogs/.vitepress/cache/
+blogs/.vitepress/temp/
+blogs/*.local
+blogs/.env
+logs/
+*.log
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
