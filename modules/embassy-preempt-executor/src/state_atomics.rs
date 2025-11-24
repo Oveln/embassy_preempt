@@ -1,7 +1,9 @@
 //! Atomic state operations with architecture-specific optimizations.
 #[cfg(target_arch = "arm")]
 use core::arch::asm;
-use core::sync::atomic::{compiler_fence, AtomicBool, AtomicU32, Ordering};
+
+use portable_atomic::{AtomicBool, AtomicU32};
+use core::sync::atomic::{compiler_fence, Ordering};
 
 // Must be kept in sync with the layout of `State`!
 pub(crate) const STATE_SPAWNED: u32 = 1 << 0;

@@ -13,6 +13,7 @@ crate-type = ["rlib"]             # Rust库类型
 
 [dependencies]
 # Core dependencies (platform-agnostic)
+portable-atomic ={ version = "1.11.1"}
 spin = { version = "0.10.0" }
 embedded-hal = "1.0"
 nb = "1"
@@ -37,6 +38,10 @@ stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", ta
 riscv = { version = "0.15.0", optional = true, default-features = false }
 riscv-rt = { version = "0.16.0", optional = true }
 
+# Qingke dependencies
+qingke = { version = "0.5.0", optional = true , features = ["unsafe-trust-wch-atomics"]}
+qingke-rt = { version = "0.5.0", optional = true}
+
 
 panic-halt = { version = "1.0.0" }
 
@@ -48,7 +53,7 @@ default-features = false
 optional = true
 
 [features]
-default = ["stm32f401re", "time_driver_tim3"]
+default = []
 
 # ===== PLATFORM ARCHITECTURES =====
 
@@ -68,6 +73,8 @@ riscv = ["dep:riscv", "dep:riscv-rt"]
 riscv32 = ["riscv"]
 riscv64 = ["riscv"]
 
+qingke = ["dep:qingke", "dep:qingke-rt", "spin/portable-atomic", "portable-atomic/critical-section"]
+
 # ===== ARM CORTEX-M PLATFORMS =====
 
 # STM32F4xx series
@@ -77,6 +84,13 @@ stm32f401re = [
     "dep:stm32f4xx-hal",
     "stm32-metapac/stm32f401re",
     # "semihosting",
+]
+
+
+# ===== Qingke CORTEX-M PLATFORMS =====
+
+ch32v307 = [
+    "qingke"
 ]
 
 # ===== TIMER DRIVERS =====

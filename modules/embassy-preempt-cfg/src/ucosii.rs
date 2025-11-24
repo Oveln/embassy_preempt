@@ -28,7 +28,7 @@
 *********************************************************************************************************
 */
 
-use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU8};
+use portable_atomic::{AtomicBool, AtomicU32, AtomicU8};
 use super::*;
 // use crate::port::*;
 

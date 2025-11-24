@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 embassy-preempt-structs = { path = "../embassy-preempt-structs" }
 spin = "0.10.0"
+portable-atomic = { version = "1.11.1" }
 
 [features]
 default = [

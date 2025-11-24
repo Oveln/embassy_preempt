@@ -132,8 +132,7 @@ lto = true        # 启用链接时优化
 # memory-x = ["executor/memory-x"]     # If you have not added memory.x, you need to activate the feature
 default = [
     "logs",
-    "embassy-preempt-platform/stm32f401re",
-    "embassy-preempt-platform/cortex-m4",
+    # "embassy-preempt-platform/stm32f401re",
 ]
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = [

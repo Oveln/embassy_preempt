@@ -41,7 +41,7 @@ impl ReturnUnitOrNeverReturn for () {}
 
 /// Create a task in uC/OS-II kernel. This func is used by C
 // _ptos is not used in this func, because stack allocation is done by the stack allocator when scheduling
-pub extern "aapcs" fn SyncOSTaskCreate<F, R>(
+pub extern "C" fn SyncOSTaskCreate<F, R>(
     task: F,
     p_arg: *mut c_void,
     _ptos: *mut OsStk,
@@ -100,8 +100,8 @@ where
 
 #[unsafe(no_mangle)]
 /// helper func
-pub extern "aapcs" fn OSTaskCreate(
-    fun_ptr: extern "aapcs" fn(*mut c_void),
+pub extern "C" fn OSTaskCreate(
+    fun_ptr: extern "C" fn(*mut c_void),
     p_arg: *mut c_void,
     ptos: *mut OsStk,
     prio: OS_PRIO,

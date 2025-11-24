@@ -56,6 +56,17 @@ pub mod riscv;
 #[cfg(all(feature = "riscv", feature = "riscv32"))]
 pub use riscv as arch;
 
+
+// Qingke platforms
+#[cfg(all(feature = "qingke"))]
+pub mod qingke;
+#[cfg(all(feature = "qingke"))]
+pub use qingke as arch;
+
+#[cfg(feature = "ch32v307")]
+pub use arch::chip::ch32v307 as chip;
+
+
 // ===== RE-EXPORTS =====
 
 // Re-export panic handler for the selected architecture
