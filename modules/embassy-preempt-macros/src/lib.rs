@@ -145,3 +145,68 @@ pub fn arch_detection(_input: TokenStream) -> TokenStream {
 
     expanded.into()
 }
+
+#[proc_macro_attribute]
+pub fn switch_context_function(_args: TokenStream, input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as ItemFn);
+
+    // Generate platform-specific entry point
+    let expanded = quote::quote! {
+        #[cfg(all(target_arch = "riscv32"))]
+        #[embassy_preempt_macros::riscv_switch_context_function]
+        #input
+
+        #[cfg(not(any(target_arch = "arm", target_arch = "riscv32")))]
+        compile_error!("Unsupported target architecture for embassy_preempt_macros::entry. Supported architectures: arm, riscv32");
+    };
+
+    expanded.into()
+}
+
+/// Switch context function macro for QingKe CH32V307
+///
+/// This macro converts any function into a switch context function that:
+/// 1. Generates assembly code for MachineEnvCall entry point
+/// 2. Renames the function to `ov__MachineEnvCall`
+/// 3. Adds required attributes: `#[allow(non_snake_case)]`, `#[unsafe(no_mangle)]`, `#[unsafe(link_section = ".trap.rust")]`
+///
+/// # Examples
+///
+/// ```rust
+/// use embassy_preempt_macros::switch_context_function;
+///
+/// #[switch_context_function]
+/// fn my_context_switch_handler() {
+///     // Your context switching code here
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn riscv_switch_context_function(_attr: TokenStream, input: TokenStream) -> TokenStream {
+    let mut function: ItemFn = syn::parse(input).expect("expected a function");
+
+    // Change function name to ov__MachineEnvCall
+    function.sig.ident = syn::Ident::new("ov__MachineEnvCall", proc_macro2::Span::call_site());
+
+    // Add required attributes
+    function.attrs.push(syn::parse_quote!(#[allow(non_snake_case)]));
+    function.attrs.push(syn::parse_quote!(#[unsafe(no_mangle)]));
+    function.attrs.push(syn::parse_quote!(#[unsafe(link_section = ".trap.rust")]));
+
+    // Generate the assembly code
+    let expanded = quote::quote! {
+        core::arch::global_asm!(
+            ".section .trap, \"ax\"",
+            ".global MachineEnvCall",
+            "MachineEnvCall:",
+            "csrrw sp, mscratch, sp",
+            // 禁用硬件压栈
+            // "li t0, 0x23",
+            // "csrw 0x804, t0",
+            "jal ov__MachineEnvCall"
+        );
+
+        #function
+    };
+
+    expanded.into()
+}

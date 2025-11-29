@@ -1,4 +1,6 @@
 #![no_std]
+#![feature(naked_functions_rustic_abi)]
+#![feature(decl_macro)]
 
 //! Platform abstraction layer for embassy_preempt RTOS
 //!
@@ -63,8 +65,8 @@ pub mod qingke;
 #[cfg(all(feature = "qingke"))]
 pub use qingke as arch;
 
-#[cfg(feature = "ch32v307")]
-pub use arch::chip::ch32v307 as chip;
+#[cfg(feature = "ch32v307wcu6")]
+pub use arch::chip::ch32v307wcu6 as chip;
 
 
 // ===== RE-EXPORTS =====
@@ -75,7 +77,9 @@ pub use arch::panic_handler;
 
 pub use arch::driver as driver;
 
-pub type OsStk = <chip::PlatformImpl as Platform>::OsStk;
+pub use chip::PlatformImpl;
+
+pub type OsStk = usize;
 
 // Re-export timer driver for supported platforms
 pub use chip::timer_driver as timer_driver;
@@ -85,10 +89,11 @@ pub use chip::timer_driver as timer_driver;
 
 static __PLATFORM: Once<chip::PlatformImpl> = Once::new();
 
+#[inline(always)]
 pub fn get_platform() -> &'static chip::PlatformImpl {
     __PLATFORM.call_once(|| chip::PlatformImpl::new())
 }
 
-pub fn get_platform_trait() -> &'static dyn Platform<OsStk = OsStk> {
-    __PLATFORM.call_once(|| chip::PlatformImpl::new())  as &dyn Platform<OsStk = OsStk>
+pub fn get_platform_trait() -> &'static dyn Platform {
+    __PLATFORM.call_once(|| chip::PlatformImpl::new())
 }

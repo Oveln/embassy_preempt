@@ -1,1 +1,1 @@
-pub mod ch32v307;
+pub mod ch32v307wcu6;

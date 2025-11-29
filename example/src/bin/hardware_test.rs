@@ -15,8 +15,10 @@ use embassy_preempt_executor::os_time::timer::Timer;
 fn test_hardware() -> ! {
     // os初始化
     OSInit();
+    task_log!(info, "init success");
     // 为了测试硬件以及time driver的正确性，只创建1个任务以避免抢占
     AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 10);
+    task_log!(info, "create task success");
     // 启动os
     OSStart();
 }

@@ -88,9 +88,11 @@ harness = false
 
 
 [dependencies]
-cortex-m = { version = "0.7.7" }
-cortex-m-rt = { version = "0.7", features = ["device"] }
+cortex-m = { version = "0.7.7", optional = true }
+cortex-m-rt = { version = "0.7", features = ["device"], optional = true}
 # panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
+
+qingke-rt = { version = "0.5.0", optional = true }
 
 critical-section = { version = "1.1", features = ["restore-state-bool"] }
 
@@ -118,21 +120,21 @@ codegen-units = 1       # 控制代码生成单元的数量
 debug = 2
 debug-assertions = true # 启用调试断言
 incremental = false     # 禁用增量编译
-opt-level = 0
+lto = true        # 启用链接时优化
+opt-level = 1
 overflow-checks = true  # 启用整数溢出检查
 
 # cargo build --release
 [profile.release]
 codegen-units = 1
-debug = 0
+debug = 2
 opt-level = 3
 lto = true        # 启用链接时优化
 
 [features]
-# memory-x = ["executor/memory-x"]     # If you have not added memory.x, you need to activate the feature
 default = [
     "logs",
-    # "embassy-preempt-platform/stm32f401re",
+    "embassy-preempt-platform/memory-x",
 ]
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
 log-base = [
@@ -163,3 +165,9 @@ log-scheduler = [
     "log-base",
     "embassy-preempt-log/log-scheduler",
 ]
+
+cortex-m = ["dep:cortex-m", "cortex-m-rt"]
+stm32f401re = ["cortex-m", "embassy-preempt-platform/stm32f401re"]
+
+qingke = []
+ch32v307wcu6 = ["qingke", "embassy-preempt-platform/ch32v307wcu6", "dep:qingke-rt", "qingke-rt/v4"]

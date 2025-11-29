@@ -4,13 +4,14 @@
 
 use core::ffi::c_void;
 
-use embassy_preempt_log::task_log;
+use embassy_preempt_log::{os_log, task_log};
 // <- derive attribute
 use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
 use embassy_preempt_executor::os_time::blockdelay::delay;
 use embassy_preempt_executor::os_time::timer::Timer;
 use embassy_preempt_executor::os_time::OSTimeDly;
+use embassy_preempt_platform::get_platform_trait;
 // use embassy_preempt::{self as _};
 
 const LONG_TIME: usize = 10;
@@ -21,6 +22,7 @@ const SHORT_TIME: usize = 3;
 fn test_basic_schedule() -> ! {
     // os初始化
     OSInit();
+    // get_platform_trait().trigger_context_switch();
     // 创建两个任务
     SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 10);
     SyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 11);

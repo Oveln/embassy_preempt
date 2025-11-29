@@ -41,6 +41,7 @@ riscv-rt = { version = "0.16.0", optional = true }
 # Qingke dependencies
 qingke = { version = "0.5.0", optional = true , features = ["unsafe-trust-wch-atomics"]}
 qingke-rt = { version = "0.5.0", optional = true}
+ch32-metapac = { features = [ "metadata" ], optional = true, git = "https://github.com/ch32-rs/ch32-metapac", rev = "b1cbc7a98e43af3fd3170821654784e2c01cb26b" }
 
 
 panic-halt = { version = "1.0.0" }
@@ -73,7 +74,7 @@ riscv = ["dep:riscv", "dep:riscv-rt"]
 riscv32 = ["riscv"]
 riscv64 = ["riscv"]
 
-qingke = ["dep:qingke", "dep:qingke-rt", "spin/portable-atomic", "portable-atomic/critical-section"]
+qingke = ["dep:qingke", "dep:qingke-rt", "dep:ch32-metapac", "spin/portable-atomic", "portable-atomic/critical-section"]
 
 # ===== ARM CORTEX-M PLATFORMS =====
 
@@ -89,8 +90,12 @@ stm32f401re = [
 
 # ===== Qingke CORTEX-M PLATFORMS =====
 
-ch32v307 = [
-    "qingke"
+ch32v307wcu6 = [
+    "qingke",
+    "ch32-metapac/ch32v307wcu6",
+    "ch32-metapac/rt",
+    "qingke-rt/v4",
+    # "qingke-rt/highcode"
 ]
 
 # ===== TIMER DRIVERS =====

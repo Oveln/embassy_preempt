@@ -46,16 +46,13 @@ fn main() {
         println!("cargo:rustc-cfg=feature=\"OS_EVENT_NAME_EN\"");
     }
 
-    // let _flip_link_installed = Command::new("flip-link")
-    //     .arg("--version")
-    //     .output()
-    //     .is_ok();
-    // if _flip_link_installed {
-    //      println!("cargo:rustc-linker=flip-link");
-    // }
-    // println!("cargo:rustc-link-lib=flip-link");
-    // println!("cargo:rustc-link-arg=--nmagic");
-    // println!("cargo:rustc-link-arg=-Tlink.x");
+    let cortex_m = env::var("FEATURE_CORTEX_M").is_ok();
+    if cortex_m {
+        println!("cargo:rustc-link-lib=flip-link");
+    }
+    
+    println!("cargo:rustc-link-arg=--nmagic");
+    println!("cargo:rustc-link-arg-bins=-Tlink.x");
 
 
     // println!("cargo:rustc-link-arg=-")

@@ -80,7 +80,7 @@ fn task5(_args: *mut c_void) {
     let ptos = 0 as *mut usize;
     task_log!(info, "ptos is {:x}",ptos);
     // 任务5中涉及任务创建
-    SyncOSTaskCreate(task1, 0 as *mut c_void, ptos, 11);
+    SyncOSTaskCreate(task1, 0 as *mut c_void, ptos, 9);
     task_log!(info, "created task1 in task5");
     delay(SHORT_TIME);
     task_log!(info, "---task5 end---");

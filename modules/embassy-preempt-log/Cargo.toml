@@ -25,7 +25,8 @@ panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
 # ==================================================================
 [features]
 default = []
-log-base = ["dep:defmt", "dep:panic-probe", "dep:defmt-rtt"]
+logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
+log-base = ["dep:defmt", "dep:defmt-rtt"]
 log-os = ["log-base"]
 log-task = ["log-base"]
 log-mem = ["log-base"]

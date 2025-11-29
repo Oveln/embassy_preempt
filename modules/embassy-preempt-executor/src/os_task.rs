@@ -132,6 +132,7 @@ fn init_task<F: Future + 'static>(prio: OS_PRIO, future_func: impl FnOnce() -> F
         task_log!(trace, "the prio is exist");
         return OS_ERR_STATE::OS_ERR_PRIO_EXIST;
     }
+        task_log!(trace, "the prio is exist");
 
     let err = OS_TASK_STORAGE::init(prio, 0, 0 as *mut (), 0, "".to_string(), future_func);
     if err == OS_ERR_STATE::OS_ERR_NONE {

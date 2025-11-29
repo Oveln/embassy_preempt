@@ -6,9 +6,10 @@
     "editor.formatOnSave": false
   },
   "rust-analyzer.check.allTargets": false,
+  "rust-analyzer.cargo.target": "riscv32imc-unknown-none-elf",
   "rust-analyzer.check.noDefaultFeatures": false,
-  "rust-analyzer.cargo.noDefaultFeatures": false,
   "rust-analyzer.showUnlinkedFileNotification": false,
+  "rust-analyzer.server.path": "/home/oveln/.cargo/bin/rust-analyzer",
   "rust-analyzer.linkedProjects": [
     "Cargo.toml",
     "example/Cargo.toml",
@@ -21,7 +22,9 @@
     "modules/embassy-preempt-platform/Cargo.toml"
   ],
   "rust-analyzer.cargo.features": [
-    "stm32f401re"
+    // "stm32f401re"
+    "ch32v307wcu6",
+    ",embassy-preempt-log/logs"
   ],
   "liveshare.languages.allowGuestCommandControl": true,
   "files.associations": {

@@ -5,20 +5,20 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
-use embassy_preempt_platform::{OsStk, Platform};
-use embassy_preempt_log::mem_log;
 use core::ptr::NonNull;
 
+use embassy_preempt_log::mem_log;
+use embassy_preempt_platform::traits::platform::PlatformStatic;
+use embassy_preempt_platform::OsStk;
 
-use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
+use super::fixed_size_block::FixedSizeBlockAllocator;
 
-pub const STACK_START: usize = 0x20000000;
-pub const STACK_SIZE: usize = 20 * 4096; // 20 KiB
-pub const PROGRAM_STACK_SIZE: usize = 4096; // 1KiB 512 B also ok
-pub const INTERRUPT_STACK_SIZE: usize = 4096; // 1 KiB
+pub const STACK_START: usize = 0x2000B800;
+pub const STACK_SIZE: usize = 10 * 2048; // 20 KiB
+pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 512 B also ok
+pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
-
 
 use embassy_preempt_structs::cell::UPSafeCell;
 use spin::Once;
@@ -43,7 +43,6 @@ pub fn get_interrupt_stack() -> &'static UPSafeCell<OS_STK_REF> {
 */
 /// init the stack allocator and set up the program stack and the interrupt stack
 pub fn OS_InitStackAllocator() {
-    
     mem_log!(trace, "Init Stack Allocator");
     unsafe {
         STACK_ALLOCATOR.lock().init(STACK_START as *mut u8, STACK_SIZE);
@@ -60,23 +59,21 @@ pub fn OS_InitStackAllocator() {
     PROGRAM_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
-    embassy_preempt_platform::get_platform_trait().set_program_stack_pointer(stk_ptr);
+    embassy_preempt_platform::PlatformImpl::set_program_stack_pointer(stk_ptr);
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
-    
     mem_log!(trace, "alloc_stack");
     let heap_ptr: *mut u8;
     unsafe {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);
     }
-    // 
+    //
     mem_log!(trace, "alloc a stack at {}", heap_ptr);
     stk_from_ptr(heap_ptr, layout)
 }
 /// dealloc a stack
 pub fn dealloc_stack(stk: &mut OS_STK_REF) {
-    
     mem_log!(trace, "dealloc_stack");
     if stk.STK_REF == NonNull::dangling() || stk.HEAP_REF == NonNull::dangling() {
         return;
@@ -151,4 +148,3 @@ pub fn stk_from_ptr(heap_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
         layout,
     }
 }
-

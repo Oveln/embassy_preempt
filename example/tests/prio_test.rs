@@ -62,6 +62,7 @@ use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
 use embassy_preempt_executor::os_time::blockdelay::delay;
 use embassy_preempt_executor::os_time::timer::Timer;
+use embassy_preempt_platform::traits::platform::PlatformStatic;
 use embassy_preempt_platform::OsStk;
 use embassy_preempt_platform::Platform;
 use defmt::assert;
@@ -201,7 +202,7 @@ fn task7(_args: *mut c_void) {
         });
         
     }
-    embassy_preempt_platform::get_platform_trait().shutdown();
+    embassy_preempt_platform::PlatformImpl::shutdown();
 }
 
 fn task1(_args: *mut c_void) {

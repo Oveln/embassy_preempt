@@ -48,6 +48,7 @@ use crate::os_time::blockdelay::delay;
 // use crate::ucosii::*;
 use embassy_preempt_cfg::ucosii::*;
 use embassy_preempt_structs::cell::SyncUnsafeCell;
+use embassy_preempt_platform::traits::platform::PlatformStatic;
 
 /*
 ****************************************************************************************************************************************
@@ -368,7 +369,7 @@ impl SyncExecutor {
         critical_section::with(|_| {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
                 scheduler_log!(trace, "restore the task/thread");
-                embassy_preempt_platform::get_platform_trait().trigger_context_switch();
+                embassy_preempt_platform::PlatformImpl::trigger_context_switch();
             }
         });
     }}

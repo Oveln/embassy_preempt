@@ -2,6 +2,64 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "WCH-RISC-V Debug",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "openocd",
+      "cwd": "${workspaceFolder}",
+      "executable": "target/riscv32imc-unknown-none-elf/release/prio_test",
+      "configFiles": [
+        "${workspaceFolder}/ch32v307.cfg"
+      ],
+      "gdbPath": "rust-gdb",
+      "openOCDPath": "/home/oveln/Downloads/OpenOCD/OpenOCD/bin/openocd", // 若在 PATH
+      "toolchainPrefix": "riscv-none-embed",
+      // "runToMain": true,
+      // "svdFile": "${workspaceFolder}/CH32V307.svd"
+    },
+    {
+      "type": "probe-rs-debug",
+      "request": "attach",
+      "name": "ch32v307",
+      "cwd": "${workspaceFolder}",
+      "chip": "CH32V307",
+      "runtimeExecutable": "probe-rs",
+      "runtimeArgs": [
+        "dap-server"
+      ],
+      // "flashingConfig": {
+      //   "flashingEnabled": true,
+      //   "haltAfterReset": true,
+      //   "formatOptions": {
+      //     //!MODIFY (or remove). Valid values are: 'bin', 'hex', 'elf'(default), 'idf'
+      //     "binaryFormat": "elf"
+      //   }
+      // },
+      "coreConfigs": [
+        {
+          "coreIndex": 0,
+          "programBinary": "target/riscv32imc-unknown-none-elf/release/prio_test",
+          "rttEnabled": true,
+          "rttChannelFormats": [
+            {
+              "channelNumber": 0,
+              // Format RTT data as String data
+              "dataFormat": "String",
+              // Include host-side timestamps for every line of data transferred from the target RTT output
+              "showTimestamps": true
+            },
+          ]
+        }
+      ],
+      "env": {
+        //!MODIFY (or remove)
+        // If you set this variable, check the VSCode console log window for the location of the log file.
+        "RUST_LOG": "info"
+      },
+      // Info, Debug
+      "consoleLogLevel": "Console"
+    },
+    {
       "type": "probe-rs-debug",
       "request": "launch",
       "name": "probe_rs Executable launch example",
@@ -11,7 +69,6 @@
       "runtimeArgs": [
         "dap-server"
       ],
-      //!MODIFY
       "chip": "STM32F401RETx",
       "flashingConfig": {
         "flashingEnabled": true,

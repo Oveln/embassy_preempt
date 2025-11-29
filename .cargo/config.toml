@@ -11,7 +11,8 @@ rustflags = [
 ]
 
 [build]
-target = "thumbv7em-none-eabi"
+target = "riscv32imc-unknown-none-elf"
+# target = "thumbv7em-none-eabi"
 
 [alias]
 rb = "run --bin"

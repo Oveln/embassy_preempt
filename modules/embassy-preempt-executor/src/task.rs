@@ -18,6 +18,7 @@ use embassy_preempt_mem::heap::OS_STK_REF;
 use embassy_preempt_cfg::ucosii::{OS_ERR_STATE, OS_PRIO};
 use embassy_preempt_cfg::OS_TASK_REG_TBL_SIZE;
 use embassy_preempt_structs::cell::{SyncUnsafeCell, UninitCell};
+use embassy_preempt_platform::traits::platform::PlatformStatic;
 #[cfg(feature = "OS_EVENT_EN")]
 use crate::event::OS_EVENT_REF;
 
@@ -129,7 +130,7 @@ impl OS_TCB {
         // in restore_task it will set PROGRAM_STACK a new stk
         // revoke the stk
         critical_section::with(|_| {
-            embassy_preempt_platform::get_platform_trait().trigger_context_switch();
+            embassy_preempt_platform::PlatformImpl::trigger_context_switch();
         });
     }
     /// get the stk ptr of tcb, and set the tcb's stk ptr to None
