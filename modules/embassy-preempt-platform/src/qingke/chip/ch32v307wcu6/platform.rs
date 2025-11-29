@@ -115,11 +115,11 @@ impl PlatformStatic for PlatformImpl {
             "lw x30, 116(sp)",
             "lw x31, 120(sp)",
 
-            "lw t0, 124(sp)",
-            "addi t0, t0, 4",
-            "csrw mepc, t0",
-            "lw t0, 128(sp)",
-            "csrw mstatus, t0",
+            "lw a0, 124(sp)",
+            "addi a0, a0, 4",
+            "csrw mepc, a0",
+            "lw a0, 128(sp)",
+            "csrw mstatus, a0",
 
             "lw x10, 36(sp)",  //a0
             "addi sp, sp, 132",
@@ -230,11 +230,13 @@ impl PlatformMemoryLayout for PlatformImpl {
     }
 
     fn get_program_stack_size() -> usize {
-        2048 // 2 KiB
+        // 2048 // 2 KiB
+        4096
     }
 
     fn get_interrupt_stack_size() -> usize {
-        2048 // 2 KiB
+        // 2048 // 2 KiB
+        4096
     }
 }
 

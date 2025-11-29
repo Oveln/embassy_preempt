@@ -13,5 +13,5 @@ core::arch::global_asm!(
         // 禁用硬件压栈
         // "li t0, 0x23",
         // "csrw 0x804, t0",
-        "jal __ContextSwitchHandler"
+        "j __ContextSwitchHandler"
 );
