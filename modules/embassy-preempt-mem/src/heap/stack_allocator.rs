@@ -8,20 +8,16 @@ use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
 use embassy_preempt_log::mem_log;
-use embassy_preempt_platform::traits::platform::PlatformStatic;
 use embassy_preempt_platform::OsStk;
+use embassy_preempt_platform::chip::PlatformImpl;
+// Import memory layout from platform library
+use embassy_preempt_platform::traits::memory_layout::PlatformMemoryLayout;
+use embassy_preempt_platform::traits::platform::PlatformStatic;
+use embassy_preempt_structs::cell::UPSafeCell;
+use spin::Once;
 
 use super::Locked;
 use super::fixed_size_block::FixedSizeBlockAllocator;
-
-pub const STACK_START: usize = 0x2000B800;
-pub const STACK_SIZE: usize = 10 * 2048; // 20 KiB
-pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 512 B also ok
-pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
-pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
-
-use embassy_preempt_structs::cell::UPSafeCell;
-use spin::Once;
 static STACK_ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 static PROGRAM_STACK: Once<UPSafeCell<OS_STK_REF>> = Once::new();
 static INTERRUPT_STACK: Once<UPSafeCell<OS_STK_REF>> = Once::new();
@@ -45,15 +41,18 @@ pub fn get_interrupt_stack() -> &'static UPSafeCell<OS_STK_REF> {
 pub fn OS_InitStackAllocator() {
     mem_log!(trace, "Init Stack Allocator");
     unsafe {
-        STACK_ALLOCATOR.lock().init(STACK_START as *mut u8, STACK_SIZE);
+        STACK_ALLOCATOR.lock().init(
+            PlatformImpl::get_stack_start() as *mut u8,
+            PlatformImpl::calculate_stack_size(),
+        );
     }
     // allocate interrupt Stack and set the interrupt stack pointe
-    let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 4).unwrap();
+    let layout = Layout::from_size_align(PlatformImpl::get_interrupt_stack_size(), 4).unwrap();
     let stk = alloc_stack(layout);
     INTERRUPT_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
 
     // allocate program stack
-    let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 4).unwrap();
+    let layout = Layout::from_size_align(PlatformImpl::get_program_stack_size(), 4).unwrap();
     let stk = alloc_stack(layout);
     let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
     PROGRAM_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });

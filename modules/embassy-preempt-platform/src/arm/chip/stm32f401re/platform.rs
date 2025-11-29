@@ -1,5 +1,6 @@
 use core::arch::asm;
 use core::ptr::NonNull;
+
 #[cfg(feature = "log-base")]
 use cortex_m::asm::delay;
 use cortex_m::interrupt;
@@ -17,6 +18,7 @@ use stm32f4xx_hal::syscfg::SysCfgExt;
 use crate::chip::ucstk::CONTEXT_STACK_SIZE;
 use crate::driver::button::driver::Button;
 use crate::driver::led::driver::Led;
+use crate::traits::memory_layout::PlatformMemoryLayout;
 use crate::traits::Platform;
 /// STM32F401RE platform implementation
 ///
@@ -68,8 +70,9 @@ impl PlatformImpl {
     /// # Panics
     /// Will panic if hardware peripherals are already taken or initialization fails
     pub(crate) fn new() -> Self {
+        use stm32f4xx_hal::rcc::RccExt;
+
         use crate::arm::chip::stm32f401re::timer_driver::RtcDriver;
-        use stm32f4xx_hal::rcc::{RccExt};
 
         // Take ownership of hardware peripherals
         let dp = crate::hal::pac::Peripherals::take().unwrap();
@@ -79,11 +82,11 @@ impl PlatformImpl {
         // This replaces the previous rcc_init() function
         let rcc = dp.RCC.constrain();
         let mut rcc = rcc.freeze(
-            Config::hse(8u32.MHz())   // Use 8MHz external crystal
-            .hclk(84u32.MHz())         // AHB clock: 84MHz
-            .pclk1(42u32.MHz())        // APB1 clock: 42MHz
-            .pclk2(84u32.MHz())        // APB2 clock: 84MHz
-            .sysclk(84u32.MHz())       // System clock: 84MHz)
+            Config::hse(8u32.MHz()) // Use 8MHz external crystal
+                .hclk(84u32.MHz()) // AHB clock: 84MHz
+                .pclk1(42u32.MHz()) // APB1 clock: 42MHz
+                .pclk2(84u32.MHz()) // APB2 clock: 84MHz
+                .sysclk(84u32.MHz()), // System clock: 84MHz)
         );
 
         // Initialize system components
@@ -113,7 +116,7 @@ impl PlatformImpl {
         PlatformImpl {
             button: Mutex::new(button),
             led: Mutex::new(led),
-            timer: timer
+            timer: timer,
         }
     }
 
@@ -128,7 +131,7 @@ impl PlatformImpl {
     /// # Parameters
     /// - `scb`: System Control Block for system-wide interrupts
     /// - `nvic`: Nested Vectored Interrupt Controller for peripheral interrupts
-    fn set_interupt_prio(scb:&mut SCB, nvic:&mut NVIC) {
+    fn set_interupt_prio(scb: &mut SCB, nvic: &mut NVIC) {
         unsafe {
             // Set the NVIC group as 2-2 (same as port implementation)
             let aircr = scb.aircr.read();
@@ -155,10 +158,12 @@ impl PlatformImpl {
 
             // Set PendSV priority (lowest priority)
             #[cfg(feature = "semihosting")]
-            let _ = cortex_m_semihosting::hprintln!("the prio of PendSV is {}", SCB::get_priority(SystemHandler::PendSV));
+            let _ =
+                cortex_m_semihosting::hprintln!("the prio of PendSV is {}", SCB::get_priority(SystemHandler::PendSV));
             scb.set_priority(SystemHandler::PendSV, 0xf << 4);
             #[cfg(feature = "semihosting")]
-            let _ = cortex_m_semihosting::hprintln!("the prio of PendSV is {}", SCB::get_priority(SystemHandler::PendSV));
+            let _ =
+                cortex_m_semihosting::hprintln!("the prio of PendSV is {}", SCB::get_priority(SystemHandler::PendSV));
         }
     }
 }
@@ -173,7 +178,7 @@ impl Platform for PlatformImpl {
     /// priority and will execute after all other pending interrupts.
     fn trigger_context_switch(&'static self) {
         os_log!(trace, "trigger_context_switch");
-        const NVIC_INT_CTRL: u32 = 0xE000ED04;  // NVIC Interrupt Control Register
+        const NVIC_INT_CTRL: u32 = 0xE000ED04; // NVIC Interrupt Control Register
         const NVIC_PENDSVSET: u32 = 0x10000000; // PendSV Set bit
         unsafe {
             asm!(
@@ -256,25 +261,25 @@ impl Platform for PlatformImpl {
         // Initialize ARM Cortex-M context frame
         unsafe {
             // General purpose registers (with debug patterns)
-            (*psp).r0 = 0;                     // First argument register
-            (*psp).r1 = 0x01010101;           // Debug pattern
-            (*psp).r2 = 0x02020202;           // Debug pattern
-            (*psp).r3 = 0x03030303;           // Debug pattern
-            (*psp).r4 = 0x04040404;           // Callee-saved (initial value)
-            (*psp).r5 = 0x05050505;           // Callee-saved (initial value)
-            (*psp).r6 = 0x06060606;           // Callee-saved (initial value)
-            (*psp).r7 = 0x07070707;           // Callee-saved (initial value)
-            (*psp).r8 = 0x08080808;           // Callee-saved (initial value)
-            (*psp).r9 = 0x09090909;           // Callee-saved (initial value)
-            (*psp).r10 = 0x10101010;          // Callee-saved (initial value)
-            (*psp).r11 = 0x11111111;          // Callee-saved (initial value)
-            (*psp).r12 = 0x12121212;          // Intra-procedure call (initial value)
-            (*psp).r14 = 0xFFFFFFFD;          // LR: Return to Thread mode, PSP
-            (*psp).lr = 0;                    // Unused in task context
+            (*psp).r0 = 0; // First argument register
+            (*psp).r1 = 0x01010101; // Debug pattern
+            (*psp).r2 = 0x02020202; // Debug pattern
+            (*psp).r3 = 0x03030303; // Debug pattern
+            (*psp).r4 = 0x04040404; // Callee-saved (initial value)
+            (*psp).r5 = 0x05050505; // Callee-saved (initial value)
+            (*psp).r6 = 0x06060606; // Callee-saved (initial value)
+            (*psp).r7 = 0x07070707; // Callee-saved (initial value)
+            (*psp).r8 = 0x08080808; // Callee-saved (initial value)
+            (*psp).r9 = 0x09090909; // Callee-saved (initial value)
+            (*psp).r10 = 0x10101010; // Callee-saved (initial value)
+            (*psp).r11 = 0x11111111; // Callee-saved (initial value)
+            (*psp).r12 = 0x12121212; // Intra-procedure call (initial value)
+            (*psp).r14 = 0xFFFFFFFD; // LR: Return to Thread mode, PSP
+            (*psp).lr = 0; // Unused in task context
 
             // Exception frame (automatically loaded by hardware on exception return)
-            (*psp).pc = executor_function_ptr as u32;  // Program counter: task entry point
-            (*psp).xpsr = 0x01000000;        // xPSR: T-bit set for Thumb mode
+            (*psp).pc = executor_function_ptr as u32; // Program counter: task entry point
+            (*psp).xpsr = 0x01000000; // xPSR: T-bit set for Thumb mode
         }
 
         // Return the new stack pointer pointing to the context frame
@@ -293,11 +298,11 @@ impl Platform for PlatformImpl {
 
         #[cfg(not(feature = "log-base"))]
         unsafe {
-            asm!("wfe");  // Wait For Event - lowest power consumption
+            asm!("wfe"); // Wait For Event - lowest power consumption
         }
 
         #[cfg(feature = "log-base")]
-        delay(500);  // Use delay when logging to maintain RTT connectivity
+        delay(500); // Use delay when logging to maintain RTT connectivity
     }
 
     /// System shutdown handler
@@ -319,7 +324,7 @@ impl Platform for PlatformImpl {
         {
             // Without semihosting, manual intervention is required
             os_log!(info, "Shutdown, please press Ctrl+C to stop the program");
-            loop {}  // Infinite loop waiting for reset
+            loop {} // Infinite loop waiting for reset
         }
     }
 
@@ -336,10 +341,10 @@ impl Platform for PlatformImpl {
     #[inline(always)]
     unsafe fn save_task_context(&'static self) {
         asm!(
-            "CPSID I",                    // Disable interrupts for atomic context save
-            "MRS     R0, PSP",            // Get current Process Stack Pointer
+            "CPSID I",                      // Disable interrupts for atomic context save
+            "MRS     R0, PSP",              // Get current Process Stack Pointer
             "STMFD   R0!, {{R4-R11, R14}}", // Save callee-saved registers (R4-R11, LR) with full descending stack
-            "MSR     PSP, R0",            // Write back updated PSP
+            "MSR     PSP, R0",              // Write back updated PSP
             options(nostack, preserves_flags)
         );
     }
@@ -363,7 +368,12 @@ impl Platform for PlatformImpl {
     /// - Must be called from PendSV handler
     /// - Stack pointers must be properly aligned
     #[inline(always)]
-    unsafe fn restore_task_context(&'static self, stack_pointer: *mut usize, interrupt_stack: *mut usize, return_value: u32) {
+    unsafe fn restore_task_context(
+        &'static self,
+        stack_pointer: *mut usize,
+        interrupt_stack: *mut usize,
+        return_value: u32,
+    ) {
         asm!(
             "LDMFD   R0!, {{R4-R11, R14}}", // Restore callee-saved registers from task stack
             "MSR     PSP, R0",              // Set task's Process Stack Pointer
@@ -407,5 +417,27 @@ impl Platform for PlatformImpl {
     /// Reference to the timer driver implementing the Driver trait
     fn get_timer_driver(&'static self) -> &'static dyn crate::traits::timer::Driver {
         &self.timer
+    }
+}
+
+impl PlatformMemoryLayout for PlatformImpl {
+    const fn get_stack_start() -> usize {
+        0x2000B800
+    }
+
+    const fn get_max_programs() -> usize {
+        10
+    }
+
+    const fn get_heap_size() -> usize {
+        10 * 1024 // 10 KiB
+    }
+
+    const fn get_program_stack_size() -> usize {
+        2048 // 2 KiB
+    }
+
+    const fn get_interrupt_stack_size() -> usize {
+        2048 // 2 KiB
     }
 }

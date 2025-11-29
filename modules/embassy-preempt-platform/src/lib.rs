@@ -21,7 +21,7 @@
 
 // mod critical_section;
 
-#[macro_use]
+#[macro_use] 
 extern crate embassy_preempt_log;
 
 // Declare modules

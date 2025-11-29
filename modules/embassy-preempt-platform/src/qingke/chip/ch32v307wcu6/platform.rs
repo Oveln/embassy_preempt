@@ -1,10 +1,10 @@
-use core::arch::{asm, naked_asm};
+use core::arch::asm;
 use core::ptr::NonNull;
 
 use qingke::riscv::asm::{ecall, wfi};
-use qingke::riscv::register;
 
-use crate::chip::ucstk::{self, CONTEXT_STACK_SIZE};
+use crate::chip::ucstk::CONTEXT_STACK_SIZE;
+use crate::traits::memory_layout::PlatformMemoryLayout;
 use crate::traits::platform::PlatformStatic;
 use crate::Platform;
 
@@ -213,6 +213,28 @@ impl PlatformStatic for PlatformImpl {
 
     unsafe fn get_current_stack_pointer() -> *mut usize {
         qingke::riscv::register::mscratch::read() as *mut usize
+    }
+}
+
+impl PlatformMemoryLayout for PlatformImpl {
+    fn get_stack_start() -> usize {
+        0x2000B800
+    }
+
+    fn get_max_programs() -> usize {
+        10
+    }
+
+    fn get_heap_size() -> usize {
+        10 * 1024 // 10 KiB
+    }
+
+    fn get_program_stack_size() -> usize {
+        2048 // 2 KiB
+    }
+
+    fn get_interrupt_stack_size() -> usize {
+        2048 // 2 KiB
     }
 }
 

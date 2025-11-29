@@ -1,28 +1,32 @@
 //! the allocator of the heap
 
-/// Linked_List_Allocator for [no_std]
-pub mod linked_list;
 /// Block_Allocator based on Linked_List_Allocator
 pub mod fixed_size_block;
+/// Linked_List_Allocator for [no_std]
+pub mod linked_list;
 /// Stack_Allocator for OS_STK
 pub mod stack_allocator;
 
-pub use stack_allocator::*;
+use embassy_preempt_platform::chip::PlatformImpl;
+use embassy_preempt_platform::traits::memory_layout::PlatformMemoryLayout;
 use fixed_size_block::FixedSizeBlockAllocator;
-
-// pub const HEAP_START: *mut u8 = 0x08000200 as *mut u8;
-// pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
-pub const  HEAP_START: *mut u8 = (stack_allocator::STACK_START + stack_allocator::STACK_SIZE) as *mut u8;
-pub const HEAP_SIZE: usize = 10 * 1024; // 100 KiB
+pub use stack_allocator::*;
 
 /// Global allocator
 #[global_allocator]
 static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 #[allow(unused)]
 pub fn Init_Heap() {
-    mem_log!(trace, "Init_Heap: start={:x}, size={}", HEAP_START, HEAP_SIZE);
+    mem_log!(
+        trace,
+        "Init_Heap: start={:x}, size={}",
+        PlatformImpl::get_heap_start(),
+        PlatformImpl::get_heap_size()
+    );
     unsafe {
-        ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
+        ALLOCATOR
+            .lock()
+            .init(PlatformImpl::get_heap_start(), PlatformImpl::get_heap_size());
     }
     mem_log!(trace, "Init_Heap: completed");
 }
