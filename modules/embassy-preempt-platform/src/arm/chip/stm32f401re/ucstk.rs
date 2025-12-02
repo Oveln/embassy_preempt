@@ -1,6 +1,6 @@
 
 #[repr(C, align(4))]
-pub(crate) struct UcStk {
+pub struct UcStk {
     // below are the remaining part of the task's context
     pub(crate) r4: u32,
     pub(crate) r5: u32,

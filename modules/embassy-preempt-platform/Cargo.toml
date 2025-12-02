@@ -84,6 +84,7 @@ stm32f401re = [
     "stm32f4xx",
     "dep:stm32f4xx-hal",
     "stm32-metapac/stm32f401re",
+    "time_driver_tim3",
     # "semihosting",
 ]
 

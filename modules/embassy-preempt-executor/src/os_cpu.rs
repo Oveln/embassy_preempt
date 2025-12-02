@@ -25,17 +25,17 @@ extern "C" fn __ContextSwitchHandler() {
     let old_stk_ptr = unsafe { embassy_preempt_platform::PlatformImpl::get_current_stack_pointer() };
     os_log!(info, "psp: {},", old_stk_ptr);
 
-    unsafe {
-        let _psp = old_stk_ptr as *mut embassy_preempt_platform::chip::UcStk;
+    // unsafe {
+    //     let _psp = old_stk_ptr as *mut embassy_preempt_platform::chip::UcStk;
 
-        os_log!(
-            info,
-            "mepc: {:x}, mstatus: {:x}, ra: {:x}",
-            (*_psp).mepc,
-            (*_psp).mstatus,
-            (*_psp).ra
-        );
-    }
+    //     os_log!(
+    //         info,
+    //         "mepc: {:x}, mstatus: {:x}, ra: {:x}",
+    //         (*_psp).mepc,
+    //         (*_psp).mstatus,
+    //         (*_psp).ra
+    //     );
+    // }
 
     let global_executor = GlobalSyncExecutor().as_ref().unwrap();
     let prio_cur = global_executor.OSPrioCur.get_unmut();
@@ -90,16 +90,16 @@ extern "C" fn __ContextSwitchHandler() {
     let msp_stk = get_interrupt_stack().get().STK_REF.as_ptr();
     os_log!(info, "psp: {}, msp: {}", program_stk_ptr, msp_stk);
 
-    unsafe {
-        let _psp = program_stk_ptr as *mut embassy_preempt_platform::chip::UcStk;
-        os_log!(
-            info,
-            "mepc: {:x}, mstatus: {:x}, ra: {:x}",
-            (*_psp).mepc,
-            (*_psp).mstatus,
-            (*_psp).ra
-        );
-    }
+    // unsafe {
+    //     let _psp = program_stk_ptr as *mut embassy_preempt_platform::chip::UcStk;
+    //     os_log!(
+    //         info,
+    //         "mepc: {:x}, mstatus: {:x}, ra: {:x}",
+    //         (*_psp).mepc,
+    //         (*_psp).mstatus,
+    //         (*_psp).ra
+    //     );
+    // }
 
     unsafe {
         embassy_preempt_platform::PlatformImpl::restore_task_context(program_stk_ptr, msp_stk, EXC_RETURN_TO_PSP);

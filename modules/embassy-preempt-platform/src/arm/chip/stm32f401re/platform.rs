@@ -19,10 +19,11 @@ use crate::chip::ucstk::CONTEXT_STACK_SIZE;
 use crate::driver::button::driver::Button;
 use crate::driver::led::driver::Led;
 use crate::traits::memory_layout::PlatformMemoryLayout;
-use crate::traits::Platform;
+use crate::traits::platform::PlatformStatic;
+use crate::Platform;
 /// STM32F401RE platform implementation
 ///
-/// This structure implements the Platform trait for the STM32F401RE microcontroller.
+/// This structure implements the PlatformStatic trait for the STM32F401RE microcontroller.
 /// It provides hardware abstraction for:
 /// - GPIO-based LED and button drivers
 /// - RTC-based timer driver for scheduling
@@ -168,15 +169,13 @@ impl PlatformImpl {
     }
 }
 
-impl Platform for PlatformImpl {
-    type OsStk = usize;
-
+impl PlatformStatic for PlatformImpl {
     /// Trigger a context switch via PendSV interrupt
     ///
     /// ARM Cortex-M specific implementation that sets the PendSV flag
     /// in the NVIC interrupt control register. PendSV has the lowest
     /// priority and will execute after all other pending interrupts.
-    fn trigger_context_switch(&'static self) {
+    fn trigger_context_switch() {
         os_log!(trace, "trigger_context_switch");
         const NVIC_INT_CTRL: u32 = 0xE000ED04; // NVIC Interrupt Control Register
         const NVIC_PENDSVSET: u32 = 0x10000000; // PendSV Set bit
@@ -197,7 +196,7 @@ impl Platform for PlatformImpl {
     ///
     /// # Parameters
     /// - `sp`: Stack pointer value to set as the current PSP
-    fn set_program_stack_pointer(&'static self, sp: *mut u8) {
+    fn set_program_stack_pointer(sp: *mut u8) {
         use cortex_m::register::psp;
         unsafe {
             psp::write(sp as u32);
@@ -214,7 +213,7 @@ impl Platform for PlatformImpl {
     /// # Parameters
     /// - `interrupt_stack`: Pointer to the interrupt stack (MSP)
     #[inline(never)]
-    fn configure_interrupt_stack(&'static self, interrupt_stack: *mut u8) {
+    fn configure_interrupt_stack(interrupt_stack: *mut u8) {
         unsafe {
             asm!(
                 // First change the MSP to interrupt stack
@@ -245,7 +244,7 @@ impl Platform for PlatformImpl {
     ///
     /// # Returns
     /// Pointer to the initialized task stack top
-    fn init_task_stack(&'static self, stk_ref: NonNull<Self::OsStk>, executor_function: fn()) -> NonNull<Self::OsStk> {
+    fn init_task_stack(stk_ref: NonNull<usize>, executor_function: fn()) -> NonNull<usize> {
         scheduler_log!(trace, "init_task_stack");
         let executor_function_ptr = executor_function as *const () as usize;
         scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function_ptr);
@@ -283,7 +282,7 @@ impl Platform for PlatformImpl {
         }
 
         // Return the new stack pointer pointing to the context frame
-        NonNull::new(ptos as *mut Self::OsStk).unwrap()
+        NonNull::new(ptos as *mut usize).unwrap()
     }
 
     /// Enter low-power idle state
@@ -292,7 +291,7 @@ impl Platform for PlatformImpl {
     /// The behavior depends on the logging configuration:
     /// - With logging disabled: Use WFE (Wait For Event) instruction for lowest power
     /// - With logging enabled: Use delay loop to avoid RTT interference
-    fn enter_idle_state(&'static self) {
+    fn enter_idle_state() {
         // After WFE, probe-rs reports that the RTT read pointer has been modified.
         // Therefore, when logging is enabled, avoid WFE in idle to prevent interference.
 
@@ -310,7 +309,7 @@ impl Platform for PlatformImpl {
     /// Called when the RTOS shuts down. Behavior depends on features:
     /// - With semihosting: Exit cleanly using semihosting debug interface
     /// - Without semihosting: Enter infinite loop requiring manual reset
-    fn shutdown(&'static self) {
+    fn shutdown() {
         #[cfg(feature = "semihosting")]
         {
             // Use semihosting to exit cleanly for defmt-test
@@ -339,7 +338,7 @@ impl Platform for PlatformImpl {
     /// - Must have valid PSP pointing to sufficient stack space
     /// - Must only be called from interrupt context
     #[inline(always)]
-    unsafe fn save_task_context(&'static self) {
+    unsafe fn save_task_context() {
         asm!(
             "CPSID I",                      // Disable interrupts for atomic context save
             "MRS     R0, PSP",              // Get current Process Stack Pointer
@@ -369,7 +368,6 @@ impl Platform for PlatformImpl {
     /// - Stack pointers must be properly aligned
     #[inline(always)]
     unsafe fn restore_task_context(
-        &'static self,
         stack_pointer: *mut usize,
         interrupt_stack: *mut usize,
         return_value: u32,
@@ -398,7 +396,7 @@ impl Platform for PlatformImpl {
     /// # Safety
     /// - Must be called in a context where PSP is meaningful (thread mode)
     #[inline(always)]
-    unsafe fn get_current_stack_pointer(&'static self) -> *mut usize {
+    unsafe fn get_current_stack_pointer() -> *mut usize {
         let psp_value: *mut usize;
         asm!(
             "MRS     R0, PSP", // Read Process Stack Pointer into R0
@@ -408,36 +406,32 @@ impl Platform for PlatformImpl {
         psp_value
     }
 
-    /// Get the platform's timer driver instance
-    ///
-    /// Returns a reference to the RTC timer driver that provides timing
-    /// and alarm services for the RTOS scheduler and time functions.
-    ///
-    /// # Returns
-    /// Reference to the timer driver implementing the Driver trait
-    fn get_timer_driver(&'static self) -> &'static dyn crate::traits::timer::Driver {
-        &self.timer
     }
-}
 
 impl PlatformMemoryLayout for PlatformImpl {
-    const fn get_stack_start() -> usize {
-        0x2000B800
+    fn get_stack_start() -> usize {
+        0x20000000
     }
 
-    const fn get_max_programs() -> usize {
-        10
+    fn get_max_programs() -> usize {
+        20
     }
 
-    const fn get_heap_size() -> usize {
+    fn get_heap_size() -> usize {
         10 * 1024 // 10 KiB
     }
 
-    const fn get_program_stack_size() -> usize {
+    fn get_program_stack_size() -> usize {
         2048 // 2 KiB
     }
 
-    const fn get_interrupt_stack_size() -> usize {
+    fn get_interrupt_stack_size() -> usize {
         2048 // 2 KiB
+    }
+}
+
+impl Platform for PlatformImpl {
+    fn get_timer_driver(&'static self) -> &'static dyn crate::traits::timer::Driver {
+        &self.timer
     }
 }

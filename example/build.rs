@@ -46,15 +46,6 @@ fn main() {
         println!("cargo:rustc-cfg=feature=\"OS_EVENT_NAME_EN\"");
     }
 
-    let cortex_m = env::var("FEATURE_CORTEX_M").is_ok();
-    if cortex_m {
-        println!("cargo:rustc-link-lib=flip-link");
-    }
-    
-    println!("cargo:rustc-link-arg=--nmagic");
-    println!("cargo:rustc-link-arg-bins=-Tlink.x");
-
-
     // println!("cargo:rustc-link-arg=-")
     // 编译选项的可选："-C", "link-arg=-Tdefmt.x", 开了defmt或者alarm_test的时候才会加入
     if env::var("CARGO_FEATURE_LOG_BASE").is_ok(){

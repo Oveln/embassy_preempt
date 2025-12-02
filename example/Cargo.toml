@@ -166,7 +166,7 @@ log-scheduler = [
     "embassy-preempt-log/log-scheduler",
 ]
 
-cortex-m = ["dep:cortex-m", "cortex-m-rt"]
+cortex-m = ["dep:cortex-m", "dep:cortex-m-rt"]
 stm32f401re = ["cortex-m", "embassy-preempt-platform/stm32f401re"]
 
 qingke = []

@@ -6,22 +6,24 @@
 use core::ffi::c_void;
 
 use critical_section::CriticalSection;
-use embassy_preempt_log::task_log;
 use embassy_preempt_executor::SyncOSTaskCreate;
+use embassy_preempt_log::task_log;
 use embassy_preempt_platform::Platform;
+use embassy_preempt_platform::traits::platform::PlatformStatic;
 
 #[defmt_test::tests]
 mod tests {
-    use embassy_preempt_executor::os_core::{OSInit, OSStart};
-    use embassy_preempt_executor::AsyncOSTaskCreate;
     use core::ffi::c_void;
+
+    use embassy_preempt_executor::AsyncOSTaskCreate;
+    use embassy_preempt_executor::os_core::{OSInit, OSStart};
+
     use crate::task1;
 
     #[test]
-    fn task_create_test(){
-
+    fn task_create_test() {
         OSInit();
-        
+
         AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 10);
 
         OSStart();
@@ -34,6 +36,6 @@ async fn task1(_args: *mut c_void) {
 }
 
 fn task2(_args: *mut c_void) {
-    task_log!(info,"hello from task2");
-    embassy_preempt_platform::get_platform_static().shutdown();
+    task_log!(info, "hello from task2");
+    embassy_preempt_platform::PlatformImpl::shutdown();
 }

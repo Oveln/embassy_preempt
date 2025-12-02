@@ -165,14 +165,14 @@ pub extern "C" fn TIM3() {
     // Toggle debug GPIO pin high for timing analysis
     interrupt_pin_high();
 
-    os_log!(trace, "TIM3 interrupt handler invoked");
+    // os_log!(trace, "TIM3 interrupt handler invoked");
 
     // Delegate to the timer driver for interrupt processing
     unsafe {
         get_platform_trait().get_timer_driver().on_interrupt();
     }
 
-    os_log!(trace, "exiting TIM3 interrupt handler");
+    // os_log!(trace, "exiting TIM3 interrupt handler");
 
     // Toggle debug GPIO pin low
     interrupt_pin_low();
