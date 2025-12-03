@@ -201,7 +201,10 @@ pub extern "C" fn OSInit() {
     Init_Heap();
     OS_InitStackAllocator();
 
-    embassy_preempt_platform::get_platform_trait();
+    embassy_preempt_platform::init_platform().expect(
+        "Platform has beed initliazed !"
+    );
+
     GlobalSyncExecutor();
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */

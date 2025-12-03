@@ -89,11 +89,27 @@ pub use chip::timer_driver as timer_driver;
 
 static __PLATFORM: Once<chip::PlatformImpl> = Once::new();
 
-#[inline(always)]
-pub fn get_platform() -> &'static chip::PlatformImpl {
-    __PLATFORM.call_once(|| chip::PlatformImpl::new())
+pub fn init_platform() -> Result<(), ()> {
+    if __PLATFORM.is_completed() {
+        Err(())
+    } else {
+        __PLATFORM.call_once(|| chip::PlatformImpl::new());
+        Ok(())
+    }
 }
 
+#[inline(always)]
+pub fn get_platform() -> &'static chip::PlatformImpl {
+    // __PLATFORM.call_once(|| chip::PlatformImpl::new())
+    unsafe {
+        __PLATFORM.get_unchecked()
+    }
+}
+
+#[inline(always)]
 pub fn get_platform_trait() -> &'static dyn Platform {
-    __PLATFORM.call_once(|| chip::PlatformImpl::new())
+    // __PLATFORM.call_once(|| chip::PlatformImpl::new())
+    unsafe {
+        __PLATFORM.get_unchecked()
+    }
 }
