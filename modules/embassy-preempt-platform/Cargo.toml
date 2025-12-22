@@ -89,7 +89,7 @@ stm32f401re = [
 ]
 
 
-# ===== Qingke CORTEX-M PLATFORMS =====
+# ===== Qingke PLATFORMS =====
 
 ch32v307wcu6 = [
     "qingke",
@@ -97,6 +97,15 @@ ch32v307wcu6 = [
     "ch32-metapac/rt",
     "qingke-rt/v4",
     # "qingke-rt/highcode"
+]
+
+# ===== jh7110 PLATFORMS =====
+
+jh7110 = [
+    "riscv64",
+    "spin/portable-atomic",
+    "portable-atomic/critical-section",
+    "riscv/critical-section-single-hart"
 ]
 
 # ===== TIMER DRIVERS =====

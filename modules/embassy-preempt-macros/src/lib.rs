@@ -41,7 +41,11 @@ pub fn entry(_args: TokenStream, input: TokenStream) -> TokenStream {
         #[qingke_rt::entry]
         #input
 
-        #[cfg(not(any(target_arch = "arm", target_arch = "riscv32")))]
+        #[cfg(all(target_arch = "riscv64",feature = "riscv64"))]
+        #[riscv_rt::entry]
+        #input
+
+        #[cfg(not(any(target_arch = "arm", target_arch = "riscv32", target_arch = "riscv64")))]
         compile_error!("Unsupported target architecture for embassy_preempt_macros::entry. Supported architectures: arm, riscv32");
     };
 

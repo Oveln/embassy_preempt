@@ -23,7 +23,8 @@
   ],
   "rust-analyzer.cargo.features": [
     // "stm32f401re"
-    "ch32v307wcu6",
+    // "ch32v307wcu6",
+    "jh7110",
     ",embassy-preempt-log/logs"
   ],
   "liveshare.languages.allowGuestCommandControl": true,

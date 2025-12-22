@@ -51,12 +51,22 @@ pub use arch::chip::stm32f401re as chip;
 #[cfg(feature = "stm32f401re")]
 pub use stm32_metapac as pac;
 
-// RISC-V platforms (placeholder for future implementation)
+// RISC-V32 platforms (placeholder for future implementation)
 #[cfg(all(feature = "riscv", feature = "riscv32"))]
 pub mod riscv;
 
 #[cfg(all(feature = "riscv", feature = "riscv32"))]
 pub use riscv as arch;
+
+// RISC-V64 platforms
+#[cfg(all(feature = "riscv", feature = "riscv64"))]
+pub mod riscv64;
+
+#[cfg(all(feature = "riscv", feature = "riscv64"))]
+pub use riscv64 as arch;
+
+#[cfg(feature = "jh7110")]
+pub use arch::chip::jh7110 as chip;
 
 
 // Qingke platforms
@@ -72,7 +82,7 @@ pub use arch::chip::ch32v307wcu6 as chip;
 // ===== RE-EXPORTS =====
 
 // Re-export panic handler for the selected architecture
-#[cfg(any(feature = "stm32f401re", all(feature = "riscv", feature = "riscv32")))]
+#[cfg(any(feature = "stm32f401re", all(feature = "riscv")))]
 pub use arch::panic_handler;
 
 pub use arch::driver as driver;
