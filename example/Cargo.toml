@@ -110,6 +110,9 @@ cortex-m-semihosting = { version = "0.5" }
 
 spin = { version = "0.10.0" }
 
+# for jh7110 usart test
+uart16550 = "0.0.1"
+
 [dev-dependencies]
 defmt-test = { version = "0.4.0" }
 defmt = { version = "1.0.1"}
