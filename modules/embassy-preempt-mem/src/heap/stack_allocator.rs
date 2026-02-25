@@ -68,7 +68,7 @@ pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);
     }
     //
-    mem_log!(trace, "alloc a stack at {}", heap_ptr);
+    mem_log!(trace, "alloc a stack at {:p}", heap_ptr);
     stk_from_ptr(heap_ptr, layout)
 }
 /// dealloc a stack

@@ -142,6 +142,8 @@ default = [
     "embassy-preempt-platform/memory-x",
 ]
 logs = ["log-os", "log-task", "log-mem", "log-timer", "log-scheduler"]
+log-rtt = ["embassy-preempt-log/log-rtt"]
+log-uart = ["embassy-preempt-log/log-uart"]
 log-base = [
     "embassy-preempt-log/log-base",
 ]
@@ -178,4 +180,4 @@ qingke = []
 ch32v307wcu6 = ["qingke", "embassy-preempt-platform/ch32v307wcu6", "dep:qingke-rt", "qingke-rt/v4"]
 
 riscv64 = []
-jh7110 = ["riscv64", "embassy-preempt-platform/jh7110", "dep:riscv-rt"]
+jh7110 = ["riscv64", "embassy-preempt-platform/jh7110", "dep:riscv-rt", "logs", "log-uart"]

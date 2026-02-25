@@ -389,7 +389,7 @@ impl SyncExecutor {
                 {
                     mem_log!(
                         trace,
-                        "the highrdy task {} have a stack {}",
+                        "the highrdy task {} have a stack {:?}",
                         *self.OSPrioHighRdy.get_unmut(),
                         task.OSTCBStkPtr.as_ref().unwrap().STK_REF
                     );

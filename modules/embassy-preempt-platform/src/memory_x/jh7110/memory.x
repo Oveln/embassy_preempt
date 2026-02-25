@@ -1,7 +1,7 @@
 MEMORY
 {
     /* DDR memory for system port - this is where code runs */
-    RAM : ORIGIN = 0x80400000, LENGTH = 512K
+    RAM : ORIGIN = 0x41000000, LENGTH = 512K
 }
 REGION_ALIAS("REGION_TEXT", RAM);
 REGION_ALIAS("REGION_RODATA", RAM);

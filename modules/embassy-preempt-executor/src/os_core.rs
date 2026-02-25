@@ -162,6 +162,8 @@ pub fn OSEventNameSet() {}
 #[unsafe(no_mangle)]
 pub extern "C" fn OSInit() {
     os_log!(trace, "OSInit");
+
+
     OSInitHookBegin(); /* Call port specific initialization code   */
 
     // by noah: this func is no need to be called because we give the static var init val

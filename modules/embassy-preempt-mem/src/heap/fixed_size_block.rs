@@ -44,7 +44,7 @@ impl FixedSizeBlockAllocator {
     /// heap bounds are valid and that the heap is unused. This method must be
     /// called only once.
     pub unsafe fn init(&mut self, heap_start: *mut u8, heap_size: usize) { unsafe {
-        mem_log!(trace, "FixedSizeBlockAllocator::init: start={:x} size={}", heap_start, heap_size);
+        mem_log!(trace, "FixedSizeBlockAllocator::init: start={:p} size={}", heap_start, heap_size);
         self.fallback_allocator.init(heap_start, heap_size);
         mem_log!(trace, "FixedSizeBlockAllocator::init: completed");
     }}
@@ -54,7 +54,7 @@ impl FixedSizeBlockAllocator {
         mem_log!(trace, "fallback_alloc: requesting size={} align={}", layout.size(), layout.align());
         match self.fallback_allocator.allocate_first_fit(layout) {
             Ok(ptr) => {
-                mem_log!(trace, "fallback_alloc: success ptr={:x}", ptr.as_ptr());
+                mem_log!(trace, "fallback_alloc: success ptr={:p}", ptr.as_ptr());
                 ptr.as_ptr()
             },
             Err(_) => {
@@ -67,7 +67,7 @@ impl FixedSizeBlockAllocator {
 
 unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        mem_log!(trace, "alloc: will alloc {}", layout);
+        mem_log!(trace, "alloc: will alloc {:?}", layout);
         let mut allocator = self.lock();
         match list_index(&layout) {
             Some(index) => {
@@ -75,7 +75,7 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
                     Some(node) => {
                         allocator.list_heads[index] = node.next.take();
                         let ptr = node as *mut ListNode as *mut u8;
-                        mem_log!(trace, "alloc: reused block size={} ptr={:x}", BLOCK_SIZES[index], ptr);
+                        mem_log!(trace, "alloc: reused block size={} ptr={:p}", BLOCK_SIZES[index], ptr);
                         ptr
                     }
                     None => {
@@ -92,7 +92,7 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
             }
             None => {
                 let ptr = allocator.fallback_alloc(layout);
-                mem_log!(trace, "alloc: fallback size={} align={} ptr={:x}", layout.size(), layout.align(), ptr);
+                mem_log!(trace, "alloc: fallback size={} align={} ptr={:p}", layout.size(), layout.align(), ptr);
                 ptr
             }
         }
@@ -102,7 +102,7 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
         let mut allocator = self.lock();
         match list_index(&layout) {
             Some(index) => {
-                mem_log!(trace, "dealloc: returning block size={} ptr={:x}", BLOCK_SIZES[index], ptr);
+                mem_log!(trace, "dealloc: returning block size={} ptr={:p}", BLOCK_SIZES[index], ptr);
                 let new_node = ListNode {
                     next: allocator.list_heads[index].take(),
                 };
@@ -115,7 +115,7 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
                 allocator.list_heads[index] = Some(&mut *new_node_ptr);
             }
             None => {
-                mem_log!(trace, "dealloc: fallback size={} align={} ptr={:x}", layout.size(), layout.align(), ptr);
+                mem_log!(trace, "dealloc: fallback size={} align={} ptr={:p}", layout.size(), layout.align(), ptr);
                 let ptr = NonNull::new(ptr).unwrap();
                 allocator.fallback_allocator.deallocate(ptr, layout);
             }

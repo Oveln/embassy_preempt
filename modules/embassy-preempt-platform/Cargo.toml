@@ -36,7 +36,7 @@ stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", ta
 
 # RISC-V dependencies
 riscv = { version = "0.15.0", optional = true, default-features = false }
-riscv-rt = { version = "0.16.0", optional = true }
+riscv-rt = { version = "0.16.0", optional = true, features = ["v-trap"] }
 
 # Qingke dependencies
 qingke = { version = "0.5.0", optional = true , features = ["unsafe-trust-wch-atomics"]}

@@ -229,7 +229,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     ) -> OS_ERR_STATE {
         
         task_log!(debug, "init of OS_TASK_STORAGE");
-        task_log!(trace, "prio: {}, _name: {}", prio, _name[0..]);
+        task_log!(trace, "prio: {}, _name: {:?}", prio, &_name[0..]);
         // by noah: claim a TaskStorage
         let task_ref = OS_TASK_STORAGE::<F>::claim();
 

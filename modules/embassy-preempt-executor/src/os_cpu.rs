@@ -23,7 +23,7 @@ extern "C" fn __ContextSwitchHandler() {
     os_log!(info, "PendSV");
 
     let old_stk_ptr = unsafe { embassy_preempt_platform::PlatformImpl::get_current_stack_pointer() };
-    os_log!(info, "psp: {},", old_stk_ptr);
+    os_log!(info, "psp: {:p}", old_stk_ptr);
 
     // unsafe {
     //     let _psp = old_stk_ptr as *mut embassy_preempt_platform::chip::UcStk;
@@ -88,7 +88,7 @@ extern "C" fn __ContextSwitchHandler() {
         tcb_cur.needs_stack_save.set(false);
     }
     let msp_stk = get_interrupt_stack().get().STK_REF.as_ptr();
-    os_log!(info, "psp: {}, msp: {}", program_stk_ptr, msp_stk);
+    os_log!(info, "psp: {:p}, msp: {:p}", program_stk_ptr, msp_stk);
 
     // unsafe {
     //     let _psp = program_stk_ptr as *mut embassy_preempt_platform::chip::UcStk;

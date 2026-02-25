@@ -220,7 +220,7 @@ impl PlatformStatic for PlatformImpl {
 impl PlatformMemoryLayout for PlatformImpl {
     fn get_stack_start() -> usize {
         // JH7110 的内存布局 - 根据实际硬件调整
-        0x4000_0000
+        0x41400000
     }
 
     fn get_max_programs() -> usize {

@@ -6,8 +6,11 @@
 
 #![no_std]
 
-#[cfg(feature = "log-base")]
+#[cfg(feature = "log-rtt")]
 use defmt_rtt as _;
+
+#[cfg(feature = "log-uart")]
+pub mod uart;
 
 #[cfg(feature = "log-base")]
 pub use defmt;
@@ -38,8 +41,8 @@ macro_rules! warn {
     ($($arg:tt)*) => { $crate::__log!(warn, $($arg)*) };
 }
 
-// Forward to defmt or become no-op based on features
-#[cfg(feature = "log-base")]
+// Forward to defmt (RTT)
+#[cfg(all(feature = "log-base", not(feature = "log-uart")))]
 #[macro_export]
 macro_rules! __log {
     ($level:ident, $($arg:tt)*) => {
@@ -50,7 +53,49 @@ macro_rules! __log {
     };
 }
 
-#[cfg(not(feature = "log-base"))]
+// Forward to UART (using Display2Format + fmt::Arguments)
+#[cfg(feature = "log-uart")]
+#[macro_export]
+macro_rules! __log {
+    (trace, $($arg:tt)*) => {
+        unsafe {
+            use core::fmt::Write;
+            let _ = write!(embassy_preempt_log::uart::Uart, "{}", embassy_preempt_log::uart::level::TRACE);
+            let _ = writeln!(embassy_preempt_log::uart::Uart, $($arg)*);
+        }
+    };
+    (debug, $($arg:tt)*) => {
+        unsafe {
+            use core::fmt::Write;
+            let _ = write!(embassy_preempt_log::uart::Uart, "{}", embassy_preempt_log::uart::level::DEBUG);
+            let _ = writeln!(embassy_preempt_log::uart::Uart, $($arg)*);
+        }
+    };
+    (info, $($arg:tt)*) => {
+        unsafe {
+            use core::fmt::Write;
+            let _ = write!(embassy_preempt_log::uart::Uart, "{}", embassy_preempt_log::uart::level::INFO);
+            let _ = writeln!(embassy_preempt_log::uart::Uart, $($arg)*);
+        }
+    };
+    (warn, $($arg:tt)*) => {
+        unsafe {
+            use core::fmt::Write;
+            let _ = write!(embassy_preempt_log::uart::Uart, "{}", embassy_preempt_log::uart::level::WARN);
+            let _ = writeln!(embassy_preempt_log::uart::Uart, $($arg)*);
+        }
+    };
+    (error, $($arg:tt)*) => {
+        unsafe {
+            use core::fmt::Write;
+            let _ = write!(embassy_preempt_log::uart::Uart, "{}", embassy_preempt_log::uart::level::ERROR);
+            let _ = writeln!(embassy_preempt_log::uart::Uart, $($arg)*);
+        }
+    };
+}
+
+// No logging enabled
+#[cfg(not(all(feature = "log-base", any(feature = "log-rtt", feature = "log-uart"))))]
 #[macro_export]
 macro_rules! __log {
     ($level:ident, $($arg:tt)*) => {};
