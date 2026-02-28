@@ -59,11 +59,11 @@ extern "C" fn __ContextSwitchHandler() {
     // add global context switch counter
     OSCtxSwCtr.fetch_add(1, core::sync::atomic::Ordering::SeqCst);
 
-    os_log!(
-        info,
-        "OSCtxSwCtr is {}",
-        OSCtxSwCtr.load(core::sync::atomic::Ordering::SeqCst)
-    );
+    // os_log!(
+    //     info,
+    //     "OSCtxSwCtr is {}",
+    //     OSCtxSwCtr.load(core::sync::atomic::Ordering::SeqCst)
+    // );
 
     let stk_ptr: embassy_preempt_mem::heap::OS_STK_REF = global_executor.OSTCBHighRdy.get_mut().take_stk();
     let stk_heap_ref = stk_ptr.HEAP_REF;

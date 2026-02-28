@@ -35,8 +35,9 @@ stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", ta
 ] }
 
 # RISC-V dependencies
-riscv = { version = "0.15.0", optional = true, default-features = false }
-riscv-rt = { version = "0.16.0", optional = true, features = ["v-trap"] }
+riscv = { version = "0.16.0", optional = true, default-features = false }
+riscv-rt = { version = "0.17.1", optional = true, features = ["no-xtvec"]} 
+aclint = { git = "https://github.com/rustsbi/aclint", optional = true}
 
 # Qingke dependencies
 qingke = { version = "0.5.0", optional = true , features = ["unsafe-trust-wch-atomics"]}
@@ -103,9 +104,10 @@ ch32v307wcu6 = [
 
 jh7110 = [
     "riscv64",
+    "dep:aclint",
     "spin/portable-atomic",
     "portable-atomic/critical-section",
-    "riscv/critical-section-single-hart"
+    "riscv/critical-section-single-hart",
 ]
 
 # ===== TIMER DRIVERS =====

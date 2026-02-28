@@ -10,6 +10,7 @@ use embassy_preempt_executor::{AsyncOSTaskCreate, SyncOSTaskCreate, OSInit, OSSt
 use embassy_preempt_log::task_log;
 use embassy_preempt_executor::os_time::timer::Timer;
 use critical_section::Mutex;
+use embassy_preempt_platform::get_platform_trait;
 
 static EXECUTION_ORDER: Mutex<[&'static str; 20]> = Mutex::new([""; 20]);
 static mut ORDER_INDEX: usize = 0;
@@ -126,6 +127,28 @@ fn clear_bss() {
 fn test_hardware() -> ! {
     // 清除 BSS 段
     clear_bss();
+    // 陷阱向量
+    let mtvec = unsafe { csr::mtvec() };
+    let mode = mtvec & 0x3;
+    let base = mtvec & !0x3;
+    let mode_str = match mode {
+        0 => "Direct (all traps to BASE)",
+        1 => "Vectored (exceptions to BASE, interrupts to BASE+4*cause)",
+        _ => "Reserved",
+    };
+    task_log!(info, "[Trap Vector]");
+    task_log!(info, "  mtvec: {:#x}", mtvec);
+    task_log!(info, "    Mode: {}", mode_str);
+    task_log!(info, "    Base: {:#x}", base);
+    // os初始化
+    OSInit();
+
+    task_log!(info, "[OS Status]");
+    task_log!(info, "  OSInit completed!");
+    task_log!(info, "========================================");
+    task_log!(info, "  Hello, Embassy Preempt on VisionFive2!");
+    task_log!(info, "========================================\r\n");
+
 
     // ========== 系统信息输出开始 ==========
     task_log!(info, "========================================");
@@ -223,196 +246,78 @@ fn test_hardware() -> ! {
     task_log!(info, "  UART Logger Initialized");
     task_log!(info, "========================================");
 
-    // os初始化
-    OSInit();
-
-    task_log!(info, "[OS Status]");
-    task_log!(info, "  OSInit completed!");
-    task_log!(info, "========================================");
-    task_log!(info, "  Hello, Embassy Preempt on VisionFive2!");
-    task_log!(info, "========================================\r\n");
-
     task_log!(info, "defmt test");
     let mip = unsafe { csr::mip() };
     task_log!(info, "mip: {:#x}", mip);
     
-    // 创建6个任务，测试优先级调度的顺序是否正确
-    // 调度顺序应该为：task5->task1(task5中创建)->task4->task3->task2->task1->task1(在task4中创建)->task6(由于优先级相同输出相关信息)
     SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 30);
     SyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 25);
     AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 20);
     SyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 15);
     SyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 10);
     SyncOSTaskCreate(task6, 0 as *mut c_void, 0 as *mut usize, 35);
-    SyncOSTaskCreate(task7, 0 as *mut c_void, 0 as *mut usize, 62);
+    // AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 9);
     // 启动os
     OSStart();
-}
-
-// 记录执行顺序的宏
-macro_rules! record_execution {
-    ($task_name:expr) => {
-        unsafe {
-            critical_section::with(|cs| {
-                let order = EXECUTION_ORDER.borrow(cs);
-                let index = ORDER_INDEX;
-                if index < 20 {
-                    // 使用可变引用来修改数组
-                    let order_mut = order as *const [&'static str; 20] as *mut [&'static str; 20];
-                    (*order_mut)[index] = $task_name;
-                    ORDER_INDEX += 1;
-                    task_log!(info, "Execution order[{}]: {}", index, $task_name);
-                }
-            })
-        }
-    };
 }
 
 const LONG_TIME: usize = 10;
 const MID_TIME: usize = 5;
 const SHORT_TIME: usize = 3;
-fn task7(_args: *mut c_void) {
-    unsafe {
-        critical_section::with(|cs| {
-            let order = EXECUTION_ORDER.borrow(cs);
-            let index = ORDER_INDEX;
-
-            task_log!(info, "Total execution steps: {}", index);
-
-            // 记录实际的执行顺序
-            for i in 0..index {
-                task_log!(info, "Step {}: {}", i, order[i]);
-            }
-
-            // 验证关键调度点
-            // 1. task5 应该最先执行（优先级 10，最低数字最高优先级）
-            assert!(order[0] == "task5_begin", "Expected task5_begin first, got {}", order[0]);
-
-            // 2. task5 创建任务的记录点
-            assert!(order[1] == "task5_created_task1", "Expected task5_created_task1 second, got {}", order[1]);
-
-            // 3. task5 结束
-            assert!(order[2] == "task5_end", "Expected task5_end third, got {}", order[2]);
-
-            // 4. task5 创建的 task1 (优先级 11) 然后执行
-            assert!(order[3] == "task1_from_task5_begin", "Expected task1_from_task5_begin fourth, got {}", order[3]);
-
-            // 5. 然后 task4 (优先级 15)
-            assert!(order[5] == "task4_begin", "Expected task4_begin fifth, got {}", order[5]);
-
-            // 6. 然后 task3 (优先级 20)
-            assert!(order[7] == "task3_begin", "Expected task3_begin seventh, got {}", order[7]);
-
-            // 7. 然后 task2 (优先级 25)
-            assert!(order[9] == "task2_begin", "Expected task2_begin ninth, got {}", order[9]);
-
-            // 8. 然后 task1 (优先级 30)
-            assert!(order[11] == "task1_begin", "Expected task1_begin eleventh, got {}", order[11]);
-
-            // 9. task4 中创建的 task1 (优先级 34)
-            assert!(order[13] == "task1_from_task4_begin", "Expected task1_from_task4_begin thirteenth, got {}", order[13]);
-
-            // 10. task6 (优先级 35，最高优先级）
-            assert!(order[15] == "task6_begin", "Expected task6_begin fifteenth, got {}", order[15]);
-
-            // 验证总执行步骤数应该是17
-            assert!(index == 17, "Expected 17 total execution steps, got {}", index);
-
-            task_log!(info, "Priority scheduling order verification PASSED");
-        });
-        
-    }
-}
 
 fn task1(_args: *mut c_void) {
-    record_execution!("task1_begin");
+    // 任务1
     task_log!(info, "---task1 begin---");
     delay(LONG_TIME);
-    record_execution!("task1_end");
     task_log!(info, "---task1 end---");
     delay(SHORT_TIME);
 }
-
 fn task2(_args: *mut c_void) {
-    record_execution!("task2_begin");
+    // 任务2
     task_log!(info, "---task2 begin---");
     delay(MID_TIME);
-    record_execution!("task2_end");
     task_log!(info, "---task2 end---");
     delay(SHORT_TIME);
 }
-
 async fn task3(_args: *mut c_void) {
-    record_execution!("task3_begin");
+    // 任务3
+    //
     task_log!(info, "---task3 begin---");
-    Timer::after_ticks(LONG_TIME as u64).await;
-    record_execution!("task3_end");
+    // Timer::after_ticks(LONG_TIME as u64).await;
+    // delay(LONG_TIME);
     task_log!(info, "---task3 end---");
     delay(SHORT_TIME);
 }
-
 fn task4(_args: *mut c_void) {
-    record_execution!("task4_begin");
+    // 任务4
     task_log!(info, "---task4 begin---");
     // 任务4中涉及任务创建
-    SyncOSTaskCreate(task1_from_task4, 0 as *mut c_void, 0 as *mut usize, 34);
+    SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 34);
     delay(SHORT_TIME);
-    record_execution!("task4_end");
     task_log!(info, "---task4 end---");
     delay(SHORT_TIME);
 }
 
 fn task5(_args: *mut c_void) {
-    record_execution!("task5_begin");
+    // 任务5
     task_log!(info, "---task5 begin---");
     let ptos = 0 as *mut usize;
-    task_log!(info, "ptos is {:p}", ptos);
+    task_log!(info, "ptos is {:p}",ptos);
     // 任务5中涉及任务创建
-    SyncOSTaskCreate(task1_from_task5, 0 as *mut c_void, ptos, 11);
-    record_execution!("task5_created_task1");
+    SyncOSTaskCreate(task1, 0 as *mut c_void, ptos, 9);
     task_log!(info, "created task1 in task5");
     delay(SHORT_TIME);
-    record_execution!("task5_end");
     task_log!(info, "---task5 end---");
     delay(SHORT_TIME);
 }
 
 /* 任务6用于测试优先级相同的情况 */
 fn task6(_args: *mut c_void) {
-    record_execution!("task6_begin");
+    // 任务6
     task_log!(info, "---task6 begin---");
     // 任务6中涉及任务创建，新创建的优先级与当前任务相同
-    SyncOSTaskCreate(task1_from_task6, 0 as *mut c_void, 0 as *mut usize, 35);
+    SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 35);
     delay(SHORT_TIME);
-    record_execution!("task6_end");
     task_log!(info, "---task6 end---");
-    delay(SHORT_TIME);
-}
-
-// 不同上下文创建的 task1 变体
-fn task1_from_task4(_args: *mut c_void) {
-    record_execution!("task1_from_task4_begin");
-    task_log!(info, "---task1_from_task4 begin---");
-    delay(LONG_TIME);
-    record_execution!("task1_from_task4_end");
-    task_log!(info, "---task1_from_task4 end---");
-    delay(SHORT_TIME);
-}
-
-fn task1_from_task5(_args: *mut c_void) {
-    record_execution!("task1_from_task5_begin");
-    task_log!(info, "---task1_from_task5 begin---");
-    delay(LONG_TIME);
-    record_execution!("task1_from_task5_end");
-    task_log!(info, "---task1_from_task5 end---");
-    delay(SHORT_TIME);
-}
-
-fn task1_from_task6(_args: *mut c_void) {
-    record_execution!("task1_from_task6_begin");
-    task_log!(info, "---task1_from_task6 begin---");
-    delay(LONG_TIME);
-    record_execution!("task1_from_task6_end");
-    task_log!(info, "---task1_from_task6 end---");
     delay(SHORT_TIME);
 }

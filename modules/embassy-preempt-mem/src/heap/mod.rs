@@ -17,12 +17,12 @@ pub use stack_allocator::*;
 static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 #[allow(unused)]
 pub fn Init_Heap() {
-    mem_log!(
-        trace,
-        "Init_Heap: start={:p}, size={}",
-        PlatformImpl::get_heap_start(),
-        PlatformImpl::get_heap_size()
-    );
+    // mem_log!(
+    //     trace,
+    //     "Init_Heap: start={:p}, size={}",
+    //     PlatformImpl::get_heap_start(),
+    //     PlatformImpl::get_heap_size()
+    // );
     unsafe {
         ALLOCATOR
             .lock()

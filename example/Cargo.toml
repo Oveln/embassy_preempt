@@ -94,7 +94,8 @@ cortex-m-rt = { version = "0.7", features = ["device"], optional = true}
 
 qingke-rt = { version = "0.5.0", optional = true }
 
-riscv-rt ={ version = "0.16.0", optional = true }
+riscv ={ version = "0.16.0", optional = true}
+riscv-rt ={ version = "0.17.1", optional = true }
 
 critical-section = { version = "1.1", features = ["restore-state-bool"] }
 
@@ -179,5 +180,5 @@ stm32f401re = ["cortex-m", "embassy-preempt-platform/stm32f401re"]
 qingke = []
 ch32v307wcu6 = ["qingke", "embassy-preempt-platform/ch32v307wcu6", "dep:qingke-rt", "qingke-rt/v4"]
 
-riscv64 = []
+riscv64 = ["dep:riscv"]
 jh7110 = ["riscv64", "embassy-preempt-platform/jh7110", "dep:riscv-rt", "logs", "log-uart"]
