@@ -46,7 +46,7 @@ impl PlatformStatic for PlatformImpl {
         core::arch::asm!(
             // 保存通用寄存器（64位）
             "csrrw sp, mscratch, sp",
-            "addi sp, sp, -264",  // 33 * 8 = 264 bytes
+            "addi sp, sp, -256",  // 32 * 8 = 256 bytes (不保存 mstatus)
             "sd x1, 0(sp)",    // ra
             "sd x2, 8(sp)",    // sp
             "sd x3, 16(sp)",   // gp
@@ -79,10 +79,11 @@ impl PlatformStatic for PlatformImpl {
             "sd x30, 232(sp)", // t5
             "sd x31, 240(sp)", // t6
             // 保存 mepc, mstatus 到最后两个 64-bit 位置
+            // mepc 保存时+4，使其存储"返回地址"而非"异常地址"
+            // 这样无论是新任务还是被ecall打断的任务都能正确恢复
             "csrr t0, mepc",
+            "addi t0, t0, 4",
             "sd t0, 248(sp)",
-            "csrr t0, mstatus",
-            "sd t0, 256(sp)",
             "csrrw sp, mscratch, sp",
         );
     }
@@ -98,6 +99,7 @@ impl PlatformStatic for PlatformImpl {
             "ld x5, 32(sp)",
             "ld x6, 40(sp)",
             "ld x7, 48(sp)",
+            "ld x8, 56(sp)",
             "ld x9, 64(sp)",
             // "ld x10, 64(sp)",
             "ld x11, 80(sp)",
@@ -123,15 +125,13 @@ impl PlatformStatic for PlatformImpl {
             "ld x31, 240(sp)",
 
             // 恢复 mepc, mstatus
+            // mepc 已经是返回地址（在保存时已+4），直接恢复即可
             "ld a0, 248(sp)",
-            "addi a0, a0, 4", // 恢复到下一条指令
             "csrw mepc, a0",
-            "ld a0, 256(sp)",
-            "csrw mstatus, a0",
 
             // 恢复 a0 和 sp
             "ld x10, 72(sp)",  // a0
-            "addi sp, sp, 264",
+            "addi sp, sp, 256",
 
             "mret",
 
@@ -209,7 +209,6 @@ impl PlatformStatic for PlatformImpl {
             (*psp).t6 = 0x0000_0721_0721_0721;
 
             (*psp).mepc = executor_function_ptr as usize;
-            (*psp).mstatus = 0x0000_1800;
         }
 
         NonNull::new(ptos as *mut usize).unwrap()
@@ -257,5 +256,129 @@ impl PlatformMemoryLayout for PlatformImpl {
 impl Platform for PlatformImpl {
     fn get_timer_driver(&'static self) -> &'static dyn crate::traits::timer::Driver {
         &self.timer
+    }
+}
+
+// ===== 系统信息输出辅助函数 =====
+
+/// 读取 sp - 栈指针
+#[inline]
+fn sp() -> usize {
+    let mut sp: usize;
+    unsafe {
+        core::arch::asm!("mv {}, sp", out(reg) sp);
+    }
+    sp
+}
+
+/// 读取 ra - 返回地址
+#[inline]
+fn ra() -> usize {
+    let mut ra: usize;
+    unsafe {
+        core::arch::asm!("mv {}, ra", out(reg) ra);
+    }
+    ra
+}
+
+impl PlatformImpl {
+    /// 打印完整的系统信息
+    ///
+    /// 输出当前系统状态，包括：
+    /// - Hart ID
+    /// - Trap Vector 配置
+    /// - Machine Status
+    /// - 中断使能和挂起状态
+    /// - 栈信息
+    /// - 代码位置
+    pub fn print_system_info() {
+        use riscv::register::{mhartid, mepc, mie, mip, mscratch, mtvec, mstatus};
+
+        os_log!(info, "========================================");
+        os_log!(info, "  Embassy Preempt - System Info");
+        os_log!(info, "  VisionFive2 JH7110 Platform");
+        os_log!(info, "========================================");
+
+        // Hart ID
+        let hartid = mhartid::read();
+        os_log!(info, "[Hart Information]");
+        os_log!(info, "  mhartid (Hart ID): {:#x} ({})", hartid, hartid);
+
+        // 陷阱向量
+        let mtvec = mtvec::read();
+        let mode = mtvec.trap_mode();
+        let base = mtvec.address();
+        os_log!(info, "[Trap Vector]");
+        os_log!(info, "  mtvec: {:#x}", mtvec.bits());
+        os_log!(info, "    Mode: {}", match mode {
+            riscv::register::mtvec::TrapMode::Direct => "Direct (all traps to BASE)",
+            riscv::register::mtvec::TrapMode::Vectored => "Vectored (exceptions to BASE, interrupts to BASE+4*cause)",
+        });
+        os_log!(info, "    Base: {:#x}", base);
+
+        // 状态寄存器
+        let mstatus = mstatus::read();
+        let mpp = match mstatus.mpp() {
+            riscv::register::mstatus::MPP::User => "U",
+            riscv::register::mstatus::MPP::Supervisor => "S",
+            riscv::register::mstatus::MPP::Machine => "M",
+            _ => "?",
+        };
+        os_log!(info, "[Machine Status]");
+        os_log!(info, "  mstatus: {:#x}", mstatus.bits());
+        os_log!(info, "    MIE: {}, MPIE: {}, MPP: {}",
+            if mstatus.mie() { "1" } else { "0" },
+            if mstatus.mpie() { "1" } else { "0" },
+            mpp
+        );
+
+        // 异常程序计数器
+        let mepc = mepc::read();
+        os_log!(info, "[Exception Program Counter]");
+        os_log!(info, "  mepc: {:#x}", mepc);
+
+        // 中断使能
+        let mie = mie::read();
+        os_log!(info, "[Interrupt Enable]");
+        os_log!(info, "  mie: {:#x}", mie.bits());
+        os_log!(info, "    MIE bits:");
+        os_log!(info, "      SSIP: {}, MSIP: {}, STIP: {}, MTIP: {}, SEIP: {}, MEIP: {}",
+            if mie.ssoft() { "1" } else { "0" },
+            if mie.msoft() { "1" } else { "0" },
+            if mie.stimer() { "1" } else { "0" },
+            if mie.mtimer() { "1" } else { "0" },
+            if mie.sext() { "1" } else { "0" },
+            if mie.mext() { "1" } else { "0" }
+        );
+
+        // 中断挂起
+        let mip = mip::read();
+        os_log!(info, "[Interrupt Pending]");
+        os_log!(info, "  mip: {:#x}", mip.bits());
+        os_log!(info, "    MIP bits:");
+        os_log!(info, "      SSIP: {}, MSIP: {}, STIP: {}, MTIP: {}, SEIP: {}, MEIP: {}",
+            if mip.ssoft() { "1" } else { "0" },
+            if mip.msoft() { "1" } else { "0" },
+            if mip.stimer() { "1" } else { "0" },
+            if mip.mtimer() { "1" } else { "0" },
+            if mip.sext() { "1" } else { "0" },
+            if mip.mext() { "1" } else { "0" }
+        );
+
+        // 栈信息
+        let mscratch = mscratch::read();
+        let sp = sp();
+        os_log!(info, "[Stack Information]");
+        os_log!(info, "  mscratch: {:#x}", mscratch);
+        os_log!(info, "  sp (stack pointer): {:#x}", sp);
+
+        // 代码地址
+        let ra = ra();
+        os_log!(info, "[Code Location]");
+        os_log!(info, "  ra (return address): {:#x}", ra);
+
+        os_log!(info, "========================================");
+        os_log!(info, "  System Info Complete");
+        os_log!(info, "========================================");
     }
 }

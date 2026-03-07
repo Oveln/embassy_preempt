@@ -38,8 +38,9 @@ pub struct UcStk {
     pub t6: usize,      // x31
     // 特殊寄存器
     pub mepc: usize,
-    pub mstatus: usize,
 }
 
-/// 供汇编调度器使用：上下文占用的 64-bit 字数
-pub(crate) const CONTEXT_STACK_SIZE: usize = 33 * 8;
+/// 供汇编调度器使用：上下文占用的字节数
+/// 32个通用寄存器(x1-x31) + mepc = 33 * 8 = 264 字节
+/// 注意：不保存 mstatus，因为所有任务都是 M 态且中断状态相同
+pub(crate) const CONTEXT_STACK_SIZE: usize = 32 * 8;  // 256 字节
