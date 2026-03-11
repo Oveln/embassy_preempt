@@ -10,9 +10,9 @@ PROVIDE(_defmt_panic = __defmt_default_panic);
 /* Place defmt section at the beginning of RAM to ensure it's within PC-relative range */
 SECTIONS
 {
-  .defmt 0x41000000 (INFO) :
+  .defmt 0xc0000000 (INFO) :
   {
-    . = 0x41000000;
+    . = 0xc0000000;
 
     /* Format implementations for primitives like u8 */
     *(.defmt.prim.*);
@@ -44,4 +44,4 @@ SECTIONS
   } > RAM
 }
 
-ASSERT(__DEFMT_MARKER_END - 0x41000000 < 65536, ".defmt section cannot exceed 64KB");
+ASSERT(__DEFMT_MARKER_END - 0xc0000000 < 65536, ".defmt section cannot exceed 64KB");
