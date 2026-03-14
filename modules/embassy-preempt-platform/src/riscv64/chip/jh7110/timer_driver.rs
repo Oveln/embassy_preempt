@@ -72,23 +72,6 @@ const ALARM_COUNT: usize = 1;
 /// Timer frequency in Hz (4MHz for JH7110)
 const TIMER_HZ: u64 = 4_000_000;
 
-#[riscv_rt::core_interrupt(riscv::interrupt::Interrupt::MachineTimer)]
-unsafe fn machine_timer(){
-    let value = u64::MAX;
-    unsafe {
-        (*CLINT).write_mtimecmp(0, u64::MAX);
-    }
-    // timer_log!(info, "Machine Timer Interrupt triggered, mtimecmp reset to {}", value);
-
-     // Delegate to the timer driver for interrupt processing
-    // use crate::get_platform_trait;
-
-    // // Delegate to the timer driver for interrupt processing
-    // unsafe {
-    //     get_platform_trait().get_timer_driver().on_interrupt();
-    // }
-}
-
 /*
 *********************************************************************************************************
 *                                           var declaration
@@ -262,25 +245,14 @@ impl Driver for Jh7110Timer {
                 // Disable the alarm and return `false` to indicate that.
                 self.set_mtimecmp(u64::MAX);
                 alarm.timestamp.set(u64::MAX);
+                timer_log!(trace, "Alarm timestamp has passed (current time {})", t);
                 return false;
             }
 
             // Set mtimecmp to the alarm timestamp
             // The interrupt will fire when mtime >= mtimecmp
             self.set_mtimecmp(timestamp);
-
-            // Reevaluate if the alarm timestamp is still in the future
-            let t = self.now();
-            if timestamp <= t {
-                // If alarm timestamp has passed since we set it, we have a race condition and
-                // the alarm may or may not have fired.
-                // Disable the alarm and return `false` to indicate that.
-                // It is the caller's responsibility to handle this ambiguity.
-                self.set_mtimecmp(u64::MAX);
-                alarm.timestamp.set(u64::MAX);
-                return false;
-            }
-
+            timer_log!(trace, "Alarm set for {} (current time {})", timestamp, t);
             // We're confident the alarm will ring in the future.
             true
         })

@@ -10,14 +10,13 @@ use crate::riscv64::chip::jh7110::backtrace::{print_backtrace, print_all_registe
 /// 异常原因常量
 pub(crate) const M_ECALL: usize = 11;  // Environment call from M-mode
 pub(crate) const EXCEPTION_CODE_MASK: usize = 0x7F;
-pub(crate) const INTERRUPT_BIT: usize = 1 << 31;
+pub(crate) const INTERRUPT_BIT: usize = 1 << 63;
 
 /// 解析 mcause 寄存器获取异常原因
 #[inline]
 pub(crate) unsafe fn get_exception_reason(mcause: usize) -> &'static str {
     // mcause 的低位表示异常类型
     const EXCEPTION_MASK: usize = 0x7F;
-    const INTERRUPT_BIT: usize = 1 << 31;
 
     let is_interrupt = mcause & INTERRUPT_BIT != 0;
     let exception_code = mcause & EXCEPTION_MASK;

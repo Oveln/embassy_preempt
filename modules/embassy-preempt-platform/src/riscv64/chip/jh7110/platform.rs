@@ -33,11 +33,22 @@ impl PlatformImpl {
     }
 }
 
+
 impl PlatformStatic for PlatformImpl {
     fn trigger_context_switch() {
-        unsafe {
-            // 使用 ecall 触发上下文切换
-            asm!("ecall");
+        use crate::riscv64::chip::jh7110::interrupt::IN_INTERRUPT;
+        use crate::riscv64::chip::jh7110::interrupt::NEED_CONTEXT_SWITCH;
+        use core::sync::atomic::Ordering;
+
+        // 检查是否在中断处理中
+        if IN_INTERRUPT.load(Ordering::SeqCst) {
+            // 在中断中，设置延迟上下文切换标志
+            NEED_CONTEXT_SWITCH.store(true, Ordering::SeqCst);
+        } else {
+            // 不在中断中，直接执行 ecall 触发上下文切换
+            unsafe {
+                asm!("ecall");
+            }
         }
     }
 

@@ -2,12 +2,22 @@
 //!
 //! 提供中断分发和处理功能，支持定时器中断、外部中断等。
 
-use core::arch::asm;
+use core::{arch::asm, sync::atomic::Ordering};
 
-use crate::riscv64::chip::jh7110::exception::{EXCEPTION_CODE_MASK, INTERRUPT_BIT, get_exception_reason};
+use portable_atomic::AtomicBool;
+
+use crate::{get_platform_trait, riscv64::chip::jh7110::exception::{EXCEPTION_CODE_MASK, INTERRUPT_BIT, get_exception_reason}, timer_driver};
 
 /// 中断处理函数类型
 pub type InterruptHandler = unsafe extern "C" fn();
+
+/// 全局标志：是否在中断处理中
+/// true = 在中断处理中, false = 不在中断处理中
+pub(crate) static IN_INTERRUPT: AtomicBool = AtomicBool::new(false);
+
+/// 全局标志：是否需要延迟的上下文切换
+/// true = 需要, false = 不需要
+pub(crate) static NEED_CONTEXT_SWITCH: AtomicBool = AtomicBool::new(false);
 
 /// 中断处理函数表
 ///
@@ -71,26 +81,44 @@ pub unsafe fn register_interrupt_handler(
 /// 3. 如果是异常，打印错误信息并调用 abort()（不返回）
 ///
 /// # RISC-V 中断编码
-/// - mcause bit 31 = 1: 中断
-/// - mcause bit 31 = 0: 异常
+/// - mcause bit 63 = 1: 中断
+/// - mcause bit 63 = 0: 异常
 /// - mcause[4:0]: 中断/异常码
+///
+/// # 返回值
+/// - 1: 需要进行上下文切换（延迟的上下文切换请求）
+/// - 0: 正常返回，不需要上下文切换
 ///
 /// # 注意
 /// 寄存器的保存和恢复由 `__trap_entry` 汇编代码处理。
 /// 对于中断，此函数正常返回，由汇编代码执行 mret。
 /// 对于异常，此函数调用 abort() 不会返回。
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn handle_exception(mcause: usize) {
+pub unsafe extern "C" fn handle_exception(mcause: usize) -> usize {
     let is_interrupt = (mcause & INTERRUPT_BIT) != 0;
     let exception_code = mcause & EXCEPTION_CODE_MASK;
 
     if is_interrupt {
+        // 设置中断标志
+        IN_INTERRUPT.store(true, Ordering::SeqCst);
+
         // 中断处理路径
         handle_interrupt(exception_code);
+
+        // 清除中断标志
+        IN_INTERRUPT.store(false, Ordering::SeqCst);
+
+        // 检查是否需要延迟的上下文切换
+        if NEED_CONTEXT_SWITCH.load(Ordering::SeqCst) {
+            NEED_CONTEXT_SWITCH.store(false, Ordering::SeqCst);
+            return 1; // 需要上下文切换
+        }
+        return 0; // 正常返回
     } else {
         // 异常处理路径
         handle_exception_sync(mcause, exception_code);
         // 异常处理调用 abort()，不会返回
+        unreachable!();
     }
 }
 
@@ -129,6 +157,7 @@ unsafe fn handle_interrupt(exception_code: usize) {
             // Machine timer interrupt
             // 由 riscv_rt 的 machine_timer 函数处理
             // 这里不需要做额外处理，直接返回
+            get_platform_trait().get_timer_driver().on_interrupt();
             os_log!(trace, "Machine timer interrupt received");
         }
         11 => {

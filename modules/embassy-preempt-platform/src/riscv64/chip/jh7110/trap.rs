@@ -86,6 +86,9 @@ core::arch::global_asm!(
     "mv a0, t0",       // mcause 已经在 t0 中
     "jal handle_exception",
 
+    "li t1, 1",
+    "beq a0, t1, 2f", // 如果返回值为1，则说明需要ecall，跳转到2
+
     // handle_exception 返回后（仅中断路径会返回），恢复寄存器
     "ld x1, 0(sp)",     // ra
     "ld x10, 8(sp)",    // a0
@@ -112,12 +115,40 @@ core::arch::global_asm!(
     "addi sp, sp, 144",
     "mret",
 
+// ------------------------------
     "1:",  // ecall 路径：恢复 t0/t1/t2 后跳转到上下文切换
     "ld x5, 0(sp)",     // 恢复 t0
     "ld x6, 8(sp)",     // 恢复 t1
     "ld x7, 16(sp)",    // 恢复 t2
     "addi sp, sp, 24",  // 释放临时栈空间
+    "j MachineEnvCall",
+
+// ------------------------------
+    "2:", // 如果handle_exception返回值为1，则需要上下文切换，跳转到ecall处理
+    "ld x1, 0(sp)",     // ra
+    "ld x10, 8(sp)",    // a0
+    "ld x11, 16(sp)",   // a1
+    "ld x12, 24(sp)",   // a2
+    "ld x13, 32(sp)",   // a3
+    "ld x14, 40(sp)",   // a4
+    "ld x15, 48(sp)",   // a5
+    "ld x16, 56(sp)",   // a6
+    "ld x17, 64(sp)",   // a7
+    "ld x5, 72(sp)",    // t0
+    "ld x6, 80(sp)",    // t1
+    "ld x7, 88(sp)",    // t2
+    "ld x28, 96(sp)",   // t3
+    "ld x29, 104(sp)",  // t4
+    "ld x30, 112(sp)",  // t5
+    "ld x31, 120(sp)",  // t6
+    // 恢复 mepc
+    "ld t1, 128(sp)",
+    "csrw mepc, t1",
+
+    "addi sp, sp, 144",
+
     "j MachineEnvCall"
+// ------------------------------
 );
 
 /// MachineEnvCall 入口（上下文切换）

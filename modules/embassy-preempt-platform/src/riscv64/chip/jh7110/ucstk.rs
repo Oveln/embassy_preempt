@@ -2,7 +2,7 @@
 
 /// RISC-V64 任务上下文（JH7110 适用）
 /// 基于 RISC-V32 版本适配为 64 位
-/// 总大小 33 * 8 = 264 B
+/// 总大小 32 * 8 = 248 B
 #[repr(C, align(8))]
 pub struct UcStk {
     pub ra: usize,      // x1
@@ -41,6 +41,6 @@ pub struct UcStk {
 }
 
 /// 供汇编调度器使用：上下文占用的字节数
-/// 32个通用寄存器(x1-x31) + mepc = 33 * 8 = 264 字节
+/// 32个通用寄存器(x1-x31) + mepc = 32 * 8 = 264 字节
 /// 注意：不保存 mstatus，因为所有任务都是 M 态且中断状态相同
 pub(crate) const CONTEXT_STACK_SIZE: usize = 32 * 8;  // 256 字节
