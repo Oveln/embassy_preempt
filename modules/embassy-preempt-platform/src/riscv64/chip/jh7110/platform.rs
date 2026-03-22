@@ -16,6 +16,7 @@ impl PlatformImpl {
         // RISC-V64 初始化代码
         unsafe {
             riscv::register::mstatus::set_mie(); // Enable machine interrupts
+            riscv::register::mie::set_msoft();
             
             /// 外部声明 trap 入口
             extern "C" {

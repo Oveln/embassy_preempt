@@ -682,10 +682,10 @@ fn OS_InitTaskIdle() {
     os_log!(trace, "OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
-            {
-                task_log!(trace, "task idle");
-                blockdelay::delay(1);
-            }
+            // {
+            //     task_log!(trace, "task idle");
+            //     blockdelay::delay(1);
+            // }
             OSIdleCtr.fetch_add(1, Ordering::SeqCst);
             embassy_preempt_platform::PlatformImpl::enter_idle_state();
         }

@@ -110,6 +110,7 @@ embassy-preempt-macros = { path = "../modules/embassy-preempt-macros" }
 cortex-m-semihosting = { version = "0.5" }
 
 spin = { version = "0.10.0" }
+portable-atomic = { version = "1.11.1" }
 
 # for jh7110 usart test
 uart16550 = "0.0.1"
