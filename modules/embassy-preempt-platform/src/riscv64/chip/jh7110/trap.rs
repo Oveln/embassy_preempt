@@ -141,6 +141,7 @@ core::arch::global_asm!(
     "ld x29, 104(sp)",  // t4
     "ld x30, 112(sp)",  // t5
     "ld x31, 120(sp)",  // t6
+    "addi t1, t1, -4",
     // 恢复 mepc
     "ld t1, 128(sp)",
     "csrw mepc, t1",
