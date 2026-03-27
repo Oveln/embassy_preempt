@@ -36,9 +36,9 @@ use embassy_preempt_cfg::ucosii::*;
 // use arena::ARENA;
 use embassy_preempt_cfg::*;
 use embassy_preempt_mem::heap::{OS_STK_REF, alloc_stack, get_program_stack};
-use embassy_preempt_platform::traits::PlatformMemoryLayout;
-use embassy_preempt_platform::traits::platform::PlatformStatic;
-use embassy_preempt_platform::traits::timer::AlarmHandle;
+use embassy_preempt_traits::PlatformMemoryLayout;
+use embassy_preempt_traits::platform::PlatformStatic;
+use embassy_preempt_traits::timer::AlarmHandle;
 use embassy_preempt_platform::{OsStk, PlatformImpl, get_platform_trait};
 use embassy_preempt_structs::cell::SyncUnsafeCell;
 pub use os_core::*;
@@ -375,7 +375,7 @@ impl SyncExecutor {
                             *self.OSPrioHighRdy.get_unmut()
                         );
                     }
-                    let layout = Layout::from_size_align(PlatformImpl::get_task_stack_size(), 4).unwrap();
+                    let layout = Layout::from_size_align(PlatformImpl::task_stack_size(), 4).unwrap();
                     stk = alloc_stack(layout);
                     {
                         mem_log!(trace, "the bottom of the allocated stk is {:?}", stk.STK_REF);

@@ -1,0 +1,27 @@
+[package]
+name = "jh7110"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "jh7110"
+path = "src/lib.rs"
+
+[dependencies]
+# Core dependencies from main platform crate
+portable-atomic = {version = "1.11.1", features = ["critical-section"]}
+spin = {version = "0.10.0", features = ["portable-atomic"]}
+embedded-hal = "1.0"
+nb = "1"
+critical-section = { version = "1.2", features = ["restore-state-bool"] }
+embassy-preempt-cfg = { path = "../../../embassy-preempt-cfg" }
+embassy-preempt-log = { path = "../../../embassy-preempt-log" }
+embassy-preempt-traits = { path = "../../traits" }
+# RISC-V dependencies
+riscv = { version = "0.16.0", default-features = false, features = ["critical-section-single-hart"]}
+riscv-rt = { version = "0.17.1", features = ["no-xtvec"] }
+aclint = { git = "https://github.com/rustsbi/aclint" }
+
+[features]
+default = []

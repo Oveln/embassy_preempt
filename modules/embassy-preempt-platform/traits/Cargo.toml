@@ -1,0 +1,18 @@
+[package]
+name = "embassy-preempt-traits"
+version = "0.1.0"
+edition = "2021"
+authors = ["oveln"]
+description = "Platform trait definitions for embassy_preempt RTOS"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "embassy_preempt_traits"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
+[dependencies]
+spin = { version = "0.10.0" }
+critical-section = { version = "1.2", features = ["restore-state-bool"] }
+embassy-preempt-cfg = { path = "../../embassy-preempt-cfg" }
+embassy-preempt-log = { path = "../../embassy-preempt-log" }

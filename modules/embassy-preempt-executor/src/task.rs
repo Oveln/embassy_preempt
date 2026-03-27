@@ -7,7 +7,7 @@ use core::ops::{Deref, DerefMut};
 use core::ptr::NonNull;
 use core::mem;
 
-use embassy_preempt_platform::Platform;
+use embassy_preempt_traits::Platform;
 
 use super::waker;
 use super::State;
@@ -18,7 +18,7 @@ use embassy_preempt_mem::heap::OS_STK_REF;
 use embassy_preempt_cfg::ucosii::{OS_ERR_STATE, OS_PRIO};
 use embassy_preempt_cfg::OS_TASK_REG_TBL_SIZE;
 use embassy_preempt_structs::cell::{SyncUnsafeCell, UninitCell};
-use embassy_preempt_platform::traits::platform::PlatformStatic;
+use embassy_preempt_traits::platform::PlatformStatic;
 #[cfg(feature = "OS_EVENT_EN")]
 use crate::event::OS_EVENT_REF;
 

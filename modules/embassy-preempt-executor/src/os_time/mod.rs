@@ -2,7 +2,7 @@ use core::sync::atomic::Ordering;
 
 use crate::{wake_task_no_pend, GlobalSyncExecutor};
 use embassy_preempt_platform::get_platform_trait;
-use embassy_preempt_platform::traits::timer::Driver;
+use embassy_preempt_traits::timer::Driver;
 use embassy_preempt_cfg::OS_LOWEST_PRIO;
 use embassy_preempt_cfg::ucosii::{OS_ERR_STATE, OS_PRIO, OSIntNesting, OSLockNesting, OSRunning};
 /// the mod of blockdelay of uC/OS-II kernel

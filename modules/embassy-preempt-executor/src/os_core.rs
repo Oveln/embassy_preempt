@@ -42,8 +42,8 @@ use core::sync::atomic::Ordering;
 use crate::os_cpu::*;
 
 use embassy_preempt_mem::heap::{Init_Heap, OS_InitStackAllocator};
-use embassy_preempt_platform::traits::platform::PlatformStatic;
-use embassy_preempt_platform::Platform;
+use embassy_preempt_traits::platform::PlatformStatic;
+use embassy_preempt_traits::Platform;
 use crate::GlobalSyncExecutor;
 use crate::SyncOSTaskCreate;
 use crate::os_time::blockdelay;

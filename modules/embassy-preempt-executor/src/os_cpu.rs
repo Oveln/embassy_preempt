@@ -5,7 +5,7 @@ use core::ptr::NonNull;
 
 use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
 use embassy_preempt_mem::heap::{get_interrupt_stack, get_program_stack};
-use embassy_preempt_platform::traits::platform::PlatformStatic;
+use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_platform::OsStk;
 
 use crate::GlobalSyncExecutor;

@@ -8,11 +8,11 @@ use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
 use embassy_preempt_log::mem_log;
-use embassy_preempt_platform::OsStk;
 use embassy_preempt_platform::chip::PlatformImpl;
-// Import memory layout from platform library
-use embassy_preempt_platform::traits::memory_layout::PlatformMemoryLayout;
-use embassy_preempt_platform::traits::platform::PlatformStatic;
+use embassy_preempt_platform::OsStk;
+// Import memory layout from traits library
+use embassy_preempt_traits::PlatformMemoryLayout;
+use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_structs::cell::UPSafeCell;
 use spin::Once;
 
@@ -42,17 +42,17 @@ pub fn OS_InitStackAllocator() {
     mem_log!(trace, "Init Stack Allocator");
     unsafe {
         STACK_ALLOCATOR.lock().init(
-            PlatformImpl::get_stack_start() as *mut u8,
+            PlatformImpl::STACK_START as *mut u8,
             PlatformImpl::calculate_stack_size(),
         );
     }
     // allocate interrupt Stack and set the interrupt stack pointe
-    let layout = Layout::from_size_align(PlatformImpl::get_interrupt_stack_size(), 4).unwrap();
+    let layout = Layout::from_size_align(PlatformImpl::INTERRUPT_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
     INTERRUPT_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
 
     // allocate program stack
-    let layout = Layout::from_size_align(PlatformImpl::get_program_stack_size(), 4).unwrap();
+    let layout = Layout::from_size_align(PlatformImpl::PROGRAM_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
     let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
     PROGRAM_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });

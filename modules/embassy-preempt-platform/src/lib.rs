@@ -1,6 +1,4 @@
 #![no_std]
-#![feature(naked_functions_rustic_abi)]
-#![feature(decl_macro)]
 
 //! Platform abstraction layer for embassy_preempt RTOS
 //!
@@ -10,107 +8,62 @@
 //!
 //! ## Organization
 //!
-//! - [`traits`]: Platform trait definitions
-//!   - [`platform`]: Core platform functionality trait
-//!   - [`timer`]: Timer driver trait
-//! - [`stm32f401re`]: STM32F401RE platform implementation
+//! This crate re-exports traits from `embassy-preempt-traits` and provides
+//! platform-specific implementations.
 //!
-//! ## Platform Implementations
+//! ## Platform Selection
 //!
-//! - [`stm32f401re`]: STM32F401RE microcontroller support with timer driver
+//! Platforms are selected via Cargo features:
+//! - `stm32f401re`: STM32F401RE microcontroller support
+//! - `jh7110`: JH7110 RISC-V SoC support
+//! - `ch32v307wcu6`: CH32V307WCU6 microcontroller support
 
-// mod critical_section;
-
-#[macro_use] 
+#[macro_use]
 extern crate embassy_preempt_log;
-
-// Declare modules
-pub mod traits;
 
 use spin::Once;
 
-// Re-export traits for convenience
-pub use traits::Platform;
+// Re-export traits from embassy-preempt-traits
+pub use embassy_preempt_traits::{OsStk, Platform, PlatformStatic};
 
 // ===== PLATFORM SELECTION =====
+// Each platform is implemented in a separate sub-crate and re-exported here
 
-// ARM Cortex-M platforms
-#[cfg(all(feature = "arm", feature = "cortex-m"))]
-pub mod arm;
-
-#[cfg(all(feature = "arm", feature = "cortex-m"))]
-pub use arm as arch;
-
-#[cfg(feature = "stm32f4xx")]
-pub use stm32f4xx_hal as hal;
-
-// STM32F401RE platform
+// STM32F4 platform (ARM Cortex-M)
 #[cfg(feature = "stm32f401re")]
-pub use arch::chip::stm32f401re as chip;
+pub use stm32f4 as chip;
 
-#[cfg(feature = "stm32f401re")]
-pub use stm32_metapac as pac;
-
-// RISC-V32 platforms (placeholder for future implementation)
-#[cfg(all(feature = "riscv", feature = "riscv32"))]
-pub mod riscv;
-
-#[cfg(all(feature = "riscv", feature = "riscv32"))]
-pub use riscv as arch;
-
-// RISC-V64 platforms
-#[cfg(all(feature = "riscv", feature = "riscv64"))]
-pub mod riscv64;
-
-#[cfg(all(feature = "riscv", feature = "riscv64"))]
-pub use riscv64 as arch;
-
+// JH7110 platform (RISC-V 64)
 #[cfg(feature = "jh7110")]
-pub use arch::chip::jh7110 as chip;
+pub use jh7110 as chip;
 
-
-// Qingke platforms
-#[cfg(all(feature = "qingke"))]
-pub mod qingke;
-#[cfg(all(feature = "qingke"))]
-pub use qingke as arch;
-
+// CH32V3 platform (Qingke RISC-V)
 #[cfg(feature = "ch32v307wcu6")]
-pub use arch::chip::ch32v307wcu6 as chip;
-
+pub use ch32v3 as chip;
 
 // ===== RE-EXPORTS =====
 
-// Re-export panic handler for the selected architecture
-#[cfg(any(feature = "stm32f401re", all(feature = "riscv")))]
-pub use arch::panic_handler;
+// Re-export timer driver for the selected platform
+pub use chip::timer_driver;
 
-pub use arch::driver as driver;
-
+// Re-export platform implementation
 pub use chip::PlatformImpl;
-
-pub type OsStk = usize;
-
-// Re-export timer driver for supported platforms
-pub use chip::timer_driver as timer_driver;
-
 
 // ===== PLATFORM INSTANCE =====
 
-static __PLATFORM: Once<chip::PlatformImpl> = Once::new();
+static __PLATFORM: Once<PlatformImpl> = Once::new();
 
 pub fn init_platform() -> Result<(), ()> {
     if __PLATFORM.is_completed() {
         Err(())
     } else {
-        __PLATFORM.call_once(|| chip::PlatformImpl::new());
+        __PLATFORM.call_once(|| PlatformImpl::new());
         Ok(())
     }
 }
 
 #[inline(always)]
-pub fn get_platform() -> &'static chip::PlatformImpl {
-    // __PLATFORM.call_once(|| chip::PlatformImpl::new())
+pub fn get_platform() -> &'static PlatformImpl {
     unsafe {
         __PLATFORM.get_unchecked()
     }
@@ -118,7 +71,6 @@ pub fn get_platform() -> &'static chip::PlatformImpl {
 
 #[inline(always)]
 pub fn get_platform_trait() -> &'static dyn Platform {
-    // __PLATFORM.call_once(|| chip::PlatformImpl::new())
     unsafe {
         __PLATFORM.get_unchecked()
     }

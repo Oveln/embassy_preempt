@@ -1,7 +1,7 @@
 use core::ops::Add;
 
 use super::duration::Duration;
-use embassy_preempt_platform::{get_platform_trait, traits::timer::Driver};
+use embassy_preempt_platform::{get_platform_trait};
 
 
 #[allow(unused)]

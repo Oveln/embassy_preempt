@@ -8,7 +8,7 @@ pub mod linked_list;
 pub mod stack_allocator;
 
 use embassy_preempt_platform::chip::PlatformImpl;
-use embassy_preempt_platform::traits::memory_layout::PlatformMemoryLayout;
+use embassy_preempt_traits::PlatformMemoryLayout;
 use fixed_size_block::FixedSizeBlockAllocator;
 pub use stack_allocator::*;
 
@@ -26,7 +26,7 @@ pub fn Init_Heap() {
     unsafe {
         ALLOCATOR
             .lock()
-            .init(PlatformImpl::get_heap_start(), PlatformImpl::get_heap_size());
+            .init(PlatformImpl::heap_start(), PlatformImpl::HEAP_SIZE);
     }
     mem_log!(trace, "Init_Heap: completed");
 }

@@ -9,126 +9,36 @@ license = "MIT OR Apache-2.0"
 [lib]
 name = "embassy_preempt_platform"
 path = "src/lib.rs"
-crate-type = ["rlib"]             # Rust库类型
+crate-type = ["rlib"]
 
 [dependencies]
 # Core dependencies (platform-agnostic)
-portable-atomic ={ version = "1.11.1"}
 spin = { version = "0.10.0" }
-embedded-hal = "1.0"
-nb = "1"
-critical-section = { version = "1.1", features = ["restore-state-bool"] }
 embassy-preempt-cfg = { path = "../embassy-preempt-cfg" }
-
 embassy-preempt-log = { path = "../embassy-preempt-log" }
 
-# ARM Cortex-M dependencies
-cortex-m = { version = "0.7.7", optional = true, default-features = false }
-cortex-m-rt = { version = "0.7", optional = true }
-cortex-m-semihosting = { version = "0.5", optional = true }
-defmt = { version = "1.0.1", optional = true }
-panic-probe = { version = "1.0.0", features = ["print-defmt"], optional = true }
+# Traits sub-crate (re-exported for convenience)
+embassy-preempt-traits = { path = "traits" }
 
-# STM32 support (ARM-specific)
-stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", optional = true, features = [
-    "metadata",
-] }
-
-# RISC-V dependencies
-riscv = { version = "0.16.0", optional = true, default-features = false }
-riscv-rt = { version = "0.17.1", optional = true, features = ["no-xtvec"]} 
-aclint = { git = "https://github.com/rustsbi/aclint", optional = true}
-
-# Qingke dependencies
-qingke = { version = "0.5.0", optional = true , features = ["unsafe-trust-wch-atomics"]}
-qingke-rt = { version = "0.5.0", optional = true}
-ch32-metapac = { features = [ "metadata" ], optional = true, git = "https://github.com/ch32-rs/ch32-metapac", rev = "b1cbc7a98e43af3fd3170821654784e2c01cb26b" }
-
-
-panic-halt = { version = "1.0.0" }
-
-# Platform-specific HALs
-[dependencies.stm32f4xx-hal]
-version = "0.23.0"
-features = ["stm32f401"]
-default-features = false
-optional = true
+# Platform implementation crates (optional, selected via features)
+stm32f4 = { path = "platforms/stm32f4", optional = true }
+jh7110 = { path = "platforms/jh7110", optional = true }
+ch32v3 = { path = "platforms/ch32v3", optional = true }
 
 [features]
 default = []
 
-# ===== PLATFORM ARCHITECTURES =====
+# ===== PLATFORMS =====
+# Each platform feature enables the corresponding platform implementation crate
 
-memory-x = []
+# STM32F4 platform (ARM Cortex-M)
+stm32f401re = ["dep:stm32f4"]
 
-# ARM architecture support
-arm = []
-cortex-m = ["arm", "dep:cortex-m", "dep:panic-probe", "dep:defmt"]
-cortex-m4 = ["cortex-m"]
-cortex-m7 = ["cortex-m"]
+# JH7110 platform (RISC-V 64)
+jh7110 = ["dep:jh7110"]
 
-# Semihosting (ARM only)
-semihosting = ["cortex-m", "dep:cortex-m-semihosting", "dep:cortex-m-rt"]
-
-# RISC-V architecture support
-riscv = ["dep:riscv", "dep:riscv-rt"]
-riscv32 = ["riscv"]
-riscv64 = ["riscv"]
-
-qingke = ["dep:qingke", "dep:qingke-rt", "dep:ch32-metapac", "spin/portable-atomic", "portable-atomic/critical-section"]
-
-# ===== ARM CORTEX-M PLATFORMS =====
-
-# STM32F4xx series
-stm32f4xx = ["cortex-m", "dep:stm32-metapac", "semihosting"]
-stm32f401re = [
-    "stm32f4xx",
-    "dep:stm32f4xx-hal",
-    "stm32-metapac/stm32f401re",
-    "time_driver_tim3",
-    # "semihosting",
-]
-
-
-# ===== Qingke PLATFORMS =====
-
-ch32v307wcu6 = [
-    "qingke",
-    "ch32-metapac/ch32v307wcu6",
-    "ch32-metapac/rt",
-    "qingke-rt/v4",
-    # "qingke-rt/highcode"
-]
-
-# ===== jh7110 PLATFORMS =====
-
-jh7110 = [
-    "riscv64",
-    "dep:aclint",
-    "spin/portable-atomic",
-    "portable-atomic/critical-section",
-    "riscv/critical-section-single-hart",
-]
-
-# ===== TIMER DRIVERS =====
-
-# ARM Cortex-M Timer drivers
-time_driver_tim1 = []
-time_driver_tim2 = []
-time_driver_tim3 = []
-time_driver_tim4 = []
-time_driver_tim5 = []
-time_driver_tim8 = []
-time_driver_tim9 = []
-time_driver_tim12 = []
-
-# ===== DEBUG AND LOGGING =====
-
-# Early debug support
-early_debug_gpio = []
-
-# Platform-specific debugging
-riscv_debug = [] # For RISC-V debug adapters
+# CH32V3 platform (Qingke RISC-V)
+ch32v307wcu6 = ["dep:ch32v3"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
