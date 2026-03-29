@@ -95,4 +95,14 @@ pub trait Platform {
     /// Returns a reference to the timer driver implementation that provides
     /// timing services for the RTOS.
     fn get_timer_driver(&'static self) -> &'static dyn crate::timer::Driver;
+
+    /// Register a callback to be invoked when an IPI (Inter-Processor Interrupt) occurs
+    ///
+    /// The platform implementation should call the provided callback from the
+    /// machine software interrupt (MSIP) handler.
+    ///
+    /// # Parameters
+    /// - `callback`: Function to call when IPI is received
+    /// - `ctx`: Context pointer passed to the callback
+    fn set_ipi_callback(&'static self, callback: fn(*mut ()), ctx: *mut ());
 }

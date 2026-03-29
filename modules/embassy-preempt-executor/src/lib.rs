@@ -17,6 +17,8 @@ pub mod task;
 /// The executor for the uC/OS-II RTOS.
 pub mod timer_queue;
 pub mod waker;
+/// IPI (Inter-Processor Interrupt) wait mechanism.
+pub mod ipi;
 
 #[macro_use]
 extern crate embassy_preempt_log;
@@ -48,6 +50,7 @@ use state_atomics::State;
 use task::{OS_TCB, OS_TCB_REF};
 
 pub use self::waker::task_from_waker;
+pub use self::ipi::wait_for_ipi;
 use crate::os_cpu::OSTaskStkInit;
 #[cfg(feature = "delay_idle")]
 use crate::os_time::blockdelay::delay;

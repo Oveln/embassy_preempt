@@ -116,7 +116,7 @@ pub use platform::PlatformImpl;
 
 // 重新导出异常处理相关的公共接口
 pub use exception::abort;
-pub use interrupt::{plic, register_interrupt_handler, InterruptHandler};
+pub use interrupt::{plic, register_interrupt_handler, register_ipi_callback, InterruptHandler};
 
 // 重新导出 trap 处理相关的常量
 pub use trap::constants;

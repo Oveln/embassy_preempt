@@ -77,6 +77,19 @@ pub(crate) static NEED_CONTEXT_SWITCH: AtomicBool = AtomicBool::new(false);
 /// - 11: Machine external interrupt
 static mut INTERRUPT_HANDLERS: [Option<InterruptHandler>; riscv_irq::MAX_IRQ] = [const { None }; riscv_irq::MAX_IRQ];
 
+/// IPI (Inter-Processor Interrupt) 回调
+///
+/// 当 MSIP 中断发生时调用此回调，由 executor 注册。
+static mut IPI_CALLBACK: Option<(fn(*mut ()), *mut ())> = None;
+
+/// 注册 IPI 回调函数
+///
+/// # Safety
+/// 必须在中断禁用状态下调用
+pub unsafe fn register_ipi_callback(callback: fn(*mut ()), ctx: *mut ()) {
+    IPI_CALLBACK = Some((callback, ctx));
+}
+
 /// PLIC 外部中断处理函数表
 ///
 /// 索引对应 PLIC 中断源 ID (1-127)
@@ -207,7 +220,11 @@ unsafe fn handle_interrupt_default(exception_code: usize) {
         riscv_irq::M_SOFT => {
             let msip: *mut usize = 0x02000000 as *mut usize;
             core::ptr::write_volatile(msip, 0);
-            os_log!(trace, "[IRQ] MSIP");
+            os_log!(trace, "[IRQ] MSIP (IPI)");
+            // 调用已注册的 IPI 回调
+            if let Some((callback, ctx)) = IPI_CALLBACK {
+                callback(ctx);
+            }
         }
         riscv_irq::M_TIMER => {
             os_log!(trace, "[IRQ] Machine Timer Interrupt");

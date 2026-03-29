@@ -269,6 +269,12 @@ impl Platform for PlatformImpl {
     fn get_timer_driver(&'static self) -> &'static dyn embassy_preempt_traits::timer::Driver {
         self.timer
     }
+
+    fn set_ipi_callback(&'static self, callback: fn(*mut ()), ctx: *mut ()) {
+        unsafe {
+            crate::interrupt::register_ipi_callback(callback, ctx);
+        }
+    }
 }
 
 // ===== 系统信息输出辅助函数 =====

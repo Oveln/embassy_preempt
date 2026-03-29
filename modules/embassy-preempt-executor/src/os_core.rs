@@ -207,6 +207,9 @@ pub extern "C" fn OSInit() {
         "Platform has beed initliazed !"
     );
 
+    // Register IPI callback with the platform
+    crate::ipi::init();
+
     GlobalSyncExecutor();
 
     OS_InitTaskIdle(); /* Create the Idle Task                     */

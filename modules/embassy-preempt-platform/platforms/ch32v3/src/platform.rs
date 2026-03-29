@@ -228,4 +228,8 @@ impl Platform for PlatformImpl {
     fn get_timer_driver(&'static self) -> &'static dyn embassy_preempt_traits::timer::Driver {
         &self.timer
     }
+
+    fn set_ipi_callback(&'static self, _callback: fn(*mut ()), _ctx: *mut ()) {
+        // CH32V3 does not support IPI (single core)
+    }
 }
