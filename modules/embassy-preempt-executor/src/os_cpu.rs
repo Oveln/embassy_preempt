@@ -7,47 +7,39 @@ use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
 use embassy_preempt_mem::heap::{get_interrupt_stack, get_program_stack};
 use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_platform::OsStk;
+use embassy_preempt_platform::chip::trap::TrapFrame;
+use embassy_preempt_platform::chip::trap::CONTEXT_STACK_SIZE;
 
 use crate::GlobalSyncExecutor;
 
 /// finish the init part of the CPU/MCU
 pub fn OSInitHookBegin() {}
 
+/// 上下文切换处理器
+///
+/// # 参数
+/// - trap_frame: 当前 TrapFrame 指针
+///
+/// # 返回
+/// 新任务的 TrapFrame 指针
+///
+/// # 注意
+/// - 寄存器的保存/恢复由汇编入口完成
+/// - 此函数只负责调度逻辑和返回新任务的 TrapFrame
 #[unsafe(no_mangle)]
-extern "C" fn __ContextSwitchHandler() {
-    const EXC_RETURN_TO_PSP: u32 = 0xFFFFFFFD;
-    // first close the interrupt and save context
-    unsafe {
-        embassy_preempt_platform::PlatformImpl::save_task_context();
-    }
-    os_log!(info, "PendSV");
-
-    let old_stk_ptr = unsafe { embassy_preempt_platform::PlatformImpl::get_current_stack_pointer() };
-    os_log!(info, "psp: {:p}", old_stk_ptr);
-
-    // unsafe {
-    //     let _psp = old_stk_ptr as *mut embassy_preempt_platform::chip::UcStk;
-
-    //     os_log!(
-    //         info,
-    //         "mepc: {:x}, mstatus: {:x}, ra: {:x}",
-    //         (*_psp).mepc,
-    //         (*_psp).mstatus,
-    //         (*_psp).ra
-    //     );
-    // }
+extern "C" fn __ContextSwitchHandler(trap_frame: *mut TrapFrame) -> *mut TrapFrame {
+    unsafe { embassy_preempt_platform::chip::gpio::gpio_controller().toggle(39); }
+    os_log!(info, "ContextSwitch");
 
     let global_executor = GlobalSyncExecutor().as_ref().unwrap();
     let prio_cur = global_executor.OSPrioCur.get_unmut();
     let prio_highrdy = global_executor.OSPrioHighRdy.get_unmut();
+
+    // 如果优先级相同，则不用切换栈，直接返回即可
     if prio_highrdy == prio_cur {
-        // we will reset the msp to the original
-        let msp_stk = get_interrupt_stack().get().STK_REF.as_ptr();
-        let current_psp = unsafe { embassy_preempt_platform::PlatformImpl::get_current_stack_pointer() };
-        unsafe {
-            embassy_preempt_platform::PlatformImpl::restore_task_context(current_psp, msp_stk, EXC_RETURN_TO_PSP);
-        }
+        return trap_frame;
     }
+
     #[cfg(feature = "OS_TASK_PROFILE_EN")]
     {
         // add the task's context switch counter
@@ -57,53 +49,33 @@ extern "C" fn __ContextSwitchHandler() {
     }
 
     // add global context switch counter
-    OSCtxSwCtr.fetch_add(1, core::sync::atomic::Ordering::SeqCst);
+    OSCtxSwCtr.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
 
-    // os_log!(
-    //     info,
-    //     "OSCtxSwCtr is {}",
-    //     OSCtxSwCtr.load(core::sync::atomic::Ordering::SeqCst)
-    // );
-
+    // 获取新任务的栈
     let stk_ptr: embassy_preempt_mem::heap::OS_STK_REF = global_executor.OSTCBHighRdy.get_mut().take_stk();
     let stk_heap_ref = stk_ptr.HEAP_REF;
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
-    // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = get_program_stack().swap(stk_ptr);
 
     let tcb_cur = global_executor.OSTCBCur.get_mut();
 
     // see if it is a thread
     if *tcb_cur.needs_stack_save.get_unmut() {
-        let old_stk_ptr = unsafe { embassy_preempt_platform::PlatformImpl::get_current_stack_pointer() };
-        old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OsStk).unwrap();
+        old_stk.STK_REF = NonNull::new(trap_frame as *mut OsStk).unwrap();
         tcb_cur.set_stk(old_stk);
     } else if old_stk.HEAP_REF != stk_heap_ref {
         drop(old_stk);
     } else {
         mem::forget(old_stk);
     }
+
     unsafe {
         global_executor.set_cur_highrdy();
         tcb_cur.needs_stack_save.set(false);
     }
-    let msp_stk = get_interrupt_stack().get().STK_REF.as_ptr();
-    os_log!(info, "psp: {:p}, msp: {:p}", program_stk_ptr, msp_stk);
 
-    // unsafe {
-    //     let _psp = program_stk_ptr as *mut embassy_preempt_platform::chip::UcStk;
-    //     os_log!(
-    //         info,
-    //         "mepc: {:x}, mstatus: {:x}, ra: {:x}",
-    //         (*_psp).mepc,
-    //         (*_psp).mstatus,
-    //         (*_psp).ra
-    //     );
-    // }
-
-    unsafe {
-        embassy_preempt_platform::PlatformImpl::restore_task_context(program_stk_ptr, msp_stk, EXC_RETURN_TO_PSP);
-    }
+    unsafe { embassy_preempt_platform::chip::gpio::gpio_controller().toggle(40); }
+    program_stk_ptr as *mut TrapFrame
 }
 
 /// the function to mock/init the stack of the task

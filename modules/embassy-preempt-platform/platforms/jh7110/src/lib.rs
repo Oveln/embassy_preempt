@@ -5,6 +5,7 @@
 //! - 异常和中断处理
 //! - 栈回溯和调试支持
 //! - 定时器驱动
+//! - GPIO 驱动
 //! - 任务上下文管理
 //!
 //! ## 模块组织
@@ -13,6 +14,7 @@
 //! - [`platform`] - 平台初始化和核心功能实现
 //! - [`timer_driver`] - 硬件定时器驱动 (基于 CLINT mtime)
 //! - [`ucstk`] - 用户栈和上下文结构定义
+//! - [`gpio`] - GPIO 驱动 (基于 sys_gpio)
 //!
 //! ### 异常和中断处理
 //! - [`trap`] - Trap 处理的汇编入口点和常量定义
@@ -73,6 +75,12 @@
 //! // 初始化平台
 //! let platform = PlatformImpl::new();
 //!
+//! // 初始化 GPIO 控制器
+//! unsafe {
+//!     use embassy_preempt_platform_jh7110::gpio_init;
+//!     gpio_init();
+//! }
+//!
 //! // 触发上下文切换
 //! PlatformImpl::trigger_context_switch();
 //!
@@ -95,16 +103,11 @@ extern crate embassy_preempt_log;
 // 平台核心实现
 pub mod platform;
 pub mod timer_driver;
-pub mod ucstk;
+pub mod gpio;
 
-// 异常和中断处理
-pub mod exception;
-pub mod interrupt;
 pub mod trap;
 pub mod panic_handler;
 
-// 调试支持
-pub mod backtrace;
 
 // Re-export from traits crate
 pub use embassy_preempt_traits::{
@@ -114,9 +117,5 @@ pub use embassy_preempt_traits::{
 // 公共导出
 pub use platform::PlatformImpl;
 
-// 重新导出异常处理相关的公共接口
-pub use exception::abort;
-pub use interrupt::{plic, register_interrupt_handler, register_ipi_callback, InterruptHandler};
-
-// 重新导出 trap 处理相关的常量
-pub use trap::constants;
+// 重新导出 GPIO 相关的公共接口
+pub use gpio::{init as gpio_init, gpio_controller, GpioController};

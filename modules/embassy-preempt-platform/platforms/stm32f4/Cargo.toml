@@ -10,7 +10,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # Core dependencies from main platform crate
-portable-atomic = "1.11.1"
+portable-atomic = "1.13.1"
 spin = "0.10.0"
 embedded-hal = "1.0"
 nb = "1"

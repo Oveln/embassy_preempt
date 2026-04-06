@@ -6,7 +6,8 @@ use embassy_preempt_traits::memory_layout::PlatformMemoryLayout;
 use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_traits::Platform;
 
-use crate::ucstk::CONTEXT_STACK_SIZE;
+use crate::gpio;
+use crate::trap::CONTEXT_STACK_SIZE;
 
 // 静态存储，供中断处理访问定时器驱动
 static mut TIMER_DRIVER_STORAGE: Option<crate::timer_driver::Jh7110Timer> = None;
@@ -33,6 +34,8 @@ impl PlatformImpl {
             use riscv::register::mtvec::{self, Mtvec, TrapMode};
             // 初始化 mtvec 指向我们的 trap 处理函数
             mtvec::write(Mtvec::new(__trap_entry as usize, TrapMode::Direct));
+
+            gpio::init();
         }
 
         // 创建并初始化定时器驱动，存储在静态变量中
@@ -52,14 +55,21 @@ impl PlatformImpl {
 
 impl PlatformStatic for PlatformImpl {
     fn trigger_context_switch() {
-        use crate::interrupt::IN_INTERRUPT;
-        use crate::interrupt::NEED_CONTEXT_SWITCH;
+        use crate::trap::IN_TRAP;
+        use crate::trap::NEED_CONTEXT_SWITCH;
         use core::sync::atomic::Ordering;
 
+        unsafe {
+            gpio::gpio_controller().toggle(37);
+            os_log!(info, "Before ecall: MIE={}， in_Interrupt={}", riscv::register::mstatus::read().mie(), IN_TRAP.load(Ordering::Acquire));
+        }
+
         // 检查是否在中断处理中
-        if IN_INTERRUPT.load(Ordering::SeqCst) {
+        // 使用 Acquire 语义：确保读取到最新的值
+        if IN_TRAP.load(Ordering::Acquire) {
             // 在中断中，设置延迟上下文切换标志
-            NEED_CONTEXT_SWITCH.store(true, Ordering::SeqCst);
+            // 使用 Release 语义：确保设置操作之前的写操作完成
+            NEED_CONTEXT_SWITCH.store(true, Ordering::Release);
         } else {
             // 不在中断中，直接执行 ecall 触发上下文切换
             unsafe {
@@ -70,102 +80,10 @@ impl PlatformStatic for PlatformImpl {
 
     #[inline(always)]
     unsafe fn save_task_context() {
-        core::arch::asm!(
-            // 保存通用寄存器（64位）
-            "csrrw sp, mscratch, sp",
-            "addi sp, sp, -256",  // 32 * 8 = 256 bytes (不保存 mstatus)
-            "sd x1, 0(sp)",    // ra
-            "sd x2, 8(sp)",    // sp
-            "sd x3, 16(sp)",   // gp
-            "sd x4, 24(sp)",   // tp
-            "sd x5, 32(sp)",   // t0
-            "sd x6, 40(sp)",   // t1
-            "sd x7, 48(sp)",   // t2
-            "sd x8, 56(sp)",   // s0
-            "sd x9, 64(sp)",   // s1
-            "sd x10, 72(sp)",  // a0
-            "sd x11, 80(sp)",  // a1
-            "sd x12, 88(sp)",  // a2
-            "sd x13, 96(sp)",  // a3
-            "sd x14, 104(sp)", // a4
-            "sd x15, 112(sp)", // a5
-            "sd x16, 120(sp)", // a6
-            "sd x17, 128(sp)", // a7
-            "sd x18, 136(sp)", // s2
-            "sd x19, 144(sp)", // s3
-            "sd x20, 152(sp)", // s4
-            "sd x21, 160(sp)", // s5
-            "sd x22, 168(sp)", // s6
-            "sd x23, 176(sp)", // s7
-            "sd x24, 184(sp)", // s8
-            "sd x25, 192(sp)", // s9
-            "sd x26, 200(sp)", // s10
-            "sd x27, 208(sp)", // s11
-            "sd x28, 216(sp)", // t3
-            "sd x29, 224(sp)", // t4
-            "sd x30, 232(sp)", // t5
-            "sd x31, 240(sp)", // t6
-            // 保存 mepc, mstatus 到最后两个 64-bit 位置
-            // mepc 保存时+4，使其存储"返回地址"而非"异常地址"
-            // 这样无论是新任务还是被ecall打断的任务都能正确恢复
-            "csrr t0, mepc",
-            "addi t0, t0, 4",
-            "sd t0, 248(sp)",
-            "csrrw sp, mscratch, sp",
-        );
     }
 
     #[inline(always)]
     unsafe fn restore_task_context(stack_pointer: *mut usize, interrupt_stack: *mut usize, _return_value: u32) {
-        core::arch::asm!(
-            "csrw mscratch, a1",
-            "mv sp, a0",
-            "ld x1, 0(sp)",
-            "ld x3, 16(sp)",
-            "ld x4, 24(sp)",
-            "ld x5, 32(sp)",
-            "ld x6, 40(sp)",
-            "ld x7, 48(sp)",
-            "ld x8, 56(sp)",
-            "ld x9, 64(sp)",
-            // "ld x10, 64(sp)",
-            "ld x11, 80(sp)",
-            "ld x12, 88(sp)",
-            "ld x13, 96(sp)",
-            "ld x14, 104(sp)",
-            "ld x15, 112(sp)",
-            "ld x16, 120(sp)",
-            "ld x17, 128(sp)",
-            "ld x18, 136(sp)",
-            "ld x19, 144(sp)",
-            "ld x20, 152(sp)",
-            "ld x21, 160(sp)",
-            "ld x22, 168(sp)",
-            "ld x23, 176(sp)",
-            "ld x24, 184(sp)",
-            "ld x25, 192(sp)",
-            "ld x26, 200(sp)",
-            "ld x27, 208(sp)",
-            "ld x28, 216(sp)",
-            "ld x29, 224(sp)",
-            "ld x30, 232(sp)",
-            "ld x31, 240(sp)",
-
-            // 恢复 mepc, mstatus
-            // mepc 已经是返回地址（在保存时已+4），直接恢复即可
-            "ld a0, 248(sp)",
-            "csrw mepc, a0",
-
-            // 恢复 a0 和 sp
-            "ld x10, 72(sp)",  // a0
-            "addi sp, sp, 256",
-
-            "mret",
-
-            in("a0") stack_pointer,
-            in("a1") interrupt_stack,
-            options(noreturn)
-        );
     }
 
     fn set_program_stack_pointer(sp: *mut u8) {
@@ -198,13 +116,11 @@ impl PlatformStatic for PlatformImpl {
         let ptos = stk_ref.as_ptr() as *mut usize;
         let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
 
-        // Reserve space for the context frame (264 bytes for RISC-V64)
         ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
-        let psp = ptos as *mut crate::ucstk::UcStk;
+        let psp: *mut crate::trap::TrapFrame = ptos as *mut crate::trap::TrapFrame;
 
         unsafe {
             (*psp).ra = 0x0000_0721_0721_0721;
-            (*psp).sp = 0x0721_0721_0721_0721;
             (*psp).gp = 0x0000_0721_0721_0721;
             (*psp).tp = 0x0000_0721_0721_0721;
             (*psp).t0 = 0x0000_0721_0721_0721;
@@ -236,6 +152,7 @@ impl PlatformStatic for PlatformImpl {
             (*psp).t6 = 0x0000_0721_0721_0721;
 
             (*psp).mepc = executor_function_ptr as usize;
+            (*psp).mstatus = 0x200001880; // MPP=Machine mode, MIE=1
         }
 
         NonNull::new(ptos as *mut usize).unwrap()
@@ -260,9 +177,9 @@ impl PlatformStatic for PlatformImpl {
 impl PlatformMemoryLayout for PlatformImpl {
     const STACK_START: usize = 0xc0020000;
     const MAX_PROGRAMS: usize = 10;
-    const HEAP_SIZE: usize = 10 * 1024; // 10 KiB
-    const PROGRAM_STACK_SIZE: usize = 8192; // 8 KiB
-    const INTERRUPT_STACK_SIZE: usize = 4096; // 4 KiB
+    const HEAP_SIZE: usize = 20 * 1024; // 20 KiB
+    const PROGRAM_STACK_SIZE: usize = 8192*2; // 16 KiB
+    const INTERRUPT_STACK_SIZE: usize = 4096*2; // 8 KiB
 }
 
 impl Platform for PlatformImpl {
@@ -272,7 +189,7 @@ impl Platform for PlatformImpl {
 
     fn set_ipi_callback(&'static self, callback: fn(*mut ()), ctx: *mut ()) {
         unsafe {
-            crate::interrupt::register_ipi_callback(callback, ctx);
+            crate::trap::register_ipi_callback(callback, ctx);
         }
     }
 }

@@ -9,7 +9,7 @@ use portable_atomic::AtomicBool;
 use critical_section::Mutex;
 use embassy_preempt_executor::{os_time::blockdelay::delay, os_time::timer::Timer, AsyncOSTaskCreate, OSInit, OSStart, SyncOSTaskCreate};
 use embassy_preempt_log::task_log;
-use embassy_preempt_platform::{chip::constants::interrupt::MSIP, get_platform, get_platform_trait};
+use embassy_preempt_platform::{get_platform, get_platform_trait};
 
 static EXECUTION_ORDER: Mutex<[&'static str; 20]> = Mutex::new([""; 20]);
 static mut ORDER_INDEX: usize = 0;

@@ -285,8 +285,6 @@ impl SyncExecutor {
     // as an interface to join the scheduler logic
     pub unsafe fn IntCtxSW(&'static self) {
         scheduler_log!(trace, "IntCtxSW");
-        // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
-        scheduler_log!(trace, "IntCtxSW");
         if critical_section::with(|_| unsafe {
             let new_prio = self.find_highrdy_prio();
             task_log!(

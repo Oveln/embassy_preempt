@@ -10,11 +10,11 @@ path = "src/lib.rs"
 
 [dependencies]
 # Core dependencies from main platform crate
-portable-atomic = {version = "1.11.1", features = ["critical-section"]}
+portable-atomic = {version = "1.13.1", features = ["critical-section"]}
 spin = {version = "0.10.0", features = ["portable-atomic"]}
 embedded-hal = "1.0"
 nb = "1"
-critical-section = { version = "1.2", features = ["restore-state-bool"] }
+critical-section = { version = "1.2", features = ["restore-state-bool"]}
 embassy-preempt-cfg = { path = "../../../embassy-preempt-cfg" }
 embassy-preempt-log = { path = "../../../embassy-preempt-log" }
 embassy-preempt-traits = { path = "../../traits" }
