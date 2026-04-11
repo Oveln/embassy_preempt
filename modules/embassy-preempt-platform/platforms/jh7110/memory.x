@@ -1,8 +1,10 @@
 MEMORY
 {
-    /* DDR memory for system port - this is where code runs */
-    RAM : ORIGIN = 0xc0000000, LENGTH = 512K
+    /* AXI 内存 (512KB) - 0x0800_0000 ~ 0x0807_FFFF */
+    RAM : ORIGIN = 0x08000000, LENGTH = 512K
 }
+
+/* 区域别名 - 默认所有段使用 DDR RAM */
 REGION_ALIAS("REGION_TEXT", RAM);
 REGION_ALIAS("REGION_RODATA", RAM);
 REGION_ALIAS("REGION_DATA", RAM);

@@ -177,4 +177,4 @@ qingke = []
 ch32v307wcu6 = ["qingke", "embassy-preempt-platform/ch32v307wcu6", "dep:qingke-rt", "qingke-rt/v4"]
 
 riscv64 = ["dep:riscv"]
-jh7110 = ["riscv64", "embassy-preempt-platform/jh7110", "dep:riscv-rt", "logs", "log-uart"]
+jh7110 = ["riscv64", "embassy-preempt-platform/jh7110", "logs", "log-uart"]

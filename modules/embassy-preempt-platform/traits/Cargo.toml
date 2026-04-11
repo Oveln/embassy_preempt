@@ -13,6 +13,6 @@ crate-type = ["rlib"]
 
 [dependencies]
 spin = { version = "0.10.0" }
-critical-section = { version = "1.2", features = ["restore-state-bool"] }
+critical-section = { version = "1.2" }
 embassy-preempt-cfg = { path = "../../embassy-preempt-cfg" }
 embassy-preempt-log = { path = "../../embassy-preempt-log" }

@@ -42,7 +42,9 @@ pub fn entry(_args: TokenStream, input: TokenStream) -> TokenStream {
         #input
 
         #[cfg(all(target_arch = "riscv64",feature = "riscv64"))]
-        #[riscv_rt::entry]
+        // #[riscv_rt::entry]
+        #[export_name = "_start"]
+        #[link_section = ".init"]
         #input
 
         #[cfg(not(any(target_arch = "arm", target_arch = "riscv32", target_arch = "riscv64")))]

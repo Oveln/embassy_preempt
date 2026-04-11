@@ -15,11 +15,11 @@ crate-type = ["rlib"]
 # DEPENDENCIES
 # ==================================================================
 [dependencies]
-critical-section = { version = "1.2", features = ["restore-state-bool"] }
+critical-section = { version = "1.2" }
 
 spin = "0.10.0"
 
-portable-atomic = { version = "1.13.1", features = ["critical-section"] }
+portable-atomic = { version = "1.13.1" }
 
 # Embassy Preempt Log
 embassy-preempt-log = { path = "../embassy-preempt-log" }
