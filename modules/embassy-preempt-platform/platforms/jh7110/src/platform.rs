@@ -78,14 +78,6 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    #[inline(always)]
-    unsafe fn save_task_context() {
-    }
-
-    #[inline(always)]
-    unsafe fn restore_task_context(stack_pointer: *mut usize, interrupt_stack: *mut usize, _return_value: u32) {
-    }
-
     fn set_program_stack_pointer(sp: *mut u8) {
         unsafe {
             asm!(

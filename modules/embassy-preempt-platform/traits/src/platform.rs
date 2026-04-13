@@ -11,37 +11,6 @@ pub trait PlatformStatic {
     /// - RISC-V: Set software interrupt or use ecall
     fn trigger_context_switch();
 
-    // ===== Context Management Functions =====
-    // These functions handle low-level context switching and should be marked as
-    // #[inline(always)] in implementations for performance-critical operations
-
-    /// Save current task context to stack
-    ///
-    /// Saves the current CPU context (registers, program counter, etc.) to the task's stack.
-    /// This is called during task switching interrupts.
-    ///
-    /// Architecture-specific context:
-    /// - ARM Cortex-M: R4-R11, LR
-    /// - RISC-V: Saved registers per ABI specification
-    ///
-    /// # Safety
-    /// Must be called with interrupts disabled and proper stack setup.
-    unsafe fn save_task_context();
-
-    /// Restore task context from stack and resume execution
-    ///
-    /// Restores a task's saved context and switches to it.
-    /// This is the final step in context switching.
-    ///
-    /// Parameters:
-    /// - `stack_pointer`: Pointer to the task's stack containing saved context
-    /// - `interrupt_stack`: System interrupt stack to restore
-    /// - `return_value`: Architecture-specific return value (e.g., EXC_RETURN on ARM)
-    ///
-    /// # Safety
-    /// Must be called with valid saved context and proper stack alignment.
-    unsafe fn restore_task_context(stack_pointer: *mut usize, interrupt_stack: *mut usize, return_value: u32);
-
     /// Set the program/running stack pointer
     ///
     /// Architecture-specific stack pointer:

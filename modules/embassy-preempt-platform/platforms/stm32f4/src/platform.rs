@@ -326,64 +326,6 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    /// Save current task context to stack
-    ///
-    /// ARM Cortex-M specific context saving that stores callee-saved registers
-    /// (R4-R11 and LR) to the task's Process Stack Pointer (PSP).
-    /// Must be called with interrupts disabled for atomicity.
-    ///
-    /// # Safety
-    /// - Must be called with interrupts disabled
-    /// - Must have valid PSP pointing to sufficient stack space
-    /// - Must only be called from interrupt context
-    #[inline(always)]
-    unsafe fn save_task_context() {
-        asm!(
-            "CPSID I",                      // Disable interrupts for atomic context save
-            "MRS     R0, PSP",              // Get current Process Stack Pointer
-            "STMFD   R0!, {{R4-R11, R14}}", // Save callee-saved registers (R4-R11, LR) with full descending stack
-            "MSR     PSP, R0",              // Write back updated PSP
-            options(nostack, preserves_flags)
-        );
-    }
-
-    /// Restore task context and resume execution
-    ///
-    /// ARM Cortex-M specific context restoration that:
-    /// 1. Restores callee-saved registers from task stack
-    /// 2. Sets the task's PSP
-    /// 3. Restores interrupt stack pointer
-    /// 4. Re-enables interrupts
-    /// 5. Branches to exception return value to resume task
-    ///
-    /// # Parameters
-    /// - `stack_pointer`: Task's saved stack pointer (PSP)
-    /// - `interrupt_stack`: System interrupt stack pointer (MSP)
-    /// - `return_value`: ARM exception return value (EXC_RETURN)
-    ///
-    /// # Safety
-    /// - Must have valid saved context on stack
-    /// - Must be called from PendSV handler
-    /// - Stack pointers must be properly aligned
-    #[inline(always)]
-    unsafe fn restore_task_context(
-        stack_pointer: *mut usize,
-        interrupt_stack: *mut usize,
-        return_value: u32,
-    ) {
-        asm!(
-            "LDMFD   R0!, {{R4-R11, R14}}", // Restore callee-saved registers from task stack
-            "MSR     PSP, R0",              // Set task's Process Stack Pointer
-            "MSR     MSP, R1",              // Restore system Main Stack Pointer
-            "CPSIE   I",                    // Re-enable interrupts
-            "BX      R2",                   // Branch to EXC_RETURN value to resume task
-            in("r0") stack_pointer,         // R0: Task stack pointer
-            in("r1") interrupt_stack,       // R1: Interrupt stack pointer
-            in("r2") return_value,          // R2: EXC_RETURN value
-            options(nostack, preserves_flags),
-        );
-    }
-
     /// Get current Process Stack Pointer value
     ///
     /// ARM Cortex-M specific function that reads the current PSP value.
