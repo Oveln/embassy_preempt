@@ -5,15 +5,25 @@ use embassy_preempt_log::{os_log, scheduler_log};
 use embassy_preempt_traits::memory_layout::PlatformMemoryLayout;
 use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_traits::Platform;
+use embassy_preempt_traits::timer::Driver;
 
 use crate::gpio;
-use crate::trap::CONTEXT_STACK_SIZE;
+use embassy_preempt_riscv64_rt::CONTEXT_STACK_SIZE;
 
 // 静态存储，供中断处理访问定时器驱动
 static mut TIMER_DRIVER_STORAGE: Option<crate::timer_driver::Jh7110Timer> = None;
 
 // 静态引用，供中断处理访问定时器驱动
 pub static mut TIMER_DRIVER: Option<&'static crate::timer_driver::Jh7110Timer> = None;
+
+/// Timer 中断回调函数
+///
+/// 这个函数由 rt 库在中断处理时调用
+unsafe extern "C" fn timer_interrupt_callback() {
+    if let Some(timer) = TIMER_DRIVER {
+        timer.on_interrupt();
+    }
+}
 
 pub struct PlatformImpl {
     pub timer: &'static crate::timer_driver::Jh7110Timer,
@@ -22,21 +32,6 @@ pub struct PlatformImpl {
 impl PlatformImpl {
     pub fn new() -> Self {
         os_log!(info, "Init JH7110 Platform");
-        // RISC-V64 初始化代码
-        unsafe {
-            riscv::register::mstatus::set_mie(); // Enable machine interrupts
-            riscv::register::mie::set_msoft();
-
-            /// 外部声明 trap 入口
-            extern "C" {
-                fn __trap_entry();
-            }
-            use riscv::register::mtvec::{self, Mtvec, TrapMode};
-            // 初始化 mtvec 指向我们的 trap 处理函数
-            mtvec::write(Mtvec::new(__trap_entry as usize, TrapMode::Direct));
-
-            gpio::init();
-        }
 
         // 创建并初始化定时器驱动，存储在静态变量中
         let timer = crate::timer_driver::Jh7110Timer::new();
@@ -45,6 +40,20 @@ impl PlatformImpl {
         unsafe {
             TIMER_DRIVER_STORAGE = Some(timer);
             TIMER_DRIVER = TIMER_DRIVER_STORAGE.as_ref();
+
+            // 注册 timer 中断回调
+            embassy_preempt_riscv64_rt::register_timer_callback(timer_interrupt_callback);
+
+            // RISC-V64 初始化代码
+            riscv::register::mstatus::set_mie(); // Enable machine interrupts
+            riscv::register::mie::set_msoft();
+
+            use riscv::register::mtvec::{self, Mtvec, TrapMode};
+            // 初始化 mtvec 指向我们的 trap 处理函数
+            let trap_addr = embassy_preempt_riscv64_rt::trap_entry_addr();
+            mtvec::write(Mtvec::new(trap_addr, TrapMode::Direct));
+
+            gpio::init();
         }
 
         PlatformImpl {
@@ -55,8 +64,7 @@ impl PlatformImpl {
 
 impl PlatformStatic for PlatformImpl {
     fn trigger_context_switch() {
-        use crate::trap::IN_TRAP;
-        use crate::trap::NEED_CONTEXT_SWITCH;
+        use embassy_preempt_riscv64_rt::{IN_TRAP, NEED_CONTEXT_SWITCH};
         use core::sync::atomic::Ordering;
 
         unsafe {
@@ -109,7 +117,7 @@ impl PlatformStatic for PlatformImpl {
         let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
 
         ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
-        let psp: *mut crate::trap::TrapFrame = ptos as *mut crate::trap::TrapFrame;
+        let psp: *mut embassy_preempt_riscv64_rt::TrapFrame = ptos as *mut embassy_preempt_riscv64_rt::TrapFrame;
 
         unsafe {
             (*psp).ra = 0x0000_0721_0721_0721;
@@ -181,7 +189,7 @@ impl Platform for PlatformImpl {
 
     fn set_ipi_callback(&'static self, callback: fn(*mut ()), ctx: *mut ()) {
         unsafe {
-            crate::trap::register_ipi_callback(callback, ctx);
+            embassy_preempt_riscv64_rt::register_ipi_callback(callback, ctx);
         }
     }
 }

@@ -1,0 +1,19 @@
+[package]
+name = "embassy-preempt-riscv64-rt"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "embassy_preempt_riscv64_rt"
+path = "src/lib.rs"
+
+[dependencies]
+# Core dependencies
+portable-atomic = { version = "1.13.1" }
+riscv = { version = "0.16.0", default-features = false }
+critical-section = { version = "1.2", features = ["restore-state-bool"] }
+embassy-preempt-log = { path = "../../../embassy-preempt-log" }
+
+[features]
+default = []

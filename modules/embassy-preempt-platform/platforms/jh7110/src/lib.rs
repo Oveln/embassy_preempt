@@ -13,60 +13,7 @@
 //! ### 核心模块
 //! - [`platform`] - 平台初始化和核心功能实现
 //! - [`timer_driver`] - 硬件定时器驱动 (基于 CLINT mtime)
-//! - [`ucstk`] - 用户栈和上下文结构定义
 //! - [`gpio`] - GPIO 驱动 (基于 sys_gpio)
-//!
-//! ### 异常和中断处理
-//! - [`trap`] - Trap 处理的汇编入口点和常量定义
-//! - [`exception`] - 同步异常处理和系统终止功能
-//! - [`interrupt`] - 中断分发和外部中断处理 (PLIC)
-//! - [`backtrace`] - 基于帧指针的栈回溯功能
-//!
-//! ## 异常处理流程
-//!
-//! ```text
-//! __trap_entry (汇编)
-//!       │
-//!       ├─→ mcause = 11 (M-mode ecall)
-//!       │       └─→ MachineEnvCall
-//!       │               └─→ __ContextSwitchHandler
-//!       │
-//!       └─→ 其他异常/中断
-//!               └─→ handle_exception
-//!                       ├─→ 中断 (bit 31 = 1)
-//!                       │       ├─→ 定时器中断 (7)
-//!                       │       ├─→ 外部中断 (11) → PLIC 处理
-//!                       │       └─→ 软件中断 (3)
-//!                       │
-//!                       └─→ 异常 (bit 31 = 0)
-//!                               └─→ abort() → 系统终止
-//! ```
-//!
-//! ## 使用示例
-//!
-//! ```rust,no_run
-//! use embassy_preempt_platform_jh7110::PlatformImpl;
-//!
-//! // 初始化平台
-//! let platform = PlatformImpl::new();
-//!
-//! // 初始化 GPIO 控制器
-//! unsafe {
-//!     use embassy_preempt_platform_jh7110::gpio_init;
-//!     gpio_init();
-//! }
-//!
-//! // 触发上下文切换
-//! PlatformImpl::trigger_context_switch();
-//!
-//! // 注册中断处理函数
-//! unsafe {
-//!     extern "C" fn my_handler() {
-//!         // 中断处理代码
-//!     }
-//!     register_interrupt_handler(11, my_handler).unwrap();
-//! }
-//! ```
 
 #![no_std]
 #![feature(naked_functions_rustic_abi)]
@@ -80,13 +27,27 @@ pub mod platform;
 pub mod timer_driver;
 pub mod gpio;
 
-pub mod trap;
 pub mod panic_handler;
+
+// trap 模块重新导出 riscv64-rt 的内容
+// 这保持了与原来代码结构的兼容性
+pub mod trap {
+    pub use embassy_preempt_riscv64_rt::{
+        TrapFrame, CONTEXT_STACK_SIZE, IN_TRAP, NEED_CONTEXT_SWITCH,
+    };
+}
 
 
 // Re-export from traits crate
 pub use embassy_preempt_traits::{
     memory_layout::PlatformMemoryLayout, platform::PlatformStatic, Platform, OsStk,
+};
+
+// Re-export from riscv64-rt
+pub use embassy_preempt_riscv64_rt::{
+    CONTEXT_STACK_SIZE, IN_TRAP, NEED_CONTEXT_SWITCH, TrapFrame,
+    MachineEnvCall, register_ipi_callback, register_timer_callback,
+    trap_entry_addr,
 };
 
 // 公共导出

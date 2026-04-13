@@ -1,4 +1,4 @@
-use crate::trap::TrapFrame;
+use crate::TrapFrame;
 
 extern "C" {
     fn InstructionMisaligned(trap_frame: &mut TrapFrame);
@@ -37,7 +37,6 @@ pub static __EXCEPTIONS_EMBASSY_PREEMPT: [Option<unsafe extern "C" fn(&mut TrapF
     None,
     Some(StorePageFault),
 ];
-
 
 /// 异常和中断处理
 ///
