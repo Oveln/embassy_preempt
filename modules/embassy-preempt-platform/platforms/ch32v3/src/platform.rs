@@ -31,56 +31,6 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    fn init_task_stack(stk_ref: NonNull<usize>, executor_function: fn()) -> NonNull<usize> {
-        scheduler_log!(trace, "init_task_stack for CH32V307");
-        let executor_function_ptr = executor_function as *const () as usize;
-        scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function_ptr);
-        // Get stack pointer and align to 8-byte boundary
-        let ptos = stk_ref.as_ptr() as *mut usize;
-        let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
-        // Reserve space for the context frame
-        ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
-        let psp = ptos as *mut crate::ucstk::UcStk;
-
-        unsafe {
-            (*psp).ra = 0x0000_0721;
-            (*psp).sp = 0x0721_0721;
-            (*psp).gp = 0x0000_0721;
-            (*psp).tp = 0x0000_0721;
-            (*psp).t0 = 0x0000_0721;
-            (*psp).t1 = 0x0000_0721;
-            (*psp).s0 = 0x0000_0721;
-            (*psp).s1 = 0x0000_0721;
-            (*psp).a0 = 0x0000_0721;
-            (*psp).a1 = 0x0000_0721;
-            (*psp).a2 = 0x0000_0721;
-            (*psp).a3 = 0x0000_0721;
-            (*psp).a4 = 0x0000_0721;
-            (*psp).a5 = 0x0000_0721;
-            (*psp).a6 = 0x0000_0721;
-            (*psp).a7 = 0x0000_0721;
-            (*psp).s2 = 0x0000_0721;
-            (*psp).s3 = 0x0000_0721;
-            (*psp).s4 = 0x0000_0721;
-            (*psp).s5 = 0x0000_0721;
-            (*psp).s6 = 0x0000_0721;
-            (*psp).s7 = 0x0000_0721;
-            (*psp).s8 = 0x0000_0721;
-            (*psp).s9 = 0x0000_0721;
-            (*psp).s10 = 0x0000_0721;
-            (*psp).s11 = 0x0000_0721;
-            (*psp).t3 = 0x0000_0721;
-            (*psp).t4 = 0x0000_0721;
-            (*psp).t5 = 0x0000_0721;
-            (*psp).t6 = 0x0000_0721;
-
-            (*psp).mepc = executor_function_ptr as usize;
-            (*psp).mstatus = 0x0000_1800;
-        }
-
-        NonNull::new(ptos as *mut usize).unwrap()
-    }
-
     fn enter_idle_state() {}
 
     fn shutdown() {

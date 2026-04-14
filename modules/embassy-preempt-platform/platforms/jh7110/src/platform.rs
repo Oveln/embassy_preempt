@@ -82,24 +82,6 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    fn init_task_stack(stk_ref: NonNull<usize>, executor_function: fn()) -> NonNull<usize> {
-        scheduler_log!(trace, "init_task_stack for JH7110");
-        scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function as *const () as usize);
-
-        // Get stack pointer and align to 8-byte boundary
-        let ptos = stk_ref.as_ptr() as *mut usize;
-        let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
-
-        ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
-        let psp: *mut embassy_preempt_riscv64_rt::TrapFrame = ptos as *mut embassy_preempt_riscv64_rt::TrapFrame;
-
-        unsafe {
-            (*psp).init(executor_function);
-        }
-
-        NonNull::new(ptos as *mut usize).unwrap()
-    }
-
     fn enter_idle_state() {}
 
     fn shutdown() {

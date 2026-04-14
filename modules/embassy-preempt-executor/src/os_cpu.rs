@@ -88,5 +88,18 @@ pub fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
         global_executor.single_poll(task);
         global_executor.poll();
     };
-    embassy_preempt_platform::PlatformImpl::init_task_stack(stk_ref, executor_function)
+
+    scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function as *const () as usize);
+
+    let stk_top = stk_ref.as_ptr() as usize;
+    let aligned_top = (stk_top + 1) & !0b111;
+    let frame_addr = aligned_top - CONTEXT_STACK_SIZE;
+
+    let trap_frame = frame_addr as *mut TrapFrame;
+
+    unsafe {
+        (*trap_frame).init(executor_function);
+    }
+
+    NonNull::new(frame_addr as *mut OsStk).unwrap()
 }

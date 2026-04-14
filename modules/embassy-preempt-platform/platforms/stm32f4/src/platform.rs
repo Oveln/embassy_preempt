@@ -187,62 +187,6 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    /// Initialize task stack with ARM Cortex-M context frame
-    ///
-    /// Creates the initial stack frame for a new task following the ARM Cortex-M
-    /// procedure call standard and exception return conventions.
-    ///
-    /// Stack layout (high addresses to low addresses):
-    /// - Exception frame: xPSR, PC, LR, R12, R3, R2, R1, R0
-    /// - Callee-saved registers: R11-R4
-    ///
-    /// # Parameters
-    /// - `stk_ref`: Reference to stack memory allocation
-    /// - `executor_function`: Function to execute when task starts
-    ///
-    /// # Returns
-    /// Pointer to the initialized task stack top
-    fn init_task_stack(stk_ref: NonNull<usize>, executor_function: fn()) -> NonNull<usize> {
-        scheduler_log!(trace, "init_task_stack");
-        let executor_function_ptr = executor_function as *const () as usize;
-        scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function_ptr);
-
-        // Get stack pointer and align to 8-byte boundary
-        let ptos = stk_ref.as_ptr() as *mut usize;
-        let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
-
-        // Reserve space for the context frame
-        ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
-        let psp = ptos as *mut crate::ucstk::UcStk;
-
-        // Initialize ARM Cortex-M context frame
-        unsafe {
-            // General purpose registers (with debug patterns)
-            (*psp).r0 = 0; // First argument register
-            (*psp).r1 = 0x01010101; // Debug pattern
-            (*psp).r2 = 0x02020202; // Debug pattern
-            (*psp).r3 = 0x03030303; // Debug pattern
-            (*psp).r4 = 0x04040404; // Callee-saved (initial value)
-            (*psp).r5 = 0x05050505; // Callee-saved (initial value)
-            (*psp).r6 = 0x06060606; // Callee-saved (initial value)
-            (*psp).r7 = 0x07070707; // Callee-saved (initial value)
-            (*psp).r8 = 0x08080808; // Callee-saved (initial value)
-            (*psp).r9 = 0x09090909; // Callee-saved (initial value)
-            (*psp).r10 = 0x10101010; // Callee-saved (initial value)
-            (*psp).r11 = 0x11111111; // Callee-saved (initial value)
-            (*psp).r12 = 0x12121212; // Intra-procedure call (initial value)
-            (*psp).r14 = 0xFFFFFFFD; // LR: Return to Thread mode, PSP
-            (*psp).lr = 0; // Unused in task context
-
-            // Exception frame (automatically loaded by hardware on exception return)
-            (*psp).pc = executor_function_ptr as u32; // Program counter: task entry point
-            (*psp).xpsr = 0x01000000; // xPSR: T-bit set for Thumb mode
-        }
-
-        // Return the new stack pointer pointing to the context frame
-        NonNull::new(ptos as *mut usize).unwrap()
-    }
-
     /// Enter low-power idle state
     ///
     /// Puts the CPU into a low-power state until an interrupt occurs.

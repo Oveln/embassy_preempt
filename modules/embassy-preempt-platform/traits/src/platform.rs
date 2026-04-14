@@ -11,12 +11,6 @@ pub trait PlatformStatic {
     /// - RISC-V: Set software interrupt or use ecall
     fn trigger_context_switch();
 
-    /// Initialize task stack with proper context frame
-    ///
-    /// Creates the initial stack frame for task startup with architecture-specific
-    /// register layout and exception return values.
-    fn init_task_stack(stk_ref: NonNull<usize>, executor_function: fn()) -> NonNull<usize>;
-
     /// Execute idle/inactive state (low-power mode)
     ///
     /// Architecture-specific idle behavior:
