@@ -2,6 +2,28 @@
  * JH7110 平台 Linker Script
  *
  * 所有内容放入 RAM (0x0818_0000, 512KB)
+ *
+ * ## 弱符号机制
+ *
+ * 此链接脚本使用弱符号机制，允许平台覆盖默认的处理器：
+ *
+ * ```text
+ * riscv64-rt 提供弱符号默认实现
+ *              ↓
+ *      [链接时符号解析]
+ *              ↓
+ *   平台提供强符号 → 使用平台版本
+ *   平台未提供   → 使用默认版本
+ * ```
+ *
+ * 要覆盖某个处理器，平台代码只需定义同名的 `#[no_mangle]` 函数：
+ *
+ * ```rust,ignore
+ * #[no_mangle]
+ * pub unsafe extern "C" fn MachineTimer(trap_frame: &mut TrapFrame) {
+ *     // 自定义实现
+ * }
+ * ```
  */
 
 /* ============================================================================
@@ -15,10 +37,6 @@ PROVIDE(abort = _default_abort);
 /* 初始化期间的 trap 处理 */
 PROVIDE(_pre_init_trap = _default_abort);
 
-/* 多核处理钩子 (单核平台默认为 abort) */
-PROVIDE(_default_mp_hook = abort);
-PROVIDE(_mp_hook = _default_mp_hook);
-
 /* 默认 trap 入口点 */
 EXTERN(_default_start_trap);
 PROVIDE(_start_trap = _default_start_trap);
@@ -30,12 +48,23 @@ PROVIDE(_setup_interrupts = _default_setup_interrupts);
 /* 主函数入口 */
 PROVIDE(hal_main = main);
 
-/* 默认异常/中断处理器 */
+/* ============================================================================
+ * 弱符号处理器定义
+ * ============================================================================ */
+
+/*
+ * 默认异常/中断处理器
+ * 这些是弱符号，平台可以提供自己的实现
+ */
 PROVIDE(ExceptionHandler = abort);
 PROVIDE(DefaultHandler = abort);
 PROVIDE(_start_DefaultHandler_trap = _start_trap);
 
-/* 异常处理器别名 */
+/* 异常处理器弱符号 (平台可覆盖)
+ *
+ * 每个异常处理器默认指向 ExceptionHandler，
+ * 平台可以通过定义同名函数来覆盖
+ */
 PROVIDE(InstructionMisaligned = ExceptionHandler);
 PROVIDE(InstructionFault = ExceptionHandler);
 PROVIDE(IllegalInstruction = ExceptionHandler);
@@ -46,19 +75,26 @@ PROVIDE(StoreMisaligned = ExceptionHandler);
 PROVIDE(StoreFault = ExceptionHandler);
 PROVIDE(UserEnvCall = ExceptionHandler);
 PROVIDE(SupervisorEnvCall = ExceptionHandler);
-PROVIDE(MachineEnvCall = ExceptionHandler);
+PROVIDE(MachineEnvCall = ExceptionHandler);  /* 由 trap/handler.rs 实现 */
 PROVIDE(InstructionPageFault = ExceptionHandler);
 PROVIDE(LoadPageFault = ExceptionHandler);
 PROVIDE(StorePageFault = ExceptionHandler);
 
-/* 中断处理器别名 */
+
+/* 中断处理器弱符号 (平台可覆盖)
+ *
+ * 每个中断处理器默认指向 DefaultHandler，
+ * 平台可以通过定义同名函数来覆盖
+ *
+ * 这些处理器由 handlers/interrupt.rs 提供，
+ * 默认实现支持 Timer 和 IPI 回调
+ */
 PROVIDE(SupervisorSoft = DefaultHandler);
-PROVIDE(MachineSoft = DefaultHandler);
+PROVIDE(MachineSoft = __MachineSoft_default);
 PROVIDE(SupervisorTimer = DefaultHandler);
-PROVIDE(MachineTimer = DefaultHandler);
+PROVIDE(MachineTimer = __MachineTimer_default);
 PROVIDE(SupervisorExternal = DefaultHandler);
 PROVIDE(MachineExternal = DefaultHandler);
-
 
 /* ============================================================================
  * 全局符号定义
@@ -82,7 +118,9 @@ SECTIONS
         KEEP(*(.init));
 
         . = ALIGN(4);
-        KEEP(*(.trap.vector));   /* 向量化模式 */
+        /* Trap 处理入口点 */
+        KEEP(*(.trap.vector));   /* 向量化模式 (预留) */
+        KEEP(*(.trap.entry));    /* Direct 模式入口 */
         KEEP(*(.trap.start));    /* trap 处理入口 */
         KEEP(*(.trap.start.*));  /* 中断 trap 入口 */
         KEEP(*(.trap.continue)); /* trap 继续点 */

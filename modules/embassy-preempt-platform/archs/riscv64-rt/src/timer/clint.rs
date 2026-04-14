@@ -286,7 +286,6 @@ impl<C: ClintConfig + 'static, const N: usize> Driver for ClintTimer<C, N> {
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: u64) -> bool {
         timer_log!(trace, "set_alarm at {}", timestamp);
-        let n = alarm.id() as usize;
 
         // Check the timestamp. If timestamp is u64::MAX, there is no need to set the alarm
         if timestamp == u64::MAX {

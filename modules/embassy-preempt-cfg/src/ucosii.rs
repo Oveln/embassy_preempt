@@ -496,11 +496,11 @@ pub enum OS_ERR_STATE {
 pub type OS_PRIO = u8;
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
-pub type OS_PRIO = INT16U;
+pub type OS_PRIO = u16;
 
 // if use both of the features, there will be an error
 #[cfg(not(any(feature = "OS_PRIO_LESS_THAN_64", feature = "OS_PRIO_LESS_THAN_256")))]
-pub type OS_PRIO = INT8U;
+pub type OS_PRIO = u8;
 // there will be an error if both features is active
 #[cfg(all(feature = "OS_PRIO_LESS_THAN_64", feature = "OS_PRIO_LESS_THAN_256"))]
 compile_error!("You may not enable both `OS_PRIO_LESS_THAN_64` and `OS_PRIO_LESS_THAN_256` features.");
@@ -603,8 +603,8 @@ pub struct OS_MUTEX_DATA {
     OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
     OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
     OSValue: BOOLEAN,                         /* Mutex value (OS_FALSE = used, OS_TRUE = available)      */
-    OSOwnerPrio: INT8U,                       /* Mutex owner's task priority or 0xFF if no owner         */
-    OSMutexPCP: INT8U,                        /* Priority Ceiling Priority or 0xFF if PCP disabled       */
+    OSOwnerPrio: u8,                       /* Mutex owner's task priority or 0xFF if no owner         */
+    OSMutexPCP: u8,                        /* Priority Ceiling Priority or 0xFF if PCP disabled       */
 }
 
 /*
@@ -622,8 +622,8 @@ pub(crate) struct OS_Q {
     osqend: PTR,              /* Ptr to end   of queue data.is a second level ptr            */
     osqin: PTR,               /* Ptr to where next message will be inserted  in   the Q. is a second level ptr*/
     osqout: PTR,              /* Ptr to where next message will be extracted from the Q. is a second level ptr*/
-    osqsize: INT16U,          /* Size of queue (maximum number of entries)               */
-    osqentries: INT16U,       /* Current number of entries in the queue                  */
+    osqsize: u16,          /* Size of queue (maximum number of entries)               */
+    osqentries: u16,       /* Current number of entries in the queue                  */
 }
 
 /// the ref to OS_Q
@@ -638,8 +638,8 @@ pub struct OS_Q_REF {
 #[allow(unused)]
 pub struct OS_Q_DATA {
     OSMsg: PTR,                               /* Pointer to next message to be extracted from queue      */
-    OSNMsgs: INT16U,                          /* Number of messages in message queue                     */
-    OSQSize: INT16U,                          /* Size of message queue                                   */
+    OSNMsgs: u16,                          /* Number of messages in message queue                     */
+    OSQSize: u16,                          /* Size of message queue                                   */
     OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur         */
     OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
 }
@@ -654,7 +654,7 @@ pub struct OS_Q_DATA {
 #[cfg(feature = "OS_SEM_EN")]
 #[allow(unused)]
 pub struct OS_SEM_DATA {
-    OSCnt: INT16U,                            /* Semaphore count                                         */
+    OSCnt: u16,                            /* Semaphore count                                         */
     OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
     OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
 }

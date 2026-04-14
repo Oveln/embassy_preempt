@@ -1,8 +1,14 @@
 //! Panic handler for RISC-V platforms
+//!
+//! 提供平台无关的 panic 处理，包括寄存器转储和栈信息输出。
 
 use core::panic::PanicInfo;
 
-/// RISC-V CSR (Control and Status Registers)
+// ============================================================================
+// CSR 寄存器定义
+// ============================================================================
+
+/// RISC-V CSR (Control and Status Registers) 地址
 mod csr {
     pub const MSTATUS: u16 = 0x300;
     pub const MTVEC: u16 = 0x305;
@@ -12,19 +18,11 @@ mod csr {
     pub const MIP: u16 = 0x344;
 }
 
-/// Read a CSR register (CSR number must be compile-time constant)
-macro_rules! read_csr {
-    ($csr_num:expr) => {{
-        let value: usize;
-        unsafe {
-            core::arch::asm!(concat!("csrr {}, ", stringify!($csr_num)),
-                out(reg) value);
-        }
-        value
-    }};
-}
+// ============================================================================
+// CSR 读取宏
+// ============================================================================
 
-/// Read CSR by number (runtime)
+/// 读取 CSR 寄存器（运行时 CSR 编号）
 macro_rules! read_csr_num {
     ($csr_num:expr) => {{
         let value: usize;
@@ -39,9 +37,13 @@ macro_rules! read_csr_num {
     }};
 }
 
-/// Print all registers and CSR information
+// ============================================================================
+// 寄存器转储
+// ============================================================================
+
+/// 打印所有寄存器和 CSR 信息
 fn dump_registers(sp: usize) {
-    // Read CSRs using const numbers
+    // 读取 CSR
     let mstatus = read_csr_num!(csr::MSTATUS);
     let mepc = read_csr_num!(csr::MEPC);
     let mcause = read_csr_num!(csr::MCAUSE);
@@ -50,10 +52,6 @@ fn dump_registers(sp: usize) {
     let mip = read_csr_num!(csr::MIP);
 
     os_log!(error, "=== REGISTER DUMP ===");
-
-    // Attempt to get return address from stack if not provided
-    // Note: At panic, we can't easily capture all GPRs without compiler support
-    // We'll output what we can from CSRs
 
     os_log!(error, "CSR Registers:");
     os_log!(error, "  mstatus = {:#018x}", mstatus);
@@ -66,7 +64,7 @@ fn dump_registers(sp: usize) {
     os_log!(error, "Stack Pointer:");
     os_log!(error, "  sp      = {:#018x}", sp);
 
-    // Decode mcause
+    // 解码 mcause
     let is_interrupt = mcause & (1 << 63) != 0;
     let exception_code = mcause & !(1 << 63);
 
@@ -77,7 +75,6 @@ fn dump_registers(sp: usize) {
     } else {
         os_log!(error, "  Type: Exception");
         os_log!(error, "  Code: {}", exception_code);
-        // Exception codes for RISC-V
         let exception_name = match exception_code {
             0 => "Instruction address misaligned",
             1 => "Instruction access fault",
@@ -98,7 +95,7 @@ fn dump_registers(sp: usize) {
         os_log!(error, "  Name: {}", exception_name);
     }
 
-    // Try to dump some stack words around SP
+    // 转储栈内容
     os_log!(error, "Stack dump (sp +/- 16 words):");
     unsafe {
         let sp_ptr = sp as *const usize;
@@ -118,13 +115,23 @@ fn dump_registers(sp: usize) {
     os_log!(error, "=====================");
 }
 
+// ============================================================================
+// Panic Handler
+// ============================================================================
+
+/// RISC-V panic handler
+///
+/// 当 panic 发生时：
+/// 1. 打印 panic 信息
+/// 2. 转储寄存器和栈
+/// 3. 停机
 #[panic_handler]
 fn panic(info: &PanicInfo<'_>) -> ! {
     os_log!(error, "");
     os_log!(error, "!!! PANIC !!!");
     os_log!(error, "Message: {}", info);
 
-    // Get stack pointer
+    // 获取栈指针
     let sp: usize;
     unsafe {
         core::arch::asm!("mv {}, sp", out(reg) sp);
