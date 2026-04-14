@@ -21,54 +21,13 @@ extern crate embassy_preempt_log;
 
 mod exceptions;
 mod interrupts;
+mod trap_frame;
 
+pub use trap_frame::{CONTEXT_STACK_SIZE, TrapFrame};
 pub use exceptions::{dispatch_exception, ExceptionHandler};
 pub use interrupts::{register_ipi_callback, register_timer_callback, TimerInterruptCallback};
 
-use core::arch::asm;
 use portable_atomic::{AtomicBool, Ordering};
-
-/// 上下文占用的字节数
-/// TrapFrame 的大小：30 个通用寄存器 + mepc + mstatus = 256 字节
-pub const CONTEXT_STACK_SIZE: usize = core::mem::size_of::<TrapFrame>();
-
-/// 中断栈上的 TrapFrame 结构
-#[derive(Debug, Clone, Copy)]
-#[repr(C, align(16))]
-pub struct TrapFrame {
-    pub ra: usize,
-    pub gp: usize,
-    pub tp: usize,
-    pub t0: usize,
-    pub t1: usize,
-    pub t2: usize,
-    pub s0: usize,
-    pub s1: usize,
-    pub a0: usize,
-    pub a1: usize,
-    pub a2: usize,
-    pub a3: usize,
-    pub a4: usize,
-    pub a5: usize,
-    pub a6: usize,
-    pub a7: usize,
-    pub s2: usize,
-    pub s3: usize,
-    pub s4: usize,
-    pub s5: usize,
-    pub s6: usize,
-    pub s7: usize,
-    pub s8: usize,
-    pub s9: usize,
-    pub s10: usize,
-    pub s11: usize,
-    pub t3: usize,
-    pub t4: usize,
-    pub t5: usize,
-    pub t6: usize,
-    pub mepc: usize,
-    pub mstatus: usize,
-}
 
 /// 全局标志：当前是否在 trap 处理中
 pub static IN_TRAP: AtomicBool = AtomicBool::new(false);
@@ -76,14 +35,14 @@ pub static IN_TRAP: AtomicBool = AtomicBool::new(false);
 /// 全局标志：是否需要上下文切换
 pub static NEED_CONTEXT_SWITCH: AtomicBool = AtomicBool::new(false);
 
-/// 外部声明：上下文切换处理函数
-///
-/// 这个函数由调度器（executor）提供，在 `embassy-preempt-executor` 中实现。
+// 外部声明：上下文切换处理函数
+//
+// 这个函数由调度器（executor）提供，在 `embassy-preempt-executor` 中实现。
 extern "C" {
     fn __ContextSwitchHandler(trap_frame: &TrapFrame) -> &TrapFrame;
 }
 
-/// Trap 处理入口（汇编）
+// Trap 处理入口（汇编）
 core::arch::global_asm!(
     ".section .trap.entry, \"ax\"",
     ".global __trap_entry",

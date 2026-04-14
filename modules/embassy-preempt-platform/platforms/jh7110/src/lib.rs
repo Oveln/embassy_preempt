@@ -29,14 +29,9 @@ pub mod gpio;
 
 pub mod panic_handler;
 
-// trap 模块重新导出 riscv64-rt 的内容
-// 这保持了与原来代码结构的兼容性
 pub mod trap {
-    pub use embassy_preempt_riscv64_rt::{
-        TrapFrame, CONTEXT_STACK_SIZE, IN_TRAP, NEED_CONTEXT_SWITCH,
-    };
+    pub use embassy_preempt_riscv64_rt::{CONTEXT_STACK_SIZE, TrapFrame};
 }
-
 
 // Re-export from traits crate
 pub use embassy_preempt_traits::{
@@ -45,7 +40,7 @@ pub use embassy_preempt_traits::{
 
 // Re-export from riscv64-rt
 pub use embassy_preempt_riscv64_rt::{
-    CONTEXT_STACK_SIZE, IN_TRAP, NEED_CONTEXT_SWITCH, TrapFrame,
+    IN_TRAP, NEED_CONTEXT_SWITCH, TrapFrame,
     MachineEnvCall, register_ipi_callback, register_timer_callback,
     trap_entry_addr,
 };

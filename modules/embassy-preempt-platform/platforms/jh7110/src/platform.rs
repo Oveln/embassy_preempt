@@ -109,8 +109,7 @@ impl PlatformStatic for PlatformImpl {
 
     fn init_task_stack(stk_ref: NonNull<usize>, executor_function: fn()) -> NonNull<usize> {
         scheduler_log!(trace, "init_task_stack for JH7110");
-        let executor_function_ptr = executor_function as *const () as usize;
-        scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function_ptr);
+        scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function as *const () as usize);
 
         // Get stack pointer and align to 8-byte boundary
         let ptos = stk_ref.as_ptr() as *mut usize;
@@ -120,39 +119,7 @@ impl PlatformStatic for PlatformImpl {
         let psp: *mut embassy_preempt_riscv64_rt::TrapFrame = ptos as *mut embassy_preempt_riscv64_rt::TrapFrame;
 
         unsafe {
-            (*psp).ra = 0x0000_0721_0721_0721;
-            (*psp).gp = 0x0000_0721_0721_0721;
-            (*psp).tp = 0x0000_0721_0721_0721;
-            (*psp).t0 = 0x0000_0721_0721_0721;
-            (*psp).t1 = 0x0000_0721_0721_0721;
-            (*psp).t2 = 0x0000_0721_0721_0721;
-            (*psp).s0 = 0x0000_0721_0721_0721;
-            (*psp).s1 = 0x0000_0721_0721_0721;
-            (*psp).a0 = 0x0000_0721_0721_0721;
-            (*psp).a1 = 0x0000_0721_0721_0721;
-            (*psp).a2 = 0x0000_0721_0721_0721;
-            (*psp).a3 = 0x0000_0721_0721_0721;
-            (*psp).a4 = 0x0000_0721_0721_0721;
-            (*psp).a5 = 0x0000_0721_0721_0721;
-            (*psp).a6 = 0x0000_0721_0721_0721;
-            (*psp).a7 = 0x0000_0721_0721_0721;
-            (*psp).s2 = 0x0000_0721_0721_0721;
-            (*psp).s3 = 0x0000_0721_0721_0721;
-            (*psp).s4 = 0x0000_0721_0721_0721;
-            (*psp).s5 = 0x0000_0721_0721_0721;
-            (*psp).s6 = 0x0000_0721_0721_0721;
-            (*psp).s7 = 0x0000_0721_0721_0721;
-            (*psp).s8 = 0x0000_0721_0721_0721;
-            (*psp).s9 = 0x0000_0721_0721_0721;
-            (*psp).s10 = 0x0000_0721_0721_0721;
-            (*psp).s11 = 0x0000_0721_0721_0721;
-            (*psp).t3 = 0x0000_0721_0721_0721;
-            (*psp).t4 = 0x0000_0721_0721_0721;
-            (*psp).t5 = 0x0000_0721_0721_0721;
-            (*psp).t6 = 0x0000_0721_0721_0721;
-
-            (*psp).mepc = executor_function_ptr as usize;
-            (*psp).mstatus = 0x200001880; // MPP=Machine mode, MIE=1
+            (*psp).init(executor_function);
         }
 
         NonNull::new(ptos as *mut usize).unwrap()
