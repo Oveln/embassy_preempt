@@ -1,3 +1,4 @@
+#![feature(asm_cfg)]
 //! # RISC-V 64-bit Runtime Support
 //!
 //! 这个库提供了 RISC-V 64-bit 架构的运行时支持，包括：
@@ -22,6 +23,7 @@ extern crate embassy_preempt_log;
 mod exceptions;
 mod interrupts;
 mod trap_frame;
+mod start;
 
 pub use trap_frame::{CONTEXT_STACK_SIZE, TrapFrame};
 pub use exceptions::{dispatch_exception, ExceptionHandler};

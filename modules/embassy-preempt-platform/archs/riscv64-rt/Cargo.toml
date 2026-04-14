@@ -17,3 +17,4 @@ embassy-preempt-log = { path = "../../../embassy-preempt-log" }
 
 [features]
 default = []
+clear_bss = []
