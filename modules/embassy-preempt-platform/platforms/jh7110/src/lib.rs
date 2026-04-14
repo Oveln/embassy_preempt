@@ -4,7 +4,7 @@
 //! - 平台初始化和配置
 //! - 异常和中断处理
 //! - 栈回溯和调试支持
-//! - 定时器驱动
+//! - 定时器驱动 (基于通用 CLINT 驱动)
 //! - GPIO 驱动
 //! - 任务上下文管理
 //!
@@ -12,7 +12,7 @@
 //!
 //! ### 核心模块
 //! - [`platform`] - 平台初始化和核心功能实现
-//! - [`timer_driver`] - 硬件定时器驱动 (基于 CLINT mtime)
+//! - [`clint_config`] - JH7110 CLINT 配置
 //! - [`gpio`] - GPIO 驱动 (基于 sys_gpio)
 
 #![no_std]
@@ -24,10 +24,8 @@ extern crate embassy_preempt_log;
 
 // 平台核心实现
 pub mod platform;
-pub mod timer_driver;
+pub mod clint_config;
 pub mod gpio;
-
-pub mod panic_handler;
 
 pub mod trap {
     pub use embassy_preempt_riscv64_rt::{CONTEXT_STACK_SIZE, TrapFrame};
@@ -41,7 +39,8 @@ pub use embassy_preempt_traits::{
 // Re-export from riscv64-rt
 pub use embassy_preempt_riscv64_rt::{
     IN_TRAP, NEED_CONTEXT_SWITCH, TrapFrame,
-    MachineEnvCall, register_ipi_callback, register_timer_callback
+    MachineEnvCall, register_ipi_callback, register_timer_callback,
+    ClintTimer, ClintConfig,
 };
 
 // 公共导出

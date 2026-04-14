@@ -7,14 +7,15 @@ use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_traits::Platform;
 use embassy_preempt_traits::timer::Driver;
 
+use crate::clint_config::Jh7110ClintConfig;
 use crate::gpio;
-use embassy_preempt_riscv64_rt::CONTEXT_STACK_SIZE;
+use embassy_preempt_riscv64_rt::{ClintTimer, CONTEXT_STACK_SIZE};
 
 // 静态存储，供中断处理访问定时器驱动
-static mut TIMER_DRIVER_STORAGE: Option<crate::timer_driver::Jh7110Timer> = None;
+static mut TIMER_DRIVER_STORAGE: Option<ClintTimer<Jh7110ClintConfig, 1>> = None;
 
 // 静态引用，供中断处理访问定时器驱动
-pub static mut TIMER_DRIVER: Option<&'static crate::timer_driver::Jh7110Timer> = None;
+pub static mut TIMER_DRIVER: Option<&'static ClintTimer<Jh7110ClintConfig, 1>> = None;
 
 /// Timer 中断回调函数
 ///
@@ -26,7 +27,7 @@ unsafe extern "C" fn timer_interrupt_callback() {
 }
 
 pub struct PlatformImpl {
-    pub timer: &'static crate::timer_driver::Jh7110Timer,
+    pub timer: &'static ClintTimer<Jh7110ClintConfig, 1>,
 }
 
 impl PlatformImpl {
@@ -34,7 +35,7 @@ impl PlatformImpl {
         os_log!(info, "Init JH7110 Platform");
 
         // 创建并初始化定时器驱动，存储在静态变量中
-        let timer = crate::timer_driver::Jh7110Timer::new();
+        let timer = ClintTimer::<Jh7110ClintConfig, 1>::new();
         timer.init();
 
         unsafe {

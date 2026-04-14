@@ -41,10 +41,7 @@ pub use jh7110 as chip;
 #[cfg(feature = "ch32v307wcu6")]
 pub use ch32v3 as chip;
 
-// ===== RE-EXPORTS =====
-
 // Re-export timer driver for the selected platform
-pub use chip::timer_driver;
 
 // Re-export platform implementation
 pub use chip::PlatformImpl;

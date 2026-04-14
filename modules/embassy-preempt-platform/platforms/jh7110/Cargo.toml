@@ -21,7 +21,6 @@ embassy-preempt-traits = { path = "../../traits" }
 embassy-preempt-riscv64-rt = { path = "../../archs/riscv64-rt", features = ["clear_bss"]}
 # RISC-V dependencies
 riscv = { version = "0.16.0", default-features = false, features = ["critical-section-single-hart"]}
-aclint = { git = "https://github.com/rustsbi/aclint" }
 
 [features]
 default = []

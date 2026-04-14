@@ -1,49 +1,52 @@
 /*
 *********************************************************************************************************
-*                                 Platform Timer Driver - JH7110 RISC-V实现
+*                                 Generic RISC-V CLINT Timer Driver
 *********************************************************************************************************
 */
 
-//! JH7110 Timer Driver Implementation
+//! Generic RISC-V CLINT Timer Driver
 //!
-//! This module provides a hardware-specific timer driver for the StarFive JH7110
-//! RISC-V SoC that implements the `Driver` trait. It uses the CLINT (Core-Local Interruptor)
-//! mtime register to provide high-precision timing and alarm functionality for the RTOS.
+//! This module provides a hardware-agnostic timer driver for RISC-V systems that use
+//! the CLINT (Core-Local Interruptor) mtime register. It implements the `Driver` trait
+//! and can be configured for different platforms via the `ClintConfig` trait.
 //!
 //! ## Timer Architecture
 //!
 //! The driver uses the RISC-V CLINT mtime register:
 //! - **mtime**: 64-bit real-time counter (monotonically increasing)
 //! - **mtimecmp**: 64-bit timer compare register for alarm generation
-//! - **Timer frequency**: 4MHz (typical for JH7110)
-//! - **Alarm support**: Single alarm using mtimecmp register
-//!
-//! ## Hardware Configuration
-//!
-//! - **Clock source**: Internal oscillator (typically 4MHz)
-//! - **Timer frequency**: Fixed at 4MHz for JH7110
-//! - **Interrupts**: Machine timer interrupt when mtime >= mtimecmp
-//! - **Memory-mapped registers**: CLINT at 0x02000000
+//! - **Timer frequency**: Configurable via `ClintConfig`
+//! - **Alarm support**: Configurable number of alarms via const generic
 //!
 //! ## CLINT Register Layout
 //!
 //! ```text
-//! CLINT_BASE = 0x02000000
-//! - MSIP0         0x02000000  Hart 0 software interrupt
-//! - MTIMECMP0     0x02004000  Hart 0 timer compare
-//! - MTIME         0x0200BFF8  Global real-time counter (64-bit)
+//! CLINT_BASE (platform-specific)
+//! - MSIP0         BASE + 0x0000  Hart 0 software interrupt
+//! - MTIMECMP0    BASE + 0x4000  Hart 0 timer compare
+//! - MTIME        BASE + 0xBFF8  Global real-time counter (64-bit)
 //! ```
 //!
-//! ## Features
+//! ## Usage
 //!
-//! - **64-bit timer**: Native 64-bit mtime register (no overflow handling needed)
-//! - **Alarm support**: One alarm using mtimecmp register
-//! - **Interrupt-driven**: Efficient event handling with minimal CPU overhead
-//! - **Hardware abstraction**: Clean interface for the RTOS scheduler
+//! ```rust,ignore
+//! use embassy_preempt_riscv64_rt::{ClintTimer, ClintConfig};
+//!
+//! // Define platform-specific configuration
+//! struct MyPlatformConfig;
+//! impl ClintConfig for MyPlatformConfig {
+//!     const CLINT_BASE: usize = 0x02000000;
+//!     const TIMER_HZ: u64 = 4_000_000;
+//!     const HART_ID: usize = 0;
+//! }
+//!
+//! // Create timer instance with 1 alarm
+//! let timer = ClintTimer::<MyPlatformConfig, 1>::new();
+//! timer.init();
+//! ```
 
-use core::cell::Cell;
-use core::{ptr, u64};
-use core::sync::atomic::{compiler_fence, Ordering};
+use core::marker::PhantomData;
+use core::sync::atomic::Ordering;
 
 use aclint::SifiveClint;
 use portable_atomic::AtomicU8;
@@ -55,32 +58,52 @@ use embassy_preempt_traits::timer::{AlarmHandle, AlarmState, Driver};
 
 /*
 *********************************************************************************************************
-*                                           CLINT Register Definitions
+*                                           CLINT Configuration Trait
 *********************************************************************************************************
 */
 
-/// CLINT base address for JH7110
-const CLINT_BASE: usize = 0x02000000;
+/// CLINT configuration trait
+///
+/// Platforms must implement this trait to provide platform-specific CLINT configuration.
+/// This allows the same timer driver implementation to be used across different RISC-V platforms.
+///
+/// ## Example
+///
+/// ```rust,ignore
+/// struct Jh7110Config;
+///
+/// impl ClintConfig for Jh7110Config {
+///     const CLINT_BASE: usize = 0x02000000;
+///     const TIMER_HZ: u64 = 4_000_000;
+///     const HART_ID: usize = 0;
+/// }
+/// ```
+pub trait ClintConfig {
+    /// CLINT register base address
+    const CLINT_BASE: usize;
 
-pub const CLINT: *const SifiveClint = CLINT_BASE as *const SifiveClint;
+    /// Timer frequency in Hz
+    const TIMER_HZ: u64;
 
-/// Number of alarm channels available
-/// RISC-V CLINT typically has one mtimecmp per hart
-const ALARM_COUNT: usize = 1;
-
-/// Timer frequency in Hz (4MHz for JH7110)
-const TIMER_HZ: u64 = 4_000_000;
+    /// Hart ID (default is 0)
+    const HART_ID: usize = 0;
+}
 
 /*
 *********************************************************************************************************
-*                                           var declaration
+*                                           ClintTimer Implementation
 *********************************************************************************************************
 */
 
-/// JH7110 Timer Driver using CLINT mtime register
+/// Generic CLINT Timer Driver
 ///
 /// Implements the Driver trait using the RISC-V CLINT mtime register.
 /// Provides high-precision timing and alarm functionality for the RTOS.
+///
+/// ## Type Parameters
+///
+/// - `C`: CLINT configuration type implementing `ClintConfig`
+/// - `N`: Number of alarm channels (const generic)
 ///
 /// ## Architecture
 ///
@@ -91,24 +114,28 @@ const TIMER_HZ: u64 = 4_000_000;
 ///
 /// ## Fields
 ///
-/// - `alarm_count`: Number of allocated alarm instances
+/// - `phantom`: PhantomData for the configuration type
+/// - `alarm_count`: Counter for tracking allocated alarm instances
 /// - `alarms`: Array of alarm states with callbacks and timestamps
-pub struct Jh7110Timer {
+pub struct ClintTimer<C: ClintConfig, const N: usize> {
+    /// PhantomData for the configuration type
+    phantom: PhantomData<C>,
+
     /// Counter for tracking allocated alarm instances
     alarm_count: AtomicU8,
 
     /// Array of alarm states storing callbacks, contexts, and trigger timestamps
     /// u64::MAX indicates no alarm is scheduled for that slot
-    alarms: Mutex<[AlarmState; ALARM_COUNT]>,
+    alarms: Mutex<[AlarmState; N]>,
 }
 
 /*
 *********************************************************************************************************
-*                                              implentations
+*                                              Implementation
 *********************************************************************************************************
 */
 
-impl Jh7110Timer {
+impl<C: ClintConfig, const N: usize> ClintTimer<C, N> {
     /// Create a new timer driver instance
     ///
     /// Initializes the driver with default values:
@@ -116,12 +143,17 @@ impl Jh7110Timer {
     /// - All alarm states in unconfigured state
     ///
     /// # Returns
-    /// A new Jh7110Timer instance ready for initialization
-    pub(crate) fn new() -> Self {
+    /// A new ClintTimer instance ready for initialization
+    pub fn new() -> Self {
         const ALARM_STATE_NEW: AlarmState = AlarmState::new();
-        Jh7110Timer {
+
+        // Build array of alarm states
+        let alarms_array: [AlarmState; N] = [ALARM_STATE_NEW; N];
+
+        ClintTimer {
+            phantom: PhantomData,
             alarm_count: AtomicU8::new(0),
-            alarms: Mutex::new([ALARM_STATE_NEW; ALARM_COUNT]),
+            alarms: Mutex::new(alarms_array),
         }
     }
 
@@ -133,7 +165,7 @@ impl Jh7110Timer {
     ///
     /// Note: The mtime register is read-only and runs continuously.
     pub fn init(&self) {
-        os_log!(trace, "Initializing JH7110 Jh7110Timer (CLINT mtime)");
+        os_log!(trace, "Initializing CLINT Timer (CLINT_BASE={:#x}, TIMER_HZ={}, ALARMS={})", C::CLINT_BASE, C::TIMER_HZ, N);
 
         // Disable timer interrupt by setting mtimecmp to maximum value
         // This prevents spurious interrupts during initialization
@@ -144,7 +176,16 @@ impl Jh7110Timer {
             mie::set_mtimer();
         }
 
-        os_log!(info, "JH7110 Jh7110Timer initialized at {} Hz", TIMER_HZ);
+        os_log!(info, "CLINT Timer initialized at {} Hz with {} alarm(s)", C::TIMER_HZ, N);
+    }
+
+    /// Get the CLINT register base address
+    ///
+    /// # Returns
+    /// Pointer to the CLINT registers
+    #[inline(always)]
+    fn clint(&self) -> *const SifiveClint {
+        C::CLINT_BASE as *const SifiveClint
     }
 
     /// Read the current value of the mtime register
@@ -157,11 +198,11 @@ impl Jh7110Timer {
     #[inline(always)]
     fn read_mtime(&self) -> u64 {
         unsafe {
-            (*CLINT).read_mtime()
+            (*self.clint()).read_mtime()
         }
     }
 
-    /// Set the mtimecmp register for hart 0
+    /// Set the mtimecmp register for the configured hart
     ///
     /// When mtime >= mtimecmp, a machine timer interrupt will be generated.
     ///
@@ -170,8 +211,19 @@ impl Jh7110Timer {
     #[inline(always)]
     fn set_mtimecmp(&self, value: u64) {
         unsafe {
-            (*CLINT).write_mtimecmp(0, value);
+            (*self.clint()).write_mtimecmp(C::HART_ID, value);
         }
+    }
+
+    /// Get the timer frequency in Hz
+    ///
+    /// Returns the frequency of the mtime counter for timestamp conversion.
+    ///
+    /// # Returns
+    /// Timer frequency in Hz
+    #[inline(always)]
+    pub fn timer_frequency() -> u64 {
+        C::TIMER_HZ
     }
 
     fn get_alarm<'a>(&'a self, cs: CriticalSection<'a>, alarm: AlarmHandle) -> &'a AlarmState {
@@ -194,7 +246,20 @@ impl Jh7110Timer {
     }
 }
 
-impl Driver for Jh7110Timer {
+/*
+*********************************************************************************************************
+*                                           Driver Trait Implementation
+*********************************************************************************************************
+*/
+
+// Safety: ClintTimer is Send/Sync because:
+// - Mutex provides interior mutability with critical_section synchronization
+// - AtomicU8 provides atomic operations
+// - C is a ZST (zero-sized type) marker
+unsafe impl<C: ClintConfig + 'static, const N: usize> Send for ClintTimer<C, N> {}
+unsafe impl<C: ClintConfig + 'static, const N: usize> Sync for ClintTimer<C, N> {}
+
+impl<C: ClintConfig + 'static, const N: usize> Driver for ClintTimer<C, N> {
     fn now(&self) -> u64 {
         self.read_mtime()
     }
@@ -202,7 +267,7 @@ impl Driver for Jh7110Timer {
     unsafe fn allocate_alarm(&self) -> Option<AlarmHandle> {
         critical_section::with(|_| {
             let id = self.alarm_count.load(Ordering::Relaxed);
-            if id < ALARM_COUNT as u8 {
+            if id < N as u8 {
                 self.alarm_count.store(id + 1, Ordering::Relaxed);
                 Some(AlarmHandle::new(id))
             } else {
@@ -266,8 +331,7 @@ impl Driver for Jh7110Timer {
                 self.set_mtimecmp(u64::MAX);
 
                 // Trigger the alarm callback
-                // We only have one alarm (n=0) for CLINT
-                for n in 0..ALARM_COUNT {
+                for n in 0..N {
                     let alarm = &self.alarms.borrow(cs)[n];
                     let timestamp = alarm.timestamp.get();
 
@@ -281,20 +345,4 @@ impl Driver for Jh7110Timer {
             }
         })
     }
-}
-
-/*
-*********************************************************************************************************
-*                                           auxiliary function
-*********************************************************************************************************
-*/
-
-/// Get the timer frequency in Hz
-///
-/// Returns the frequency of the mtime counter for timestamp conversion.
-///
-/// # Returns
-/// Timer frequency in Hz (4,000,000 for JH7110)
-pub fn get_timer_frequency() -> u64 {
-    TIMER_HZ
 }

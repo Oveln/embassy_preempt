@@ -24,10 +24,13 @@ mod exceptions;
 mod interrupts;
 mod trap_frame;
 mod start;
+mod panic_handler;
+mod clint_timer;
 
 pub use trap_frame::{CONTEXT_STACK_SIZE, TrapFrame};
 pub use exceptions::{dispatch_exception, ExceptionHandler};
 pub use interrupts::{register_ipi_callback, register_timer_callback, TimerInterruptCallback};
+pub use clint_timer::{ClintTimer, ClintConfig};
 
 use portable_atomic::{AtomicBool, Ordering};
 
