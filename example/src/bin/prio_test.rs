@@ -11,8 +11,6 @@ use embassy_preempt_executor::{OSInit, OSStart};
 use embassy_preempt_executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
 use embassy_preempt_executor::os_time::blockdelay::delay;
 use embassy_preempt_executor::os_time::timer::Timer;
-use embassy_preempt_platform::OsStk;
-// use embassy_preempt::{self as _};
 
 const LONG_TIME: usize = 10;
 const MID_TIME: usize = 5;
@@ -26,7 +24,7 @@ fn main_test() -> ! {
 }
 fn test_basic_schedule() {
     task_log!(info, "==========test begin==========");
-    task_log!(info, "OsStk: {}",type_name::<OsStk>());
+    task_log!(info, "OsStk: {}",type_name::<usize>());
     // os初始化
     OSInit();
     // 创建6个任务，测试优先级调度的顺序是否正确

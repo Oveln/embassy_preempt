@@ -14,7 +14,6 @@
 
 pub extern crate alloc;
 use alloc::string::ToString;
-use embassy_preempt_platform::{OsStk};
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::future::Future;
@@ -44,7 +43,7 @@ impl ReturnUnitOrNeverReturn for () {}
 pub extern "C" fn SyncOSTaskCreate<F, R>(
     task: F,
     p_arg: *mut c_void,
-    _ptos: *mut OsStk,
+    _ptos: *mut usize,
     prio: OS_PRIO,
 ) -> OS_ERR_STATE
 where
@@ -77,7 +76,7 @@ where
 }
 
 /// Create a task in uC/OS-II kernel. This func is used by async Rust
-pub fn AsyncOSTaskCreate<F, FutFn>(task: FutFn, p_arg: *mut c_void, _ptos: *mut OsStk, prio: OS_PRIO) -> OS_ERR_STATE
+pub fn AsyncOSTaskCreate<F, FutFn>(task: FutFn, p_arg: *mut c_void, _ptos: *mut usize, prio: OS_PRIO) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
     F: Future + 'static,
@@ -103,7 +102,7 @@ where
 pub extern "C" fn OSTaskCreate(
     fun_ptr: extern "C" fn(*mut c_void),
     p_arg: *mut c_void,
-    ptos: *mut OsStk,
+    ptos: *mut usize,
     prio: OS_PRIO,
 ) -> OS_ERR_STATE {
     

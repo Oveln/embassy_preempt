@@ -8,7 +8,6 @@ use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
 use embassy_preempt_platform::chip::PlatformImpl;
-use embassy_preempt_platform::OsStk;
 use embassy_preempt_traits::PlatformMemoryLayout;
 use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_structs::cell::UPSafeCell;
@@ -105,7 +104,7 @@ pub struct OS_STK_REF {
     /// field is in the asm code, so we use NonNull to ensure the safety
     /// and use #[allow(dead_code)]
     #[allow(dead_code)]
-    pub STK_REF: NonNull<OsStk>,
+    pub STK_REF: NonNull<usize>,
     /// the ref of this dynamic stk's src heap
     pub HEAP_REF: NonNull<u8>,
     /// the layout(size) of the stk
@@ -156,7 +155,7 @@ impl OS_STK_REF {
 
 pub fn stk_from_ptr(heap_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
     OS_STK_REF {
-        STK_REF: NonNull::new(unsafe { heap_ptr.offset(layout.size() as isize) as *mut OsStk }).unwrap(),
+        STK_REF: NonNull::new(unsafe { heap_ptr.offset(layout.size() as isize) as *mut usize }).unwrap(),
         HEAP_REF: NonNull::new(heap_ptr).unwrap(),
         layout,
     }

@@ -63,7 +63,6 @@ use embassy_preempt_executor::{AsyncOSTaskCreate, SyncOSTaskCreate};
 use embassy_preempt_executor::os_time::blockdelay::delay;
 use embassy_preempt_executor::os_time::timer::Timer;
 use embassy_preempt_platform::traits::platform::PlatformStatic;
-use embassy_preempt_platform::OsStk;
 use embassy_preempt_platform::Platform;
 use defmt::assert;
 
@@ -103,7 +102,6 @@ mod tests {
     use embassy_preempt_executor::os_time::timer::Timer;
     use core::ffi::c_void;
     use core::any::type_name;
-    use embassy_preempt_platform::OsStk;
     use defmt::assert;
     use crate::*;
 
@@ -131,7 +129,7 @@ mod tests {
     #[test]
     fn test_priority_scheduling() {
         task_log!(info, "Starting priority scheduling test");
-        task_log!(info, "Stack type: {}", type_name::<OsStk>());
+        task_log!(info, "Stack type: {}", type_name::<usize>());
 
         // os初始化
         OSInit();

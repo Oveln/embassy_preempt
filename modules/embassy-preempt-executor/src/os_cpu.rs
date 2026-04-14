@@ -6,7 +6,6 @@ use core::ptr::NonNull;
 use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
 use embassy_preempt_mem::heap::{get_interrupt_stack, get_program_stack};
 use embassy_preempt_traits::platform::PlatformStatic;
-use embassy_preempt_platform::OsStk;
 use embassy_preempt_platform::arch::{ TrapFrame, CONTEXT_STACK_SIZE};
 
 use crate::GlobalSyncExecutor;
@@ -60,7 +59,7 @@ extern "C" fn __ContextSwitchHandler(trap_frame: *mut TrapFrame) -> *mut TrapFra
 
     // see if it is a thread
     if *tcb_cur.needs_stack_save.get_unmut() {
-        old_stk.STK_REF = NonNull::new(trap_frame as *mut OsStk).unwrap();
+        old_stk.STK_REF = NonNull::new(trap_frame as *mut usize).unwrap();
         tcb_cur.set_stk(old_stk);
     } else if old_stk.HEAP_REF != stk_heap_ref {
         drop(old_stk);
@@ -79,7 +78,7 @@ extern "C" fn __ContextSwitchHandler(trap_frame: *mut TrapFrame) -> *mut TrapFra
 
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
-pub fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
+pub fn OSTaskStkInit(stk_ref: NonNull<usize>) -> NonNull<usize> {
     scheduler_log!(trace, "OSTaskStkInit");
     let executor_function: fn() = || unsafe {
         scheduler_log!(info, "entering the executor function");
@@ -101,5 +100,5 @@ pub fn OSTaskStkInit(stk_ref: NonNull<OsStk>) -> NonNull<OsStk> {
         (*trap_frame).init(executor_function);
     }
 
-    NonNull::new(frame_addr as *mut OsStk).unwrap()
+    NonNull::new(frame_addr as *mut usize).unwrap()
 }

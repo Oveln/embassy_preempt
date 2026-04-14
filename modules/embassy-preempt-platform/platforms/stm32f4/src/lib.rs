@@ -23,7 +23,7 @@
 
 // Re-export from traits crate
 pub use embassy_preempt_traits::{
-    memory_layout::PlatformMemoryLayout, platform::PlatformStatic, Platform, OsStk,
+    memory_layout::PlatformMemoryLayout, platform::PlatformStatic, Platform,
 };
 
 // Platform modules

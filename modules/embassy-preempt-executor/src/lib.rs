@@ -41,7 +41,7 @@ use embassy_preempt_mem::heap::{OS_STK_REF, alloc_stack, get_program_stack};
 use embassy_preempt_traits::PlatformMemoryLayout;
 use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_traits::timer::AlarmHandle;
-use embassy_preempt_platform::{OsStk, PlatformImpl, get_platform_trait};
+use embassy_preempt_platform::{PlatformImpl, get_platform_trait};
 use embassy_preempt_structs::cell::SyncUnsafeCell;
 pub use os_core::*;
 pub use os_task::*;
@@ -363,7 +363,7 @@ impl SyncExecutor {
                     // by yck: but this branch will not be executed
                     let mut program_stk = get_program_stack().exclusive_access();
                     program_stk.STK_REF = NonNull::new(
-                        program_stk.HEAP_REF.as_ptr().offset(program_stk.layout.size() as isize) as *mut OsStk,
+                        program_stk.HEAP_REF.as_ptr().offset(program_stk.layout.size() as isize) as *mut usize,
                     )
                     .unwrap();
                     stk = program_stk.clone();

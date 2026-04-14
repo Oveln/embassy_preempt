@@ -24,7 +24,7 @@ extern crate embassy_preempt_log;
 use spin::Once;
 
 // Re-export traits from embassy-preempt-traits
-pub use embassy_preempt_traits::{OsStk, Platform, PlatformStatic};
+pub use embassy_preempt_traits::{Platform, PlatformStatic};
 
 // ===== ARCH SELECTION ====
 

@@ -14,5 +14,3 @@ pub mod timer;
 pub use memory_layout::PlatformMemoryLayout;
 pub use platform::{Platform, PlatformStatic};
 
-/// OS stack type
-pub type OsStk = usize;
