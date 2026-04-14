@@ -82,27 +82,6 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    fn set_program_stack_pointer(sp: *mut u8) {
-        unsafe {
-            asm!(
-                "csrw mscratch, a0",
-                in("a0") sp
-            );
-        }
-    }
-
-    #[inline(never)]
-    fn configure_interrupt_stack(interrupt_stack: *mut u8) {
-        unsafe {
-            asm!(
-                "mv sp, a0",
-                "csrrw sp, mscratch, sp",
-                "ret",
-                in("a0") interrupt_stack
-            );
-        }
-    }
-
     fn init_task_stack(stk_ref: NonNull<usize>, executor_function: fn()) -> NonNull<usize> {
         scheduler_log!(trace, "init_task_stack for JH7110");
         scheduler_log!(info, "the executor function ptr is 0x{:x}", executor_function as *const () as usize);
@@ -128,12 +107,6 @@ impl PlatformStatic for PlatformImpl {
             // 使用 RISC-V WFI 指令进入低功耗状态
             unsafe { asm!("wfi"); }
         }
-    }
-
-    unsafe fn get_current_stack_pointer() -> *mut usize {
-        let mut sp: usize;
-        asm!("csrr {}, mscratch", out(reg) sp);
-        sp as *mut usize
     }
 }
 

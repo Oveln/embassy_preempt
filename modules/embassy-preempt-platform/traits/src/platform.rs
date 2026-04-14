@@ -11,20 +11,6 @@ pub trait PlatformStatic {
     /// - RISC-V: Set software interrupt or use ecall
     fn trigger_context_switch();
 
-    /// Set the program/running stack pointer
-    ///
-    /// Architecture-specific stack pointer:
-    /// - ARM Cortex-M: PSP (Process Stack Pointer)
-    /// - RISC-V: User stack pointer register
-    fn set_program_stack_pointer(sp: *mut u8);
-
-    /// Set the interrupt stack and switch from privileged to user mode if applicable
-    ///
-    /// Architecture-specific behavior:
-    /// - ARM Cortex-M: Set MSP and switch to PSP mode
-    /// - RISC-V: Set interrupt stack and switch privilege mode
-    fn configure_interrupt_stack(interrupt_stack: *mut u8);
-
     /// Initialize task stack with proper context frame
     ///
     /// Creates the initial stack frame for task startup with architecture-specific
@@ -42,15 +28,6 @@ pub trait PlatformStatic {
     ///
     /// Platform-specific shutdown implementation with LED effects or debug output.
     fn shutdown();
-
-    /// Get current task's stack pointer
-    ///
-    /// Returns the current stack pointer value for the running task.
-    /// Used when saving task state during context switches.
-    ///
-    /// # Safety
-    /// Must be called in a context where stack pointer is meaningful.
-    unsafe fn get_current_stack_pointer() -> *mut usize;
 
 }
 

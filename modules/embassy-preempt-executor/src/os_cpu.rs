@@ -7,8 +7,7 @@ use embassy_preempt_cfg::ucosii::OSCtxSwCtr;
 use embassy_preempt_mem::heap::{get_interrupt_stack, get_program_stack};
 use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_platform::OsStk;
-use embassy_preempt_platform::chip::trap::TrapFrame;
-use embassy_preempt_platform::chip::trap::CONTEXT_STACK_SIZE;
+use embassy_preempt_platform::arch::{ TrapFrame, CONTEXT_STACK_SIZE};
 
 use crate::GlobalSyncExecutor;
 

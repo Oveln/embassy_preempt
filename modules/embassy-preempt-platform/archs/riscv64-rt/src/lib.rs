@@ -26,11 +26,13 @@ mod trap_frame;
 mod start;
 mod panic_handler;
 mod clint_timer;
+mod stack;
 
 pub use trap_frame::{CONTEXT_STACK_SIZE, TrapFrame};
 pub use exceptions::{dispatch_exception, ExceptionHandler};
 pub use interrupts::{register_ipi_callback, register_timer_callback, TimerInterruptCallback};
 pub use clint_timer::{ClintTimer, ClintConfig};
+pub use stack::{set_program_stack_pointer, configure_interrupt_stack, get_current_stack_pointer};
 
 use portable_atomic::{AtomicBool, Ordering};
 

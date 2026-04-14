@@ -26,6 +26,11 @@ use spin::Once;
 // Re-export traits from embassy-preempt-traits
 pub use embassy_preempt_traits::{OsStk, Platform, PlatformStatic};
 
+// ===== ARCH SELECTION ====
+
+#[cfg(feature = "riscv64")]
+pub use embassy_preempt_riscv64_rt as arch;
+
 // ===== PLATFORM SELECTION =====
 // Each platform is implemented in a separate sub-crate and re-exported here
 
@@ -45,6 +50,16 @@ pub use ch32v3 as chip;
 
 // Re-export platform implementation
 pub use chip::PlatformImpl;
+
+// Re-export architecture-specific stack operations
+#[cfg(feature = "riscv64")]
+pub use arch::{set_program_stack_pointer, configure_interrupt_stack, get_current_stack_pointer};
+
+#[cfg(feature = "ch32v307wcu6")]
+pub use chip::{set_program_stack_pointer, configure_interrupt_stack, get_current_stack_pointer};
+
+#[cfg(feature = "stm32f401re")]
+pub use chip::{set_program_stack_pointer, configure_interrupt_stack, get_current_stack_pointer};
 
 // ===== PLATFORM INSTANCE =====
 

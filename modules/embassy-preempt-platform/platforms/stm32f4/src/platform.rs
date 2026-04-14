@@ -187,47 +187,6 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    /// Set the Process Stack Pointer (PSP) for task execution
-    ///
-    /// ARM Cortex-M specific implementation that programs the PSP register.
-    /// The PSP is used for task stack management while the MSP is used
-    /// for interrupt handling.
-    ///
-    /// # Parameters
-    /// - `sp`: Stack pointer value to set as the current PSP
-    fn set_program_stack_pointer(sp: *mut u8) {
-        use cortex_m::register::psp;
-        unsafe {
-            psp::write(sp as u32);
-        }
-    }
-
-    /// Configure interrupt stack and switch to thread mode
-    ///
-    /// ARM Cortex-M specific implementation that:
-    /// 1. Sets the Main Stack Pointer (MSP) for interrupt handling
-    /// 2. Configures the CONTROL register to use PSP in thread mode
-    /// 3. Enables privileged-to-unprivileged transition
-    ///
-    /// # Parameters
-    /// - `interrupt_stack`: Pointer to the interrupt stack (MSP)
-    #[inline(never)]
-    fn configure_interrupt_stack(interrupt_stack: *mut u8) {
-        unsafe {
-            asm!(
-                // First change the MSP to interrupt stack
-               "MSR msp, r1",        // Set MSP to interrupt stack pointer
-                // Then change the control register to use the PSP
-                "MRS r0, control",   // Read current CONTROL register
-                "ORR r0, r0, #2",    // Set bit 1 to use PSP in thread mode
-                "MSR control, r0",   // Write back modified CONTROL
-                "BX lr",             // Return to caller
-                in("r1") interrupt_stack,
-                options(nostack, preserves_flags),
-            )
-        }
-    }
-
     /// Initialize task stack with ARM Cortex-M context frame
     ///
     /// Creates the initial stack frame for a new task following the ARM Cortex-M
@@ -328,25 +287,6 @@ impl PlatformStatic for PlatformImpl {
 
     /// Get current Process Stack Pointer value
     ///
-    /// ARM Cortex-M specific function that reads the current PSP value.
-    /// Used during context switching to save the current task's stack pointer.
-    ///
-    /// # Returns
-    /// Current Process Stack Pointer value
-    ///
-    /// # Safety
-    /// - Must be called in a context where PSP is meaningful (thread mode)
-    #[inline(always)]
-    unsafe fn get_current_stack_pointer() -> *mut usize {
-        let psp_value: *mut usize;
-        asm!(
-            "MRS     R0, PSP", // Read Process Stack Pointer into R0
-            out("r0") psp_value,
-            options(nostack, preserves_flags),
-        );
-        psp_value
-    }
-
     }
 
 impl PlatformMemoryLayout for PlatformImpl {

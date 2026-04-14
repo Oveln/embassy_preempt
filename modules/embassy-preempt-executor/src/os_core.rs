@@ -397,9 +397,6 @@ pub fn OSSchedUnlock() {
 pub extern "C" fn OSStart() -> ! {
     use embassy_preempt_mem::heap::stack_allocator::get_interrupt_stack;
 
-    unsafe extern "Rust" {
-        fn configure_interrupt_stack(int_ptr: *mut u8);
-    }
     os_log!(trace, "OSStart");
     // set OSRunning
     OSRunning.store(true, Ordering::Release);
@@ -409,7 +406,7 @@ pub extern "C" fn OSStart() -> ! {
     let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
     drop(int_stk);
     unsafe {
-        embassy_preempt_platform::PlatformImpl::configure_interrupt_stack(int_ptr);
+        embassy_preempt_platform::configure_interrupt_stack(int_ptr);
         // find the highest priority task in the ready queue
         critical_section::with(|_| GlobalSyncExecutor().as_ref().unwrap().set_highrdy());
         GlobalSyncExecutor().as_ref().unwrap().poll();

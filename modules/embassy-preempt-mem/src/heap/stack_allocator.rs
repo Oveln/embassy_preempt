@@ -58,7 +58,7 @@ pub fn OS_InitStackAllocator() {
     PROGRAM_STACK.call_once(|| unsafe { UPSafeCell::new(stk) });
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
-    embassy_preempt_platform::PlatformImpl::set_program_stack_pointer(stk_ptr);
+    embassy_preempt_platform::set_program_stack_pointer(stk_ptr);
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {

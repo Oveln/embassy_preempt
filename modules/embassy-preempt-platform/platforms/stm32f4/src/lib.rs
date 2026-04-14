@@ -30,9 +30,11 @@ pub use embassy_preempt_traits::{
 pub mod platform;
 pub mod timer_driver;
 pub mod ucstk;
+pub mod stack;
 
 // Driver modules
 pub mod driver;
 
 // Public exports
 pub use platform::PlatformImpl;
+pub use stack::{set_program_stack_pointer, configure_interrupt_stack, get_current_stack_pointer};

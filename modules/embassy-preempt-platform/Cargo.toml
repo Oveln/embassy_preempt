@@ -20,6 +20,9 @@ embassy-preempt-log = { path = "../embassy-preempt-log" }
 # Traits sub-crate (re-exported for convenience)
 embassy-preempt-traits = { path = "traits" }
 
+# Arch Runtime
+embassy-preempt-riscv64-rt = { path = "archs/riscv64-rt", optional = true}
+
 # Platform implementation crates (optional, selected via features)
 stm32f4 = { path = "platforms/stm32f4", optional = true }
 jh7110 = { path = "platforms/jh7110", optional = true }
@@ -28,6 +31,8 @@ ch32v3 = { path = "platforms/ch32v3", optional = true }
 [features]
 default = []
 
+riscv64 = ["dep:embassy-preempt-riscv64-rt"]
+
 # ===== PLATFORMS =====
 # Each platform feature enables the corresponding platform implementation crate
 
@@ -35,7 +40,7 @@ default = []
 stm32f401re = ["dep:stm32f4"]
 
 # JH7110 platform (RISC-V 64)
-jh7110 = ["dep:jh7110"]
+jh7110 = ["dep:jh7110", "riscv64"]
 
 # CH32V3 platform (Qingke RISC-V)
 ch32v307wcu6 = ["dep:ch32v3"]

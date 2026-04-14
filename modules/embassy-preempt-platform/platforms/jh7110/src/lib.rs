@@ -27,22 +27,6 @@ pub mod platform;
 pub mod clint_config;
 pub mod gpio;
 
-pub mod trap {
-    pub use embassy_preempt_riscv64_rt::{CONTEXT_STACK_SIZE, TrapFrame};
-}
-
-// Re-export from traits crate
-pub use embassy_preempt_traits::{
-    memory_layout::PlatformMemoryLayout, platform::PlatformStatic, Platform, OsStk,
-};
-
-// Re-export from riscv64-rt
-pub use embassy_preempt_riscv64_rt::{
-    IN_TRAP, NEED_CONTEXT_SWITCH, TrapFrame,
-    MachineEnvCall, register_ipi_callback, register_timer_callback,
-    ClintTimer, ClintConfig,
-};
-
 // 公共导出
 pub use platform::PlatformImpl;
 
