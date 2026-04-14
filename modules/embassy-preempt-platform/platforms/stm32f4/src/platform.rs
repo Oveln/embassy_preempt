@@ -234,9 +234,7 @@ impl PlatformStatic for PlatformImpl {
     }
 
 impl PlatformMemoryLayout for PlatformImpl {
-    const STACK_START: usize = 0x20000000;
     const MAX_PROGRAMS: usize = 20;
-    const HEAP_SIZE: usize = 10 * 1024; // 10 KiB
     const PROGRAM_STACK_SIZE: usize = 2048; // 2 KiB
     const INTERRUPT_STACK_SIZE: usize = 2048; // 2 KiB
 }

@@ -6,27 +6,35 @@ pub mod fixed_size_block;
 pub mod linked_list;
 /// Stack_Allocator for OS_STK
 pub mod stack_allocator;
-
-use embassy_preempt_platform::chip::PlatformImpl;
-use embassy_preempt_traits::PlatformMemoryLayout;
 use fixed_size_block::FixedSizeBlockAllocator;
 pub use stack_allocator::*;
+
+/// Linker script symbols for heap boundaries
+unsafe extern "C" {
+    static __sheap: u8;
+    static __eheap: u8;
+}
+
+/// Get the heap start address from linker script
+fn heap_start() -> *mut u8 {
+    unsafe { &__sheap as *const u8 as *mut u8 }
+}
+
+/// Get the heap size from linker script symbols
+fn heap_size() -> usize {
+    unsafe { (&__eheap as *const u8 as usize) - (&__sheap as *const u8 as usize) }
+}
 
 /// Global allocator
 #[global_allocator]
 static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
+
 #[allow(unused)]
 pub fn Init_Heap() {
-    // mem_log!(
-    //     trace,
-    //     "Init_Heap: start={:p}, size={}",
-    //     PlatformImpl::get_heap_start(),
-    //     PlatformImpl::get_heap_size()
-    // );
     unsafe {
         ALLOCATOR
             .lock()
-            .init(PlatformImpl::heap_start(), PlatformImpl::HEAP_SIZE);
+            .init(heap_start(), heap_size());
     }
     mem_log!(trace, "Init_Heap: completed");
 }

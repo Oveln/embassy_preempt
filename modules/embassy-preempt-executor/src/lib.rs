@@ -376,7 +376,7 @@ impl SyncExecutor {
                             *self.OSPrioHighRdy.get_unmut()
                         );
                     }
-                    let layout = Layout::from_size_align(PlatformImpl::task_stack_size(), 4).unwrap();
+                    let layout = Layout::from_size_align(PlatformImpl::PROGRAM_STACK_SIZE, 4).unwrap();
                     stk = alloc_stack(layout);
                     {
                         mem_log!(trace, "the bottom of the allocated stk is {:?}", stk.STK_REF);
