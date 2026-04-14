@@ -188,13 +188,6 @@ pub unsafe extern "C" fn MachineEnvCall(trap_frame: &mut TrapFrame) {
     trap_frame.mepc += 4;
 }
 
-/// 导出 trap 入口地址，供平台初始化使用
-///
-/// 平台初始化时应该将 mtvec 设置为这个地址
-pub fn trap_entry_addr() -> usize {
-    unsafe { __trap_entry as usize }
-}
-
 extern "C" {
     /// 汇编入口点
     fn __trap_entry();

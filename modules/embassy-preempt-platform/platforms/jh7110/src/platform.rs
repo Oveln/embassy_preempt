@@ -48,11 +48,6 @@ impl PlatformImpl {
             riscv::register::mstatus::set_mie(); // Enable machine interrupts
             riscv::register::mie::set_msoft();
 
-            use riscv::register::mtvec::{self, Mtvec, TrapMode};
-            // 初始化 mtvec 指向我们的 trap 处理函数
-            let trap_addr = embassy_preempt_riscv64_rt::trap_entry_addr();
-            mtvec::write(Mtvec::new(trap_addr, TrapMode::Direct));
-
             gpio::init();
         }
 

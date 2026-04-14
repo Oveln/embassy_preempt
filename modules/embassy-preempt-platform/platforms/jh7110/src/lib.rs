@@ -41,8 +41,7 @@ pub use embassy_preempt_traits::{
 // Re-export from riscv64-rt
 pub use embassy_preempt_riscv64_rt::{
     IN_TRAP, NEED_CONTEXT_SWITCH, TrapFrame,
-    MachineEnvCall, register_ipi_callback, register_timer_callback,
-    trap_entry_addr,
+    MachineEnvCall, register_ipi_callback, register_timer_callback
 };
 
 // 公共导出

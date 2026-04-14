@@ -3,6 +3,10 @@
 //! Provides functions for clearing the BSS (Block Started by Symbol) section,
 //! which contains zero-initialized data.
 
+use riscv::register::{mtvec::{self, Mtvec}, stvec::TrapMode};
+
+use crate::__trap_entry;
+
 /// Clear the BSS section (zero-initialized data)
 #[cfg(feature = "clear_bss")]
 pub fn clear_bss() {
@@ -19,6 +23,11 @@ pub fn clear_bss() {
     }
 }
 
+#[unsafe(no_mangle)]
+extern "C" fn __start_rust() {
+    unsafe { mtvec::write(Mtvec::new(__trap_entry as *const () as usize, TrapMode::Direct)) };
+}
+
 // Assembly entry point
 core::arch::global_asm!(
     ".section .init",
@@ -26,6 +35,7 @@ core::arch::global_asm!(
     ".align 4",
     "__start:",
     "la sp, __sstack",
+    "call __start_rust",
     #[cfg(feature = "clear_bss")]
     "call __clear_bss",
     "j __rust_main"
