@@ -48,21 +48,17 @@ fn main() {
 
     // println!("cargo:rustc-link-arg=-")
     // 编译选项的可选："-C", "link-arg=-Tdefmt.x", 开了defmt或者alarm_test的时候才会加入
-    if env::var("CARGO_FEATURE_LOG_BASE").is_ok(){
+    if env::var("CARGO_FEATURE_LOG_RTT").is_ok(){
         println!("cargo:rustc-link-arg=-Tdefmt.x");
     }
+    const LINKER_SCRIPT: &[u8] = b"
+    INCLUDE memory.x
+    INCLUDE link.x
+    ";
+    let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    let ld = &out.join("linker.ld");
+    std::fs::write(ld, LINKER_SCRIPT).unwrap();
 
-    if env::var("CARGO_FEATURE_JH7110").is_ok() {
-        const LINKER_SCRIPT: &[u8] = b"
-        INCLUDE memory.x
-        INCLUDE link.x
-        ";
-        let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-        let ld = &out.join("linker.ld");
-        std::fs::write(ld, LINKER_SCRIPT).unwrap();
-
-        println!("cargo:rustc-link-arg=-T{}", ld.display());
-        println!("cargo:rustc-link-search={}", out.display());
-    }
-
+    println!("cargo:rustc-link-arg=-T{}", ld.display());
+    println!("cargo:rustc-link-search={}", out.display());
 }
