@@ -113,6 +113,21 @@ pub static IN_TRAP: AtomicBool = AtomicBool::new(false);
 /// 由 `MachineEnvCall` 设置，由 `trap_handler` 检查
 pub static NEED_CONTEXT_SWITCH: AtomicBool = AtomicBool::new(false);
 
+pub fn trigger_context_switch() {
+    use core::sync::atomic::Ordering;
+    // 检查是否在中断处理中
+    if IN_TRAP.load(Ordering::Acquire) {
+        // 在中断中，设置延迟上下文切换标志
+        // 使用 Release 语义：确保设置操作之前的写操作完成
+        NEED_CONTEXT_SWITCH.store(true, Ordering::Release);
+    } else {
+        // 不在中断中，直接执行 ecall 触发上下文切换
+        unsafe {
+            core::arch::asm!("ecall");
+        }
+    }
+}
+
 // ============================================================================
 // 链接脚本需要的默认函数
 // ============================================================================

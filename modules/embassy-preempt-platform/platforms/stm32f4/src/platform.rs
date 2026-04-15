@@ -174,18 +174,18 @@ impl PlatformStatic for PlatformImpl {
     /// ARM Cortex-M specific implementation that sets the PendSV flag
     /// in the NVIC interrupt control register. PendSV has the lowest
     /// priority and will execute after all other pending interrupts.
-    fn trigger_context_switch() {
-        os_log!(trace, "trigger_context_switch");
-        const NVIC_INT_CTRL: u32 = 0xE000ED04; // NVIC Interrupt Control Register
-        const NVIC_PENDSVSET: u32 = 0x10000000; // PendSV Set bit
-        unsafe {
-            asm!(
-                "STR     R1, [R0]",  // Store PendSVSET flag to NVIC register
-                in("r0") NVIC_INT_CTRL,
-                in("r1") NVIC_PENDSVSET,
-            )
-        }
-    }
+    // fn trigger_context_switch() {
+    //     os_log!(trace, "trigger_context_switch");
+    //     const NVIC_INT_CTRL: u32 = 0xE000ED04; // NVIC Interrupt Control Register
+    //     const NVIC_PENDSVSET: u32 = 0x10000000; // PendSV Set bit
+    //     unsafe {
+    //         asm!(
+    //             "STR     R1, [R0]",  // Store PendSVSET flag to NVIC register
+    //             in("r0") NVIC_INT_CTRL,
+    //             in("r1") NVIC_PENDSVSET,
+    //         )
+    //     }
+    // }
 
     /// Enter low-power idle state
     ///

@@ -24,12 +24,12 @@ impl PlatformImpl {
 }
 
 impl PlatformStatic for PlatformImpl {
-    fn trigger_context_switch() {
-        unsafe {
-            // qingke::riscv::register::mip::set_ssoft();
-            ecall();
-        }
-    }
+    // fn trigger_context_switch() {
+    //     unsafe {
+    //         // qingke::riscv::register::mip::set_ssoft();
+    //         ecall();
+    //     }
+    // }
 
     fn enter_idle_state() {}
 

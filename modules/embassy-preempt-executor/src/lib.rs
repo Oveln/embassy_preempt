@@ -400,7 +400,7 @@ impl SyncExecutor {
             critical_section::with(|_| {
                 if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
                     scheduler_log!(trace, "restore the task/thread");
-                    embassy_preempt_platform::PlatformImpl::trigger_context_switch();
+                    embassy_preempt_platform::arch::trigger_context_switch();
                 }
             });
         }

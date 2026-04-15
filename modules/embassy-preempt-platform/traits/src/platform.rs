@@ -3,14 +3,6 @@
 use core::ptr::NonNull;
 
 pub trait PlatformStatic {
-
-    /// Trigger a context switch to start the first task or switch to next task
-    ///
-    /// Architecture-specific implementation:
-    /// - ARM Cortex-M: Set PendSV flag
-    /// - RISC-V: Set software interrupt or use ecall
-    fn trigger_context_switch();
-
     /// Execute idle/inactive state (low-power mode)
     ///
     /// Architecture-specific idle behavior:

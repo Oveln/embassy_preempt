@@ -59,29 +59,6 @@ impl PlatformImpl {
 }
 
 impl PlatformStatic for PlatformImpl {
-    fn trigger_context_switch() {
-        use embassy_preempt_riscv64_rt::{IN_TRAP, NEED_CONTEXT_SWITCH};
-        use core::sync::atomic::Ordering;
-
-        unsafe {
-            gpio::gpio_controller().toggle(37);
-            os_log!(info, "Before ecall: MIE={}， in_Interrupt={}", riscv::register::mstatus::read().mie(), IN_TRAP.load(Ordering::Acquire));
-        }
-
-        // 检查是否在中断处理中
-        // 使用 Acquire 语义：确保读取到最新的值
-        if IN_TRAP.load(Ordering::Acquire) {
-            // 在中断中，设置延迟上下文切换标志
-            // 使用 Release 语义：确保设置操作之前的写操作完成
-            NEED_CONTEXT_SWITCH.store(true, Ordering::Release);
-        } else {
-            // 不在中断中，直接执行 ecall 触发上下文切换
-            unsafe {
-                asm!("ecall");
-            }
-        }
-    }
-
     fn enter_idle_state() {}
 
     fn shutdown() {

@@ -130,7 +130,7 @@ impl OS_TCB {
         // in restore_task it will set PROGRAM_STACK a new stk
         // revoke the stk
         critical_section::with(|_| {
-            embassy_preempt_platform::PlatformImpl::trigger_context_switch();
+            embassy_preempt_platform::arch::trigger_context_switch();
         });
     }
     /// get the stk ptr of tcb, and set the tcb's stk ptr to None
