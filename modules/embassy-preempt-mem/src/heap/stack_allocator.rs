@@ -21,8 +21,8 @@ static INTERRUPT_STACK: Once<UPSafeCell<OS_STK_REF>> = Once::new();
 
 /// Linker script symbols for stack boundaries
 unsafe extern "C" {
-    static __sstack: u8;
     static __estack: u8;
+    static __stack_size: usize;
 }
 
 /// Get the stack start address from linker script
@@ -32,7 +32,7 @@ fn stack_start() -> *mut u8 {
 
 /// Get the stack size from linker script symbols
 fn stack_size() -> usize {
-    unsafe { (&__sstack as *const u8 as usize) - (&__estack as *const u8 as usize) }
+    unsafe { __stack_size }
 }
 
 /// Get access to the program stack

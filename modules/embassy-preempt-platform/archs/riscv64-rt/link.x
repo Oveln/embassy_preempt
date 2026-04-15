@@ -101,9 +101,8 @@ PROVIDE(MachineExternal = DefaultHandler);
  * ============================================================================ */
 PROVIDE(_stext = ORIGIN(RAM));
 PROVIDE(_stack_start = ORIGIN(RAM) + LENGTH(RAM));
-PROVIDE(_max_hart_id = 0);
-PROVIDE(_hart_stack_size = 2K);
-PROVIDE(_heap_size = 128K);
+
+/* NOTE: _max_hart_id, _hart_stack_size, _heap_size 由各平台在 memory.x 中定义 */
 
 /* ============================================================================
  * SECTIONS 定义
@@ -204,6 +203,8 @@ SECTIONS
         __estack = .;
         . = ABSOLUTE(_stack_start);
         __sstack = .;
+        /* 栈大小：供运行时栈空间检查使用 */
+        __stack_size = __sstack - __estack;
     } > RAM
 
     /* 用于检测动态重定位 (不支持) */

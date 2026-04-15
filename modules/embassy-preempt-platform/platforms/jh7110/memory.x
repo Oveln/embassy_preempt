@@ -4,10 +4,13 @@ MEMORY
     RAM : ORIGIN = 0x08000000, LENGTH = 512K
 }
 
-/* 区域别名 - 默认所有段使用 RAM */
-REGION_ALIAS("REGION_TEXT", RAM);
-REGION_ALIAS("REGION_RODATA", RAM);
-REGION_ALIAS("REGION_DATA", RAM);
-REGION_ALIAS("REGION_BSS", RAM);
-REGION_ALIAS("REGION_HEAP", RAM);
-REGION_ALIAS("REGION_STACK", RAM);
+/* ============================================================================
+ * 平台特定符号定义
+ * ============================================================================ */
+
+/* RISC-V hart 配置 */
+PROVIDE(_max_hart_id = 0);
+PROVIDE(_hart_stack_size = 2K);
+
+/* 堆大小配置 */
+PROVIDE(_heap_size = 128K);
