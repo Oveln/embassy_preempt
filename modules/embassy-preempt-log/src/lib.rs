@@ -9,11 +9,11 @@
 #[cfg(feature = "log-rtt")]
 use defmt_rtt as _;
 
+#[cfg(feature = "log-rtt")]
+pub use defmt;
+
 #[cfg(feature = "log-uart")]
 pub mod uart;
-
-#[cfg(feature = "log-base")]
-pub use defmt;
 
 // Define all core logging macros
 #[macro_export]
@@ -42,7 +42,7 @@ macro_rules! warn {
 }
 
 // Forward to defmt (RTT)
-#[cfg(all(feature = "log-base", not(feature = "log-uart")))]
+#[cfg(all(feature = "log-rtt", not(feature = "log-uart")))]
 #[macro_export]
 macro_rules! __log {
     ($level:ident, $($arg:tt)*) => {

@@ -6,10 +6,14 @@ use embassy_preempt_traits::memory_layout::PlatformMemoryLayout;
 use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_traits::Platform;
 use embassy_preempt_traits::timer::Driver;
+use uart16550::Uart16550;
 
 use crate::clint_config::Jh7110ClintConfig;
 use crate::gpio;
 use embassy_preempt_riscv64_rt::{ClintTimer, CONTEXT_STACK_SIZE};
+
+/// Fixed UART base address for JH7110 VisionFive 2
+const UART_BASE: usize = 0x10010000;
 
 // 静态存储，供中断处理访问定时器驱动
 static mut TIMER_DRIVER_STORAGE: Option<ClintTimer<Jh7110ClintConfig, 1>> = None;
@@ -65,6 +69,13 @@ impl PlatformStatic for PlatformImpl {
         loop {
             // 使用 RISC-V WFI 指令进入低功耗状态
             unsafe { asm!("wfi"); }
+        }
+    }
+
+    fn early_putchar(c: u8) {
+        unsafe {
+            let uart = &*(UART_BASE as *const Uart16550<u32>);
+            let _ = uart.write(&[c]);
         }
     }
 }

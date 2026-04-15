@@ -22,5 +22,7 @@ embassy-preempt-riscv64-rt = { path = "../../archs/riscv64-rt", features = ["cle
 # RISC-V dependencies
 riscv = { version = "0.16.0", default-features = false, features = ["critical-section-single-hart"]}
 
+uart16550 = { version = "0.0.1" }
+
 [features]
 default = []

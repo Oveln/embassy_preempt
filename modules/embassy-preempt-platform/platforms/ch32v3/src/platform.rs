@@ -38,6 +38,13 @@ impl PlatformStatic for PlatformImpl {
             wfi();
         }
     }
+
+    /// Early putchar - stub implementation for CH32V3
+    ///
+    /// Currently not implemented. Add UART initialization and output here if needed.
+    fn early_putchar(_c: u8) {
+        // Stub: no early UART output for CH32V3
+    }
 }
 
 impl PlatformMemoryLayout for PlatformImpl {

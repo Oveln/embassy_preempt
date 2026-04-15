@@ -87,3 +87,19 @@ pub fn get_platform_trait() -> &'static dyn Platform {
         __PLATFORM.get_unchecked()
     }
 }
+
+// ===== EARLY PRINTING =====
+
+/// Early putstr implementation for boot-time debugging
+///
+/// This function outputs a byte slice to UART before the RTOS is fully initialized.
+/// It iterates through each byte and calls the platform's early_putchar implementation.
+///
+/// # Safety
+/// This function must only be called with valid byte slices.
+#[no_mangle]
+pub extern "C" fn __EARLY_PUTSTR(s: &[u8]) {
+    for &byte in s {
+        PlatformImpl::early_putchar(byte);
+    }
+}

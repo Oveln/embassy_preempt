@@ -229,9 +229,13 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    /// Get current Process Stack Pointer value
+    /// Early putchar - stub implementation for STM32F4
     ///
+    /// Currently not implemented. Add UART initialization and output here if needed.
+    fn early_putchar(_c: u8) {
+        // Stub: no early UART output for STM32F4
     }
+}
 
 impl PlatformMemoryLayout for PlatformImpl {
     const PROGRAM_STACK_SIZE: usize = 2048; // 2 KiB
