@@ -1,25 +1,23 @@
 use core::arch::asm;
-use core::ptr::NonNull;
 
 use embassy_preempt_log::{os_log, scheduler_log};
 use embassy_preempt_traits::memory_layout::PlatformMemoryLayout;
 use embassy_preempt_traits::platform::PlatformStatic;
 use embassy_preempt_traits::Platform;
 use embassy_preempt_traits::timer::Driver;
-use uart16550::Uart16550;
 
-use crate::clint_config::Jh7110ClintConfig;
+use crate::clint_config::QemuVirtClintConfig;
 use crate::gpio;
 use embassy_preempt_riscv64_rt::{ClintTimer, CONTEXT_STACK_SIZE};
 
-/// Fixed UART base address for JH7110 VisionFive 2
-const UART_BASE: usize = 0x10010000;
+/// QEMU Virt UART base address (16550-compatible UART at 0x10000000)
+const UART_BASE: usize = 0x1000_0000;
 
 // 静态存储，供中断处理访问定时器驱动
-static mut TIMER_DRIVER_STORAGE: Option<ClintTimer<Jh7110ClintConfig, 1>> = None;
+static mut TIMER_DRIVER_STORAGE: Option<ClintTimer<QemuVirtClintConfig, 1>> = None;
 
 // 静态引用，供中断处理访问定时器驱动
-pub static mut TIMER_DRIVER: Option<&'static ClintTimer<Jh7110ClintConfig, 1>> = None;
+pub static mut TIMER_DRIVER: Option<&'static ClintTimer<QemuVirtClintConfig, 1>> = None;
 
 /// Timer 中断回调函数
 ///
@@ -31,15 +29,15 @@ unsafe extern "C" fn timer_interrupt_callback() {
 }
 
 pub struct PlatformImpl {
-    pub timer: &'static ClintTimer<Jh7110ClintConfig, 1>,
+    pub timer: &'static ClintTimer<QemuVirtClintConfig, 1>,
 }
 
 impl PlatformImpl {
     pub fn new() -> Self {
-        os_log!(info, "Init JH7110 Platform");
+        os_log!(info, "Init QEMU Virt Platform");
 
         // 创建并初始化定时器驱动，存储在静态变量中
-        let timer = ClintTimer::<Jh7110ClintConfig, 1>::new();
+        let timer = ClintTimer::<QemuVirtClintConfig, 1>::new();
         timer.init();
 
         unsafe {
@@ -72,11 +70,11 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    #[inline]
+    #[inline(never)]
     fn early_putchar(c: u8) {
         unsafe {
-            let uart = &*(UART_BASE as *const Uart16550<u32>);
-            let _ = uart.write(&[c]);
+            let uart = UART_BASE as *mut u8;
+            uart.write_volatile(c);
         }
     }
 }
@@ -135,7 +133,7 @@ impl PlatformImpl {
 
         os_log!(info, "========================================");
         os_log!(info, "  Embassy Preempt - System Info");
-        os_log!(info, "  VisionFive2 JH7110 Platform");
+        os_log!(info, "  QEMU RISC-V 64-bit Virt Platform");
         os_log!(info, "========================================");
 
         // Hart ID

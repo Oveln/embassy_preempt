@@ -27,6 +27,7 @@ embassy-preempt-riscv64-rt = { path = "archs/riscv64-rt", optional = true}
 stm32f4 = { path = "platforms/stm32f4", optional = true }
 jh7110 = { path = "platforms/jh7110", optional = true }
 ch32v3 = { path = "platforms/ch32v3", optional = true }
+qemu-virt = { path = "platforms/qemu-virt", optional = true }
 
 [features]
 default = []
@@ -44,6 +45,9 @@ jh7110 = ["dep:jh7110", "riscv64"]
 
 # CH32V3 platform (Qingke RISC-V)
 ch32v307wcu6 = ["dep:ch32v3"]
+
+# QEMU Virt platform (RISC-V 64)
+qemu-virt = ["dep:qemu-virt", "riscv64"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [

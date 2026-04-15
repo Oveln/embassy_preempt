@@ -42,6 +42,9 @@ pub use stm32f4 as chip;
 #[cfg(feature = "jh7110")]
 pub use jh7110 as chip;
 
+#[cfg(feature = "qemu-virt")]
+pub use qemu_virt as chip;
+
 // CH32V3 platform (Qingke RISC-V)
 #[cfg(feature = "ch32v307wcu6")]
 pub use ch32v3 as chip;
