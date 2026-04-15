@@ -22,7 +22,7 @@ static INTERRUPT_STACK: Once<UPSafeCell<OS_STK_REF>> = Once::new();
 /// Linker script symbols for stack boundaries
 unsafe extern "C" {
     static __estack: u8;
-    static __stack_size: usize;
+    static __stack_size: u8;
 }
 
 /// Get the stack start address from linker script
@@ -32,7 +32,7 @@ fn stack_start() -> *mut u8 {
 
 /// Get the stack size from linker script symbols
 fn stack_size() -> usize {
-    unsafe { __stack_size }
+    unsafe { &__stack_size as *const u8 as usize }
 }
 
 /// Get access to the program stack
@@ -52,6 +52,8 @@ pub fn get_interrupt_stack() -> &'static UPSafeCell<OS_STK_REF> {
 */
 /// init the stack allocator and set up the program stack and the interrupt stack
 pub fn OS_InitStackAllocator() {
+    mem_log!(trace, "start: {:x}", stack_start() as usize);
+    // mem_log!(trace, "size: {}", unsafe {__stack_size} );
     mem_log!(trace, "Init Stack Allocator at 0x{:x}, size: 0x{:x}", stack_start() as usize,stack_size());
     unsafe {
         STACK_ALLOCATOR.lock().init(
