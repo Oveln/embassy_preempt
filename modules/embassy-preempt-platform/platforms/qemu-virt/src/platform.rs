@@ -71,11 +71,14 @@ impl PlatformStatic for PlatformImpl {
     }
 
     #[inline(never)]
-    fn early_putchar(c: u8) {
+    fn early_putstr(c: &[u8]) -> usize {
         unsafe {
             let uart = UART_BASE as *mut u8;
-            uart.write_volatile(c);
+            for &byte in c {
+                uart.write_volatile(byte);
+            }
         }
+        c.len()
     }
 }
 

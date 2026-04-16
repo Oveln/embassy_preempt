@@ -229,11 +229,12 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    /// Early putchar - stub implementation for STM32F4
+    /// Early putstr - stub implementation for STM32F4
     ///
     /// Currently not implemented. Add UART initialization and output here if needed.
-    fn early_putchar(_c: u8) {
+    fn early_putstr(_c: &[u8]) -> usize {
         // Stub: no early UART output for STM32F4
+        _c.len()
     }
 }
 

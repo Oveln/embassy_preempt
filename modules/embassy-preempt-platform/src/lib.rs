@@ -102,7 +102,9 @@ pub fn get_platform_trait() -> &'static dyn Platform {
 /// This function must only be called with valid byte slices.
 #[no_mangle]
 pub extern "C" fn __EARLY_PUTSTR(s: &[u8]) {
-    for &byte in s {
-        PlatformImpl::early_putchar(byte);
+    let mut s = s;
+    while !s.is_empty() {
+        let count = PlatformImpl::early_putstr(s);
+        s = &s[count..];
     }
 }

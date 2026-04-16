@@ -39,11 +39,12 @@ impl PlatformStatic for PlatformImpl {
         }
     }
 
-    /// Early putchar - stub implementation for CH32V3
+    /// Early putstr - stub implementation for CH32V3
     ///
     /// Currently not implemented. Add UART initialization and output here if needed.
-    fn early_putchar(_c: u8) {
+    fn early_putstr(_c: &[u8]) -> usize {
         // Stub: no early UART output for CH32V3
+        _c.len()
     }
 }
 

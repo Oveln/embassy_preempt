@@ -15,15 +15,19 @@ pub trait PlatformStatic {
     /// Platform-specific shutdown implementation with LED effects or debug output.
     fn shutdown();
 
-    /// Early putchar for boot-time debugging before RTOS initialization
+    /// Early putstr for boot-time debugging before RTOS initialization
     ///
-    /// This function should output a single character to UART without
+    /// This function should output a byte slice to UART without
     /// using any RTOS services. It's called during early boot when
     /// the full logging infrastructure is not yet available.
     ///
     /// # Parameters
-    /// - `c`: The byte to output
-    fn early_putchar(c: u8);
+    /// - `c`: The byte slice to output
+    ///
+    /// # Returns
+    /// The number of bytes actually written (may be less than `c.len()` if
+    /// the UART FIFO is full and cannot accept all data at once)
+    fn early_putstr(c: &[u8]) -> usize;
 
 }
 
